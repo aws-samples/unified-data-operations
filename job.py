@@ -4,9 +4,9 @@ from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
 from awsglue.context import GlueContext
 from awsglue.job import Job
-from job_interpreter import DefaultInterpreter
+from job_interpreter import TaskInterpreter
 
-args = getResolvedOptions(sys.argv, ['JOB_NAME'])
+args = getResolvedOptions(sys.argv, ['JOB_NAME', 'TASK_ID'])
 
 sc = SparkContext()
 glueContext = GlueContext(sc)
@@ -14,8 +14,8 @@ spark = glueContext.spark_session
 job = Job(glueContext)
 job.init(args['JOB_NAME'], args)
 
-job_interpreter = DefaultInterpreter(glueContext)
+task_interpreter = TaskInterpreter(glueContext)
 
-job_interpreter.interpret()
+task_interpreter.interpret(args['TASK_ID'])
 
 job.commit()
