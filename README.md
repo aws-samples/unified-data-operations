@@ -1,12 +1,14 @@
+[![pipeline status](https://gitlab.aws.dev/aws-sa-dach/teams/dnb/job-interpreter/badges/master/pipeline.svg)](https://gitlab.aws.dev/aws-sa-dach/teams/dnb/job-interpreter/-/commits/master)
+[![coverage report](https://gitlab.aws.dev/aws-sa-dach/teams/dnb/job-interpreter/badges/master/coverage.svg)](https://gitlab.aws.dev/aws-sa-dach/teams/dnb/job-interpreter/-/commits/master)
+
 # Job Interpreter
 
 Interprets YAML based AWS Glue jobs.
 
 ## Format
 
-### Product
-
-
+See [model.yml](job_interpreter/tests/interpreters/model.yml) and [product.yml](job_interpreter/tests/interpreters/product.yml)
+test examples.
 
 ## Build
 
@@ -18,4 +20,4 @@ Interprets YAML based AWS Glue jobs.
 
 ## CI/CD
 
-See [gitlab-ci.yml](../.gitlab-ci.yml).
+See [gitlab-ci.yml](.gitlab-ci.yml).
