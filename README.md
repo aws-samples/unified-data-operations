@@ -3,7 +3,7 @@
 
 # Job Interpreter
 
-Interprets YAML based AWS Glue jobs.
+Interprets YAML based definition of a data mesh task as AWS Glue job.
 
 ## Format
 
