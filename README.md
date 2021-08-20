@@ -3,7 +3,7 @@
 
 # Job Interpreter
 
-Interprets YAML based definition of a data mesh task as AWS Glue job.
+Interprets YAML based task definition of the [data mesh](https://gitlab.aws.dev/aws-sa-dach/teams/dnb/data-mesh-solution) as AWS Glue job.
 
 ## Format
 
