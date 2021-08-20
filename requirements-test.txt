@@ -1,0 +1,11 @@
+-r requirements.txt
+
+pyspark==3.0.1
+pytest-spark==0.6.0
+pytest-mock==3.5.1
+pytest-helpers-namespace==2019.1.8
+pytest-env==0.6.2
+pytest-cov==2.12.1
+awsglue3==0.0.1
+pytest==6.2.2
+black~=20.8b1

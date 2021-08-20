@@ -1,0 +1,22 @@
+product:
+  name: process_tickets
+  connections:
+    - id: sportstickets
+      user: admin
+      password: secret
+      port: 5432
+      db_name: sportstickets
+      ssl: true
+      type: postgresql
+      host: localhost
+  pipeline:
+    id: ingest data
+    tasks:
+      - id: extract_customers
+        seq: 1
+        logic: custom.aggregate
+        input:
+          - id: person
+            connection: sportstickets
+            table: person
+            model: person

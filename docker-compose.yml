@@ -1,0 +1,10 @@
+version: "2.3"
+services:
+  test:
+    image: job-interpreter-env:dev
+    build:
+      context: .
+    volumes:
+      - ./job_interpreter:/app/job_interpreter
+      - ./job.py:/app/job.py
+    command: ["pytest", "-s", "-m", "not integration"]

@@ -1,0 +1,36 @@
+stages:
+  - test
+  - package
+  - deploy
+
+test_job_interpreter:
+  stage: test
+  image:
+    name: registry.gitlab.aws.dev/aws-sa-dach/teams/dnb/docker-glue-pyspark:1.2.1
+    entrypoint:  ["/bin/bash"]
+  script:
+    - pip install -U -e  .
+    - pip install -r requirements-test.txt
+    - pytest --cov=job_interpreter -s -m 'not integration'
+
+package_job_interpreter:
+  stage: package
+  image:
+    name: registry.gitlab.aws.dev/aws-sa-dach/teams/dnb/docker-glue-pyspark:1.2.1
+    entrypoint:  ["/bin/bash"]
+  script:
+    - pip install -U -e  .
+    - pip install -r requirements-test.txt
+    - python setup.py build -vf && python setup.py bdist_wheel
+  artifacts:
+    paths:
+      - ./dist/*
+      - ./job.py
+    expire_in: 30 days
+
+deploy_job_interpreter:
+  stage: deploy
+  image: amazon/aws-cli:latest
+  script:
+    - aws s3 cp ./dist/ s3://job-interpreter/  --recursive
+    - aws s3 cp ./job.py s3://job-interpreter/job.py

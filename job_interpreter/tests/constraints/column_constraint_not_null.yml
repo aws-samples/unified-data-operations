@@ -1,0 +1,5 @@
+type: string
+constraints:
+  - type: not_null
+    options:
+      threshold: 0.1

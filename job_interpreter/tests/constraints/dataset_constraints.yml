@@ -1,0 +1,7 @@
+models:
+  - id: person
+    columns:
+      - id: id
+        type: int
+        constraints:
+        - type: distinct
