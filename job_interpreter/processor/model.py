@@ -13,7 +13,7 @@ class ModelProcessor:
         result_datasets = []
 
         for dataset in datasets:
-            self.process_input(dataset)
+            result_datasets.append(self.process_input(dataset))
 
         return result_datasets
 
