@@ -11,3 +11,9 @@ models:
         type: string
         transform:
           - type: skip
+      - id: age
+        type: int
+        transform:
+          - type: rename
+            options:
+              id: years

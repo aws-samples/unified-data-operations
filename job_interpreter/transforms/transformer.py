@@ -1,5 +1,6 @@
 from .skip import SkipTransform
 from .hash import HashTransform
+from .rename import RenameTransform
 from pyspark.sql import DataFrame
 
 
@@ -31,5 +32,8 @@ class Transformer:
                 if transform_type == 'encrypt':
                     key = get_option(transform_dict, 'key', None)
                     data_frame = HashTransform(data_frame, column_id, key).transform()
+                if transform_type == 'rename':
+                    new_column_id = get_option(transform_dict, 'id')
+                    data_frame = RenameTransform(data_frame, column_id, new_column_id).transform()
 
         return data_frame
