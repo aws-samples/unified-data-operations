@@ -1,3 +1,6 @@
+import importlib
+
+
 class DynamicProcessor:
     function: str
 
@@ -5,5 +8,6 @@ class DynamicProcessor:
         self.function = function
 
     def process(self, datasets: [dict]) -> [dict]:
-        # TODO: call dynamic function
-        return datasets
+        function = importlib.import_module(self.function)
+        return function(datasets)
+1

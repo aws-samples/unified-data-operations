@@ -24,8 +24,8 @@ class TaskInterpreter:
 
         datasets = self.dataset_mapper.map(task)
 
-        if task['logic']:
-            datasets = DynamicProcessor(task['logic']).process(datasets)
+        if task.get('logic'):
+            datasets = DynamicProcessor(task.get('logic')).process(datasets)
 
         datasets = self.model_processor.process(datasets)
 

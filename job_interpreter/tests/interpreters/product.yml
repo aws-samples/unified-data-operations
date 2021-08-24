@@ -14,7 +14,6 @@ product:
     tasks:
       - id: extract_customers
         seq: 1
-        logic: custom.aggregate
         input:
           - id: person
             connection: sportstickets
