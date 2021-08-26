@@ -10,6 +10,16 @@ Interprets YAML based task definition of the [data mesh](https://gitlab.aws.dev/
 See [model.yml](job_interpreter/tests/interpreters/model.yml) and [product.yml](job_interpreter/tests/interpreters/product.yml)
 test examples.
 
+## Setup development environment
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -U -e .
+pip install -r requirements-test.txt
+```
+Don't forget to switch the new virtual environment in your IDE too.
+
 ## Build
 
     docker-compose build
