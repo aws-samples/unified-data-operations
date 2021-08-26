@@ -1,6 +1,7 @@
 from .skip import SkipTransform
 from .hash import HashTransform
 from .rename import RenameTransform
+from .bucket import BucketTransform
 from pyspark.sql import DataFrame
 
 
@@ -35,5 +36,7 @@ class Transformer:
                 if transform_type == 'rename':
                     new_column_id = get_option(transform_dict, 'id')
                     data_frame = RenameTransform(data_frame, column_id, new_column_id).transform()
-
+                if transform_type == 'bucket':
+                    bins = get_option(transform_dict, 'bins')
+                    data_frame = BucketTransform(data_frame, column_id, bins).transform()
         return data_frame
