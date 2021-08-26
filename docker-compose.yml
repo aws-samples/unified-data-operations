@@ -6,5 +6,5 @@ services:
       context: .
     volumes:
       - ./job_interpreter:/app/job_interpreter
-      - ./job.py:/app/job.py
+      - ./main.py:/app/main.py
     command: ["pytest", "-s", "-m", "not integration"]

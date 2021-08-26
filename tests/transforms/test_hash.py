@@ -4,7 +4,7 @@ from pyspark.sql.types import (
     StructType,
     IntegerType,
 )
-from ...transforms import HashTransform
+from job_interpreter.transforms import HashTransform
 
 
 def person_frame(spark_session):

@@ -6,7 +6,7 @@ from pyspark.sql.types import (
     StructType,
     IntegerType,
 )
-from ...transforms import Transformer
+from job_interpreter.transforms import Transformer
 from pathlib import Path
 
 

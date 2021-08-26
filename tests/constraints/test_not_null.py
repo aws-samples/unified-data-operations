@@ -4,7 +4,7 @@ from pyspark.sql.types import (
     StructType,
     IntegerType,
 )
-from ...constraints import NotNullConstraint
+from job_interpreter.constraints import NotNullConstraint
 
 
 def test_not_null_false(spark_session):

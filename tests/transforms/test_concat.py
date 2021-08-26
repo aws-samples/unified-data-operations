@@ -4,7 +4,7 @@ from pyspark.sql.types import (
     StructType,
     IntegerType,
 )
-from ...transforms import ConcatTransform
+from job_interpreter.transforms import ConcatTransform
 
 
 def test_concat(spark_session):

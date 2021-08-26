@@ -3,7 +3,7 @@ from pyspark.sql.types import (
     StructField,
     StructType
 )
-from ...transforms import RenameTransform
+from job_interpreter.transforms import RenameTransform
 
 
 def person_frame(spark_session):

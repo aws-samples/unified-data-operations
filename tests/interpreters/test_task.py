@@ -4,7 +4,7 @@ from awsglue.context import GlueContext
 from pyspark.sql.types import StringType, IntegerType, StructType, StructField
 from unittest.mock import Mock
 
-from ...interpreters import TaskInterpreter
+from job_interpreter.interpreters import TaskInterpreter
 
 
 def input_data_frame(spark_session):

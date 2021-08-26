@@ -4,7 +4,7 @@ from pyspark.sql.types import (
     StructType,
     IntegerType,
 )
-from ...constraints import ExistsConstraint, ConstraintValidator
+from job_interpreter.constraints import ExistsConstraint, ConstraintValidator
 
 
 def person_data_frame(spark_session):

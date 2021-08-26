@@ -4,7 +4,7 @@ from pyspark.sql.types import (
     StructType,
     IntegerType,
 )
-from ...constraints import ExistsConstraint
+from job_interpreter.constraints import ExistsConstraint
 
 
 def test_exists_true(spark_session):

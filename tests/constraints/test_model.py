@@ -7,7 +7,7 @@ from pyspark.sql.types import (
     StructType,
     IntegerType,
 )
-from ...constraints import ConstraintModelMapper, ExistsConstraint, DistinctConstraint
+from job_interpreter.constraints import ConstraintModelMapper, ExistsConstraint, DistinctConstraint
 
 
 def as_yaml(path: str):

@@ -4,7 +4,7 @@ from pyspark.sql.types import (
     StructType,
     IntegerType,
 )
-from ...transforms import SkipTransform
+from job_interpreter.transforms import SkipTransform
 
 
 def test_skip(spark_session):

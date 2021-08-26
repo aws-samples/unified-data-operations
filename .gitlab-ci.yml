@@ -25,7 +25,7 @@ package_job_interpreter:
   artifacts:
     paths:
       - ./dist/*
-      - ./job.py
+      - ./main.py
     expire_in: 30 days
 
 deploy_job_interpreter:
@@ -33,4 +33,4 @@ deploy_job_interpreter:
   image: amazon/aws-cli:latest
   script:
     - aws s3 cp ./dist/ s3://job-interpreter/  --recursive
-    - aws s3 cp ./job.py s3://job-interpreter/job.py
+    - aws s3 cp ./main.py s3://job-interpreter/main.py

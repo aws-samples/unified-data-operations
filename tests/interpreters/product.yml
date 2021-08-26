@@ -14,6 +14,7 @@ product:
     tasks:
       - id: extract_customers
         seq: 1
+        logic: common.xtract
         input:
           - id: person
             connection: sportstickets

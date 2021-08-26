@@ -1,6 +1,6 @@
 from unittest.mock import Mock
 
-from ...writers.data_frame import resolve_additional_options
+from job_interpreter.writers.data_frame import resolve_additional_options
 
 
 def test_resolve_additional_options_no_partition_key():

@@ -7,7 +7,7 @@ from pyspark.sql.types import (
     StructType,
     IntegerType,
 )
-from ...constraints import ConstraintColumnMapper, ConstraintRegistry, ExistsConstraint, NotNullConstraint, DistinctConstraint, RegExpConstraint
+from job_interpreter.constraints import ConstraintColumnMapper, ConstraintRegistry, ExistsConstraint, NotNullConstraint, DistinctConstraint, RegExpConstraint
 
 
 def person_data_frame(spark_session):
