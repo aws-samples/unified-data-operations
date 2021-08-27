@@ -13,12 +13,12 @@ class DataFrameWriter:
         dynamic_df = DynamicFrame.fromDF(data_frame, self.context, 'dynamic_df')
 
         sink = self.context.getSink(
-            connection_type='parquet',
+            connection_type='s3',
             path=options['location'],
             enableUpdateCatalog=True,
             partitionKeys=resolve_partition_keys(options)
         )
-        sink.setFormat(options['stored_as'])
+        sink.setFormat('json')
         sink.setCatalogInfo(catalogDatabase='customers', catalogTableName='person')
         sink.writeFrame(dynamic_df)
 
