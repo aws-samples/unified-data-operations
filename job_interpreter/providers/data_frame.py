@@ -15,7 +15,7 @@ class DataFrameProvider:
 
     def get(self, input_dict):
         name = input_dict['id']
-        data_frame = self.data_frames[name]
+        data_frame = self.data_frames.get(name)
 
         if not data_frame:
             data_frame = self.create(input_dict)
