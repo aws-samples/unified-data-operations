@@ -11,21 +11,21 @@ class DataFrameWriter:
 
     def write(self, data_frame: DataFrame, options: dict):
         dynamic_df = DynamicFrame.fromDF(data_frame, self.context, 'dynamic_df')
-        self.context.write_dynamic_frame.from_options(
-            frame=dynamic_df,
-            connection_type="s3",
-            connection_options={'path': options['location']},
-            format=options['stored_as'],
-            transformation_ctx='datasink2',
-            additional_options=resolve_additional_options(options)
+
+        sink = self.context.getSink(
+            connection_type='s3',
+            path=options['location'],
+            enableUpdateCatalog=True,
+            partitionKeys=resolve_partition_keys(options)
         )
+        sink.setFormat(options['stored_as'])
+        sink.setCatalogInfo(catalogDatabase='customers', catalogTableName='person')
+        sink.writeFrame(dynamic_df)
 
 
-def resolve_additional_options(options: dict):
-    additional_options = {'enableUpdateCatalog': True}
-
+def resolve_partition_keys(options: dict):
     partition_key = options.get('partition_by')
     if partition_key:
-        additional_options['partitionKeys'] = [partition_key]
+        return [partition_key]
 
-    return additional_options
+    return []
