@@ -13,7 +13,7 @@ class DataFrameWriter:
         dynamic_df = DynamicFrame.fromDF(data_frame, self.context, 'dynamic_df')
 
         sink = self.context.getSink(
-            connection_type='s3',
+            connection_type='parquet',
             path=options['location'],
             enableUpdateCatalog=True,
             partitionKeys=resolve_partition_keys(options)
