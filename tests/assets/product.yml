@@ -17,6 +17,8 @@ product:
         seq: 1
         input:
           - id: person
-            connection: sportstickets
-            table: person
-            model: person
+            type: connection
+            props:
+              connection_id: sportstickets
+              table: movies
+              model: movies

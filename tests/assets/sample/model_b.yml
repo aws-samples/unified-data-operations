@@ -1,5 +1,5 @@
 models:
-  - id: movies
+  - id: person
     columns:
       - id: id
         type: int
