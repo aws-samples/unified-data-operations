@@ -1,10 +1,10 @@
 models:
-  - id: movies
+  - id: persons
     columns:
       - id: id
-        type: int
+        type: integer
         constraints:
-          - type: distinct
+          - type: unique
           - type: not_null
       - id: full_name
         type: string

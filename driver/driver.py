@@ -73,6 +73,6 @@ def process_product(product_path: str):
         execute_tasks(product.pipeline.tasks, models)
     except Exception as e:
         traceback.print_exc()
-        print(f"Couldn't execute job due to >> {str(e)}")
+        print(f"Couldn't execute job due to >> {type(e).__name__}: {str(e)}")
         sys.exit(-1)
         raise e

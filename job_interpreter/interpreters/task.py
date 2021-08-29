@@ -1,5 +1,4 @@
 from pyspark.sql import DataFrame
-from awsglue.context import GlueContext
 from ..writers import DatasetWriter
 from ..repositories import ModelRepository, TaskRepository, ConfigRepository
 from ..mappers import DatasetMapper

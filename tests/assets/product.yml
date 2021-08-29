@@ -13,12 +13,12 @@ product:
     id: ingest data
     tasks:
       - id: extract_customers
-        logic: common.xtract
+        logic: tasks.custom_business_logic
         seq: 1
         input:
           - id: person
             type: connection
             props:
               connection_id: sportstickets
-              table: movies
-              model: movies
+              table: persons
+              model: persons
