@@ -18,6 +18,11 @@ models:
         type: string
         transform:
           - type: skip
+      - id: gender
+        type: string
+        constraints:
+          - type: regexp
+            value: '[Male|Female]'
     meta:
       contains_pii: true
       steward: jane.doe@acme.com

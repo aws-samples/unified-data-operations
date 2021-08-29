@@ -32,7 +32,7 @@ def as_yaml(path: str):
 
 def test_map_not_null(spark_session):
     data_frame = person_data_frame(spark_session)
-    column = as_yaml('./job_interpreter/tests/constraints/column_constraint_not_null.yml')
+    column = as_yaml('./deprecated/tests/constraints/column_constraint_not_null.yml')
     constraint_mapper = ConstraintColumnMapper(ConstraintRegistry(), data_frame)
 
     constraints = constraint_mapper.map('first_name', column)
@@ -50,7 +50,7 @@ def test_map_not_null(spark_session):
 
 def test_map_regexp(spark_session):
     data_frame = person_data_frame(spark_session)
-    column = as_yaml('./job_interpreter/tests/constraints/column_constraint_regexp.yml')
+    column = as_yaml('./deprecated/tests/constraints/column_constraint_regexp.yml')
     constraint_mapper = ConstraintColumnMapper(ConstraintRegistry(), data_frame)
 
     constraints = constraint_mapper.map('first_name', column)
@@ -68,7 +68,7 @@ def test_map_regexp(spark_session):
 
 def test_map_distinct(spark_session):
     data_frame = person_data_frame(spark_session)
-    column = as_yaml('./job_interpreter/tests/constraints/column_constraint_distinct.yml')
+    column = as_yaml('./deprecated/tests/constraints/column_constraint_distinct.yml')
     constraint_mapper = ConstraintColumnMapper(ConstraintRegistry(), data_frame)
 
     constraints = constraint_mapper.map('first_name', column)

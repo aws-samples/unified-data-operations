@@ -28,7 +28,7 @@ def test_map(spark_session):
             ]
         ),
     )
-    dataset = as_yaml('./job_interpreter/tests/constraints/dataset_constraints.yml')
+    dataset = as_yaml('./deprecated/tests/constraints/dataset_constraints.yml')
     constraint_mapper = ConstraintModelMapper(data_frame)
 
     constraints = constraint_mapper.map(dataset.get('models')[0])

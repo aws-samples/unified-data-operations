@@ -29,7 +29,7 @@ def test_transform(spark_session):
             ]
         ),
     )
-    model = as_yaml('./job_interpreter/tests/transforms/model_transforms.yml')
+    model = as_yaml('./deprecated/tests/transforms/model_transforms.yml')
 
     result = Transformer(data_frame).transform(model['models'][0])
 

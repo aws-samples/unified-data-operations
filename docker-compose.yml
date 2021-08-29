@@ -5,6 +5,6 @@ services:
     build:
       context: .
     volumes:
-      - ./job_interpreter:/app/job_interpreter
+      - ./deprecated:/app/deprecated
       - ./main.py:/app/main.py
     command: ["pytest", "-s", "-m", "not integration"]

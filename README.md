@@ -7,10 +7,14 @@ Interprets YAML based task definition of the [data mesh](https://gitlab.aws.dev/
 
 ## Format
 
-See [model.yml](tests/interpreters/model.yml) and [product.yml](tests/interpreters/product.yml)
+See [model.yml](tests/retired/interpreters/model.yml) and [product.yml](tests/retired/interpreters/product.yml)
 test examples.
 
-## Setup development environment
+# Setup real-local development environment
+
+## Install environment on OSX
+
+Everything will be installed in virtual environment in your local project folder.
 
 ```bash
 python3 -m venv .venv
@@ -27,15 +31,10 @@ brew update
 brew tap  homebrew/cask
 brew tap adoptopenjdk/openjdk
 brew install --cask adoptopenjdk11
+brew install maven
 ```
 
-## Build
 
-    docker-compose build
-
-## Test
-
-    docker-compose run test
 
 ## CI/CD
 

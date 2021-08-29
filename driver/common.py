@@ -7,7 +7,7 @@ from driver import driver
 from driver.task_executor import DataSet
 
 
-class ValidationError(Exception):
+class ValidationException(Exception):
     pass
 
 
