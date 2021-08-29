@@ -7,7 +7,7 @@ Interprets YAML based task definition of the [data mesh](https://gitlab.aws.dev/
 
 ## Format
 
-See [model.yml](tests/retired/interpreters/model.yml) and [product.yml](tests/retired/interpreters/product.yml)
+See [model.yml](deprecated_ts/interpreters/model.yml) and [product.yml](deprecated_ts/interpreters/product.yml)
 test examples.
 
 # Setup real-local development environment

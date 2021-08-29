@@ -2,12 +2,9 @@ import json
 from types import SimpleNamespace
 
 import os
-import yaml
 from pyspark.sql import DataFrame
 import driver
 from driver.processors import schema_validator, constraint_processor, transformer_processor
-from .setup_test import *
-
 
 def test_end_to_end(spark_session, person_df: DataFrame):
     dfs = {"persons": person_df}

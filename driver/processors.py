@@ -2,8 +2,7 @@ import hashlib
 
 import quinn
 from pyspark.sql import DataFrame
-import pyspark.sql.functions as F
-from pyspark.sql.functions import col, count, when, lit, udf
+from pyspark.sql.functions import col, count, when, lit, udf, hash
 from pyspark.sql.types import StringType
 from pyspark.ml.feature import Bucketizer
 
@@ -43,19 +42,19 @@ constraint_validators = {
 }
 
 
-def hash(df: DataFrame, col_name: str, cfg: any = None) -> DataFrame:
-    return df.withColumn(col_name, F.hash(col(col_name)))
+def hasher(df: DataFrame, col_name: str, cfg: any = None) -> DataFrame:
+    return df.withColumn(col_name, hash(col(col_name)))
 
 
 def encrypt(df: DataFrame, col_name: str, cfg: any = None) -> DataFrame:
-    def encrypt_f(key: str, value: object):
+    def encrypt_f(value: object, key: str = None):
         if key:
             return hashlib.sha256(str(value).encode() + key.encode()).hexdigest()
         else:
             return hashlib.sha256(str(value).encode()).hexdigest()
 
-    encrypt_udf = F.udf(encrypt_f, StringType())
-    return df.withColumn(col_name, encrypt_udf(lit(cfg.key), col_name))
+    encrypt_udf = udf(encrypt_f, StringType())
+    return df.withColumn(col_name, encrypt_udf(col_name, lit(cfg.key if hasattr(cfg, 'key') else None)))
 
 
 def skip_column(df: DataFrame, col_name: str, cfg: any = None) -> DataFrame:
@@ -72,7 +71,7 @@ def bucketize(df: DataFrame, col_name: str, cfg: any = None) -> DataFrame:
 
 
 built_in_transformers = {
-    'anonymize': hash,
+    'anonymize': hasher,
     'encrypt': encrypt,
     'skip': skip_column,
     'rename_column': rename_col
