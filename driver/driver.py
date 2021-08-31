@@ -1,13 +1,9 @@
 import sys
-import os
 import traceback
 from types import SimpleNamespace
-
 import findspark
 import yaml
-from pyspark import SparkContext
 from pyspark.sql import SparkSession
-
 from driver import task_executor
 
 __SPARK__: SparkSession = None
@@ -22,11 +18,9 @@ def get_spark():
 
 def get_or_create_session(config=None) -> SparkSession:  # pragma: no cover
     """Build spark session for jobs running on cluster."""
-
-    spark = SparkSession.builder.appName(__name__).getOrCreate()
-
-    for key, value in (config or {}).items():
-        spark.conf.set(key, value)
+    spark = SparkSession.builder.appName(__name__) \
+        .config(conf=config) \
+        .getOrCreate()
 
     return spark
 

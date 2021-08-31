@@ -1,11 +1,7 @@
 import importlib
 import sys
-from pathlib import Path
 from types import SimpleNamespace
-from typing import Tuple, Set
 from dataclasses import dataclass
-import yaml
-from pyspark import SparkContext, SparkFiles
 from pyspark.sql import DataFrame
 
 data_src_handlers: dict = dict()
@@ -50,11 +46,11 @@ def load_inputs(inputs: SimpleNamespace, model_def: SimpleNamespace) -> list[Dat
         handle_input = data_src_handlers.get(input_def.type)
         if not handle_input:
             raise Exception(f"Input source handler [{input_def.type}] not registered.")
-        return handle_input(input_def.props)
+        return handle_input(input_def)
 
     for inp in inputs:
-        model_obj = next(iter([m for m in model_def.models if m.id == inp.props.model]), None)
-        input_datasets.append(DataSet(inp.id, inp.props.model, model_obj, load_input(inp)))
+        model_obj = next(iter([m for m in model_def.models if m.id == inp.model]), None)
+        input_datasets.append(DataSet(inp.id, inp.model, model_obj, load_input(inp)))
     return input_datasets
 
 
@@ -72,7 +68,9 @@ def transform(inp_dfs: list[DataSet], custom_module_name) -> list[DataSet]:
     if custom_module_name not in sys.modules:
         spec = importlib.util.find_spec(custom_module_name)
         if spec is None:
-            print(f"Warning > skipping custom transformation logic, becasue module {custom_module_name} cannot be found on the classpath")
+            print(
+                f"Warning > skipping custom transformation logic, because module {custom_module_name} "
+                f"cannot be found on the classpath")
             return inp_dfs
         else:
             # custom_module = importlib.import_module(custom_module_name)

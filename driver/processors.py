@@ -1,12 +1,11 @@
 import hashlib
-
 import quinn
+from driver import common
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, count, when, lit, udf, hash
 from pyspark.sql.types import StringType
 from pyspark.ml.feature import Bucketizer
-
-from driver import common
+from driver.core import ValidationException
 from driver.task_executor import DataSet
 from quinn.dataframe_validator import (
     DataFrameMissingStructFieldError,
@@ -21,18 +20,18 @@ def null_validator(df: DataFrame, col_name: str, cfg: any = None):
     # ('not_null', self.column, null_value_ratio <= self.threshold, self.threshold, null_value_ratio
 
     if df.filter((df[col_name].isNull()) | (df[col_name] == "")).count() > 0:
-        raise common.ValidationException(f'Column: {col_name} is expected to be not null.')
+        raise ValidationException(f'Column: {col_name} is expected to be not null.')
 
 
 def regexp_validator(df: DataFrame, col_name: str, cfg: any = None):
     if df.select(col(col_name)).count() != df.select(col(col_name).rlike(cfg.value)).count():
-        raise common.ValidationException(f"Column: {col_name} doesn't match regexp: {cfg.value}")
+        raise ValidationException(f"Column: {col_name} doesn't match regexp: {cfg.value}")
 
 
 def unique_validator(df: DataFrame, col_name: str, cfg: any = None):
     col = df.select(col_name)
     if col.distinct().count() != col.count():
-        raise common.ValidationException(f'Column: {col_name} is expected to be unique.')
+        raise ValidationException(f'Column: {col_name} is expected to be unique.')
 
 
 constraint_validators = {
@@ -78,13 +77,13 @@ built_in_transformers = {
 }
 
 
-def schema_validator(ds: DataSet):
+def schema_checker(ds: DataSet):
     try:
         if ds.model:
             ds_schema = common.remap_schema(ds)
             quinn.validate_schema(ds.df, ds_schema)
     except (DataFrameMissingColumnError, DataFrameMissingStructFieldError, DataFrameProhibitedColumnError) as ex:
-        raise common.ValidationException(f'Schema Validation Error: {str(ex)} of type: {type(ex).__name__}')
+        raise ValidationException(f'Schema Validation Error: {str(ex)} of type: {type(ex).__name__}')
     return ds
 
 

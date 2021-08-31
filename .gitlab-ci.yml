@@ -6,7 +6,7 @@ stages:
 test_job_interpreter:
   stage: test
   image:
-    name: registry.gitlab.aws.dev/aws-sa-dach/teams/dnb/docker-glue-pyspark:1.2.1
+    image: amazon/aws-cli:latest
     entrypoint:  ["/bin/bash"]
   script:
     - pip install -U -e  .
@@ -16,7 +16,7 @@ test_job_interpreter:
 package_job_interpreter:
   stage: package
   image:
-    name: registry.gitlab.aws.dev/aws-sa-dach/teams/dnb/docker-glue-pyspark:1.2.1
+    image: amazon/aws-cli:latest
     entrypoint:  ["/bin/bash"]
   script:
     - pip install -U -e  .

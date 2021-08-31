@@ -18,7 +18,6 @@ product:
         input:
           - id: person
             type: connection
-            props:
-              connection_id: sportstickets
-              table: persons
-              model: persons
+            connection_id: test_db_connection
+            table: persons
+            model: person

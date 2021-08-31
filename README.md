@@ -34,7 +34,13 @@ brew install --cask adoptopenjdk11
 brew install maven
 ```
 
+Install spark dependencies:
 
+```
+mkdir spark_deps
+cd spark_deps
+wget https://jdbc.postgresql.org/download/postgresql-42.2.23.jar
+```
 
 ## CI/CD
 

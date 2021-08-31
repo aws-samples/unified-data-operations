@@ -1,14 +1,7 @@
-import json
-import os
-from pyspark.sql import SparkSession, DataFrame
-from pyspark.sql.types import DataType, StructType
-
+from pyspark.sql import DataFrame
+from pyspark.sql.types import StructType
 from driver import driver
 from driver.task_executor import DataSet
-
-
-class ValidationException(Exception):
-    pass
 
 
 def get_data_set(dss: list[DataSet], dataset_id):
@@ -18,10 +11,10 @@ def get_data_set(dss: list[DataSet], dataset_id):
 def remap_schema(ds: DataFrame):
     schema_fields = list()
     for col in ds.model.columns:
-        nullable = True
+        not_null = True
         if hasattr(col, 'constraints'):
-            nullable = 'not_null' not in [c.type for c in col.constraints]
-        schema_fields.append({'metadata': {}, 'name': col.id, 'type': col.type, 'nullable': nullable})
+            not_null = 'not_null' in [c.type for c in col.constraints]
+        schema_fields.append({'metadata': {}, 'name': col.id, 'type': col.type, 'nullable': not_null})
     return StructType.fromJson({'fields': schema_fields, 'type': 'struct'})
 
 
