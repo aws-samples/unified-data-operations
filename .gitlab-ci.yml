@@ -6,8 +6,8 @@ stages:
 test_job_interpreter:
   stage: test
   image:
-    image: amazon/aws-cli:latest
-    entrypoint:  ["/bin/bash"]
+    name: amazon/aws-cli:latest
+    entrypoint:  [ "/bin/bash"]
   script:
     - pip install -U -e  .
     - pip install -r requirements-test.txt
@@ -16,7 +16,7 @@ test_job_interpreter:
 package_job_interpreter:
   stage: package
   image:
-    image: amazon/aws-cli:latest
+    name: amazon/aws-cli:latest
     entrypoint:  ["/bin/bash"]
   script:
     - pip install -U -e  .
