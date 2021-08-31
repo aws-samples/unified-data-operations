@@ -42,5 +42,5 @@ setup(
     zip_safe=False,
     cmdclass={
         'clean_all': CleanCommand,
-        'package': Package
+        # 'package': Package
     })
