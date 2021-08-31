@@ -22,7 +22,7 @@ package_job_interpreter:
   script:
     - pip install -U -e  .
     - pip install -r requirements-test.txt
-    - python conftest.py build -vf && python conftest.py bdist_wheel
+    - python setup.py build -vf && python setup.py bdist_wheel
   artifacts:
     paths:
       - ./dist/*
