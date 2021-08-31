@@ -42,6 +42,46 @@ cd spark_deps
 wget https://jdbc.postgresql.org/download/postgresql-42.2.23.jar
 ```
 
+Install the AWS dependencies for hadoop:
+
+1. check the current version of hadoop: ```ll -al .venv/lib/python3.9/site-packages/pyspark/jars |grep hadoop```
+2. create a POM file in the spark_deps folder:
+```
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.mycompany.app</groupId>
+  <artifactId>my-app</artifactId>
+  <version>1</version>
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-aws</artifactId>
+            <version>3.2.0</version>
+        </dependency>
+    </dependencies>
+</project>
+```
+Download the dependencies:
+```
+mkdir spark_deps
+mvn --batch-mode -f ./pom.xml -DoutputDirectory=./jars dependency:copy-dependencies
+mv jars/* .
+```
+
+Set the following parameters onto the exection context:
+```commandline
+--JOB_NAME "TEST" --product_path /tests/assets/integration --aws_profile finn --aws_region eu-central-1 --local --jars "aws-java-sdk-bundle-1.11.375.jar,hadoop-aws-3.2.0.jar"
+```
+
+Alternatively you can run the whole solution from the command line:
+```commandline
+SPARK_HOME="/Users/csatam/Code/data-mesh-task-interpreter/.venv/lib/python3.9/site-packages/pyspark"
+export SPARK_HOME
+python main.py --JOB_NAME "TEST" --product_path /tests/assets/integration --aws_profile finn --aws_region eu-central-1 --local --jars "aws-java-sdk-bundle-1.11.375.jar,hadoop-aws-3.2.0.jar"
+```
+
+
+
 ## CI/CD
 
 See [gitlab-ci.yml](.gitlab-ci.yml).

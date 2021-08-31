@@ -45,9 +45,14 @@ def lake_input_handler(props: SimpleNamespace) -> DataFrame:
     pass
 
 
-def disk_output_handler():
+def disk_output_handler(model_id: str, df: DataFrame, options: SimpleNamespace):
     pass
 
 
-def lake_output_handler():
-    pass
+def lake_output_handler(model_id: str, df: DataFrame, options: SimpleNamespace):
+    partitions = [options.partition_by] if isinstance(options.partition_by, str) else [p for p in options.partition_by]
+    df.coalesce(2).write\
+        .partitionBy(*partitions) \
+        .format(options.stored_as) \
+        .option('header', 'true') \
+        .save(options.location, mode="overwrite")

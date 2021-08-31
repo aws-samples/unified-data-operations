@@ -1,6 +1,7 @@
 -r requirements.txt
 
-pyspark==3.0.1
+pyspark
+pyspark-stubs
 pytest-spark
 pytest-mock
 pytest-helpers-namespace
