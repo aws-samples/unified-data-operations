@@ -2,6 +2,8 @@ import importlib
 import sys
 from types import SimpleNamespace
 from dataclasses import dataclass
+from typing import List
+
 from pyspark.sql import DataFrame
 
 data_src_handlers: dict = dict()
@@ -39,7 +41,7 @@ def register_output_handler(output_handler_type: str, handler: callable):
     output_handlers.update({output_handler_type: handler})
 
 
-def load_inputs(inputs: SimpleNamespace, model_def: SimpleNamespace) -> list[DataSet]:
+def load_inputs(inputs: SimpleNamespace, model_def: SimpleNamespace) -> List[DataSet]:
     input_datasets: list[DataSet] = list()
 
     def load_input(input_def):
@@ -54,7 +56,7 @@ def load_inputs(inputs: SimpleNamespace, model_def: SimpleNamespace) -> list[Dat
     return input_datasets
 
 
-def run_processors(datasets: list[DataSet], processors: list[callable]) -> list[DataSet]:
+def run_processors(datasets: list[DataSet], processors: list[callable]) -> List[DataSet]:
     processed_dfs: list[datasets] = datasets
     for processor in processors:
         new_dss: list[datasets] = list()
@@ -64,7 +66,7 @@ def run_processors(datasets: list[DataSet], processors: list[callable]) -> list[
     return processed_dfs
 
 
-def transform(inp_dfs: list[DataSet], custom_module_name) -> list[DataSet]:
+def transform(inp_dfs: list[DataSet], custom_module_name) -> List[DataSet]:
     if custom_module_name not in sys.modules:
         spec = importlib.util.find_spec(custom_module_name)
         if spec is None:
@@ -80,7 +82,7 @@ def transform(inp_dfs: list[DataSet], custom_module_name) -> list[DataSet]:
             return module.execute(inp_dfs)
 
 
-def sink(o_dfs: list[DataSet]):
+def sink(o_dfs: List[DataSet]):
     for o in o_dfs:
         storage_id = o.model.storage.type if (hasattr(o, 'model') and hasattr(o.model, 'storage')) else 'default'
         handle_output = output_handlers.get(storage_id)
@@ -89,7 +91,7 @@ def sink(o_dfs: list[DataSet]):
         handle_output(o.model_id, o.df, o.model.storage.options if o.model and o.model.storage else None)
 
 
-def execute(task: list, models_def: list) -> list[DataSet]:
+def execute(task: list, models_def: list) -> List[DataSet]:
     print(f'{task.id}')
     print(f'{task.logic}')
 

@@ -9,6 +9,7 @@ test_job_interpreter:
     name: registry.gitlab.aws.dev/aws-sa-dach/teams/dnb/docker-glue-pyspark:1.2.1
     entrypoint:  [ "/bin/bash"]
   script:
+    - pip install --upgrade pip
     - pip install -U -e  .
     - pip install -r requirements-test.txt
     - pytest --cov=deprecated -s -m 'not integration'
