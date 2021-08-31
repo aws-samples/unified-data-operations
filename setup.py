@@ -28,7 +28,7 @@ class CleanCommand(Command):
 
 
 setup(
-    name='deprecated',
+    name='data-product-processor',
     version='1.0.0',
     description='Interprets Glue job definitions in the YAML format.',
     long_description=long_description,
