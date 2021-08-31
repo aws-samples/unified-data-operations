@@ -28,7 +28,7 @@ def get_or_create_session(config=None) -> SparkSession:  # pragma: no cover
 def init(spark_session=None, spark_config=None):
     global __SPARK__
     if not spark_session:
-        findspark.init()
+        # findspark.init()
         __SPARK__ = get_or_create_session(spark_config)
     else:
         __SPARK__ = spark_session
