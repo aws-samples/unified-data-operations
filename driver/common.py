@@ -1,10 +1,12 @@
+from typing import List
+
 from pyspark.sql import DataFrame
 from pyspark.sql.types import StructType
 from driver import driver
 from driver.task_executor import DataSet
 
 
-def get_data_set(dss: list[DataSet], dataset_id):
+def get_data_set(dss: List[DataSet], dataset_id):
     return next(iter([ds for ds in dss if ds.id == dataset_id]), None)
 
 
