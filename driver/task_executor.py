@@ -2,7 +2,7 @@ import importlib
 import sys
 from types import SimpleNamespace
 from dataclasses import dataclass
-from typing import List
+from typing import List, Callable
 
 from pyspark.sql import DataFrame
 
@@ -56,7 +56,7 @@ def load_inputs(inputs: SimpleNamespace, model_def: SimpleNamespace) -> List[Dat
     return input_datasets
 
 
-def run_processors(datasets: list[DataSet], processors: list[callable]) -> List[DataSet]:
+def run_processors(datasets: List[DataSet], processors: List[Callable]) -> List[DataSet]:
     processed_dfs: list[datasets] = datasets
     for processor in processors:
         new_dss: list[datasets] = list()
@@ -66,7 +66,7 @@ def run_processors(datasets: list[DataSet], processors: list[callable]) -> List[
     return processed_dfs
 
 
-def transform(inp_dfs: list[DataSet], custom_module_name) -> List[DataSet]:
+def transform(inp_dfs: List[DataSet], custom_module_name) -> List[DataSet]:
     if custom_module_name not in sys.modules:
         spec = importlib.util.find_spec(custom_module_name)
         if spec is None:
