@@ -14,7 +14,7 @@ def test_end_to_end(spark_session, person_df: DataFrame):
         return dfs.get(props.table)
 
     def mock_output_handler(model_id: str, df: DataFrame, options: SimpleNamespace):
-        assert model_id == 'persons'
+        assert model_id == 'person'
         assert df.count() == person_df.count()
         df.show()
         df.describe()

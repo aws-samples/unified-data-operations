@@ -1,11 +1,10 @@
 models:
-  - id: persons
+  - id: person
     columns:
       - id: id
         type: integer
         constraints:
           - type: unique
-          - type: not_null
       - id: full_name
         type: string
         transform:
@@ -21,6 +20,7 @@ models:
       - id: gender
         type: string
         constraints:
+          - type: not_null
           - type: regexp
             value: '[Male|Female]'
     meta:
