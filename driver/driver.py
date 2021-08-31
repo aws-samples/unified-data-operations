@@ -1,7 +1,6 @@
 import sys
 import traceback
 from types import SimpleNamespace
-import findspark
 import yaml
 from pyspark.sql import SparkSession
 from driver import task_executor

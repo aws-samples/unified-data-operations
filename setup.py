@@ -1,6 +1,6 @@
 from os import path, system
 from setuptools import setup, Command, find_packages
-
+from package import Package
 from pip._internal.req import parse_requirements
 
 here = path.abspath(path.dirname(__file__))
@@ -41,5 +41,6 @@ setup(
     license='MIT-0',
     zip_safe=False,
     cmdclass={
-        'clean_all': CleanCommand
+        'clean_all': CleanCommand,
+        'package': Package
     })
