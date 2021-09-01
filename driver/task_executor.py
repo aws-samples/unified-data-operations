@@ -86,18 +86,21 @@ def transform(inp_dfs: List[DataSet], custom_module_name, params=None) -> List[D
 
 
 def sink(o_dfs: List[DataSet]):
-    for o in o_dfs:
-        storage_id = o.model.storage.type if (hasattr(o, 'model') and hasattr(o.model, 'storage')) else 'default'
+    for out_dataset in o_dfs:
+        storage_id = 'default'
+        storage_options = None
+        if hasattr(out_dataset, 'model') and hasattr(out_dataset.model, 'storage'):
+            storage_id = out_dataset.model.storage.type
+            storage_options = out_dataset.model.storage.options
         handle_output = output_handlers.get(storage_id)
         if not handle_output:
             raise Exception(f'Storage handler identified by {storage_id} is not found.')
-        handle_output(o.model_id, o.df, o.model.storage.options if o.model and o.model.storage else None)
+        handle_output(out_dataset.model_id, out_dataset.df, storage_options)
 
 
 def execute(task: list, models_def: list) -> List[DataSet]:
-    print(f'{task.id}')
-    print(f'{task.logic}')
+    print(f'Executing task > {task.id}')
     input_dfs: list[DataSet] = run_processors(load_inputs(task.input, models_def), pre_processors)
-    output_dfs: list[DataSet] = transform(input_dfs, task.logic.func,
-                                          task.logic.params.__dict__ if hasattr(task.logic, 'params') else None)
+    task_logic_params = task.logic.params.__dict__ if hasattr(task.logic, 'params') else None
+    output_dfs: list[DataSet] = transform(input_dfs, task.logic.func, task_logic_params)
     sink(run_processors(output_dfs, post_processors))

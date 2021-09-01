@@ -94,12 +94,13 @@ def constraint_processor(ds: DataSet):
     for col in ds.model.columns:
         if not hasattr(col, 'constraints'):
             continue
-        constraints = [c.type for c in col.constraints]
-        for c in constraints:
-            cvalidator = constraint_validators.get(c)
+        constraint_types = [c.type for c in col.constraints]
+        for ctype in constraint_types:
+            cvalidator = constraint_validators.get(ctype)
             if cvalidator:
-                constraint_props = next(iter([co for co in col.constraints if co.type == c]), None)
-                cvalidator(ds.df, col.id, constraint_props.options if hasattr(constraint_props, 'options') else None)
+                constraint = next(iter([co for co in col.constraints if co.type == ctype]), None)
+                constraint_opts = constraint.options if hasattr(constraint, 'options') else None
+                cvalidator(ds.df, col.id, constraint_opts)
     return ds
 
 
@@ -110,10 +111,10 @@ def transformer_processor(data_set: DataSet):
         if not hasattr(col, 'transform'):
             continue
         transformers = [t.type for t in col.transform]
-        for t in transformers:
-            tcall = built_in_transformers.get(t)
+        for trsfrm_type in transformers:
+            tcall = built_in_transformers.get(trsfrm_type)
             if tcall:
-                trsfm_props = next(iter([to for to in col.transform if to.type == t]), None)
-                data_set.df = tcall(data_set.df, col.id,
-                                    trsfm_props.options if hasattr(trsfm_props, 'options') else None)
+                trsfrm = next(iter([to for to in col.transform if to.type == trsfrm_type]), None)
+                trsfm_opts = trsfrm.options if trsfrm and hasattr(trsfrm, 'options') else None
+                data_set.df = tcall(data_set.df, col.id, trsfm_opts)
     return data_set
