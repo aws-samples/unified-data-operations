@@ -46,7 +46,11 @@ def init_system(product_def_path: str):
 if __name__ == '__main__':
     try:
         parser = argparse.ArgumentParser(argument_default=argparse.SUPPRESS)
-        parser.add_argument('--JOB_NAME', help='the name of this pyspark job')
+        parser.add_argument('--JOB_ID', help='the unique id of this Glue job')
+        parser.add_argument('--JOB_RUN_ID', help='the unique id of this Glue job run')
+        parser.add_argument('--JOB_NAME', help='the name of this Glue job')
+        parser.add_argument('--job-bookmark-option', help="job-bookmark-disable if you don't want bookmarking")
+        parser.add_argument('--TempDir', help='tempoarary results directory')
         parser.add_argument('--product_path', help='the data product definition folder')
         parser.add_argument('--aws_profile', help='the AWS profile to be used for connection')
         parser.add_argument('--aws_region', help='the AWS region to be used')

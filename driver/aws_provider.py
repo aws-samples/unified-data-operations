@@ -25,7 +25,7 @@ def get_session():
 
 
 def connection_provider(connection_id: str) -> Connection:
-    if not __SESSION__:
+    if not get_session():
         raise Exception('Boto session is not initialized. Please call init first.')
     glue = get_session().client('glue')
     response = glue.get_connection(Name=connection_id, HidePassword=False)

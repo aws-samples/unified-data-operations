@@ -49,8 +49,10 @@ def load_yaml_into_object(file_type, cfg_file_prefix: str = None) -> SimpleNames
         return x
 
     path = f'{cfg_file_prefix}{file_type}' if cfg_file_prefix else file_type
+    print(f'loading file {path}')
     with open(fr'{path}') as file:
         dict_val = yaml.load(file, Loader=yaml.FullLoader)
+        print(f'file content > {dict_val}')
         return parse(dict_val)
 
 

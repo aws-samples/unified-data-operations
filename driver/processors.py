@@ -96,9 +96,10 @@ def constraint_processor(ds: DataSet):
             continue
         constraints = [c.type for c in col.constraints]
         for c in constraints:
-            cv = constraint_validators.get(c)
-            if cv:
-                cv(ds.df, col.id, next(iter([co for co in col.constraints if co.type == c]), None))
+            cvalidator = constraint_validators.get(c)
+            if cvalidator:
+                constraint_props = next(iter([co for co in col.constraints if co.type == c]), None)
+                cvalidator(ds.df, col.id, constraint_props)
     return ds
 
 
@@ -111,6 +112,7 @@ def transformer_processor(data_set: DataSet):
         transformers = [t.type for t in col.transform]
         for t in transformers:
             tcall = built_in_transformers.get(t)
-            if t:
-                data_set.df = tcall(data_set.df, col.id, next(iter([to for to in col.transform if to.type == t]), None))
+            if tcall:
+                trsfm_props = next(iter([to for to in col.transform if to.type == t]), None)
+                data_set.df = tcall(data_set.df, col.id, trsfm_props)
     return data_set
