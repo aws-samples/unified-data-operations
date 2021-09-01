@@ -2,7 +2,7 @@ import os
 import argparse
 
 from pyspark import SparkConf
-
+import traceback
 import driver
 import driver.aws_provider
 from driver.io_handlers import connection_input_handler
@@ -44,19 +44,24 @@ def init_system(product_def_path: str):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(argument_default=argparse.SUPPRESS)
-    parser.add_argument('--JOB_NAME', help='the name of this pyspark job')
-    parser.add_argument('--product_path', help='the data product definition folder')
-    parser.add_argument('--aws_profile', help='the AWS profile to be used for connection')
-    parser.add_argument('--aws_region', help='the AWS region to be used')
-    parser.add_argument('--local', action='store_true', help='local development')
-    parser.add_argument('--jars', help='extra jars to be added to the Spark context')
-    parser.add_argument('--additional-python-modules', help='this is used by Glue, ignored by this code')
-    args = parser.parse_args()
-    print(f'PATH: {os.environ["PATH"]}')
-    print(f'SPARK_HOME: {os.environ.get("SPARK_HOME")}')
-    print(f'PYTHONPATH: {os.environ.get("PYTHONPATH")}')
+    try:
+        parser = argparse.ArgumentParser(argument_default=argparse.SUPPRESS)
+        parser.add_argument('--JOB_NAME', help='the name of this pyspark job')
+        parser.add_argument('--product_path', help='the data product definition folder')
+        parser.add_argument('--aws_profile', help='the AWS profile to be used for connection')
+        parser.add_argument('--aws_region', help='the AWS region to be used')
+        parser.add_argument('--local', action='store_true', help='local development')
+        parser.add_argument('--jars', help='extra jars to be added to the Spark context')
+        parser.add_argument('--additional-python-modules', help='this is used by Glue, ignored by this code')
+        args = parser.parse_args()
+        print(f'PATH: {os.environ["PATH"]}')
+        print(f'SPARK_HOME: {os.environ.get("SPARK_HOME")}')
+        print(f'PYTHONPATH: {os.environ.get("PYTHONPATH")}')
 
-    init_aws(args)
-    product_path = args.product_path if hasattr(args, 'product_path') else './'
-    init_system(f'{product_path}{os.path.sep if not product_path.endswith(os.path.sep) else ""}')
+        init_aws(args)
+        product_path = args.product_path if hasattr(args, 'product_path') else './'
+        init_system(f'{product_path}{os.path.sep if not product_path.endswith(os.path.sep) else ""}')
+    except Exception as e:
+        print(str(e))
+        traceback.print_exc()
+

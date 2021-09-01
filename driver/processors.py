@@ -102,15 +102,15 @@ def constraint_processor(ds: DataSet):
     return ds
 
 
-def transformer_processor(ds: DataSet):
-    if not hasattr(ds, 'model'):
-        return ds
-    for col in ds.model.columns:
+def transformer_processor(data_set: DataSet):
+    if not hasattr(data_set, 'model'):
+        return data_set
+    for col in data_set.model.columns:
         if not hasattr(col, 'transform'):
             continue
         transformers = [t.type for t in col.transform]
         for t in transformers:
-            tc = built_in_transformers.get(t)
+            tcall = built_in_transformers.get(t)
             if t:
-                ds.df = tc(ds.df, col.id, next(iter([to for to in col.transform if to.type == t]), None))
-    return ds
+                data_set.df = tcall(data_set.df, col.id, next(iter([to for to in col.transform if to.type == t]), None))
+    return data_set
