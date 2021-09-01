@@ -66,7 +66,7 @@ def run_processors(datasets: List[DataSet], processors: List[Callable]) -> List[
     return processed_dfs
 
 
-def transform(inp_dfs: List[DataSet], custom_module_name) -> List[DataSet]:
+def transform(inp_dfs: List[DataSet], custom_module_name, params=None) -> List[DataSet]:
     if custom_module_name not in sys.modules:
         spec = importlib.util.find_spec(custom_module_name)
         if spec is None:
@@ -79,7 +79,10 @@ def transform(inp_dfs: List[DataSet], custom_module_name) -> List[DataSet]:
             # spec.loader.exec_module(module)
             custom_module = importlib.import_module(custom_module_name)
             sys.modules[custom_module_name] = custom_module
-            return custom_module.execute(inp_dfs)
+            if params:
+                return custom_module.execute(inp_dfs, **params)
+            else:
+                return custom_module.execute(inp_dfs)
 
 
 def sink(o_dfs: List[DataSet]):
@@ -94,7 +97,7 @@ def sink(o_dfs: List[DataSet]):
 def execute(task: list, models_def: list) -> List[DataSet]:
     print(f'{task.id}')
     print(f'{task.logic}')
-
     input_dfs: list[DataSet] = run_processors(load_inputs(task.input, models_def), pre_processors)
-    output_dfs: list[DataSet] = transform(input_dfs, task.logic)
+    output_dfs: list[DataSet] = transform(input_dfs, task.logic.func,
+                                          task.logic.params.__dict__ if hasattr(task.logic, 'params') else None)
     sink(run_processors(output_dfs, post_processors))

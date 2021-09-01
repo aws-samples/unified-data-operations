@@ -1,11 +1,12 @@
 product:
   id: customers
   pipeline:
-    id: ingest data
+    schedule: "0 3 * * *"
     tasks:
       - id: extract_customers
         seq: 1
-        logic: tasks.custom_business_logic
+        logic:
+          func: tasks.custom_business_logic
         input:
           - id: person
             type: connection

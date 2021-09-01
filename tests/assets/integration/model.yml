@@ -23,7 +23,8 @@ models:
         constraints:
           - type: not_null
           - type: regexp
-            value: '[Male|Female]'
+            options:
+              value: '[Male|Female]'
     meta:
       contains_pii: true
       steward: jane.doe@acme.com

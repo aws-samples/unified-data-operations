@@ -1,19 +1,14 @@
 product:
-  name: process_tickets
-  connections:
-    - id: sportstickets
-      user: admin
-      password: secret
-      port: 5432
-      db_name: sportstickets
-      ssl: true
-      type: postgresql
-      host: localhost
+  id: customers
+  version: "1.0.0"
   pipeline:
-    id: ingest data
+    schedule: "0 3 * * *"
     tasks:
       - id: extract_customers
-        logic: tasks.custom_business_logic
+        logic:
+          func: tasks.custom_business_logic
+          params:
+            create_timestamp: true
         seq: 1
         input:
           - id: person
