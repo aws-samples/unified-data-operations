@@ -75,11 +75,11 @@ def transform(inp_dfs: List[DataSet], custom_module_name) -> List[DataSet]:
                 f"cannot be found on the classpath")
             return inp_dfs
         else:
-            # custom_module = importlib.import_module(custom_module_name)
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
-            sys.modules[custom_module_name] = module
-            return module.execute(inp_dfs)
+            # module = importlib.util.module_from_spec(spec)
+            # spec.loader.exec_module(module)
+            custom_module = importlib.import_module(custom_module_name)
+            sys.modules[custom_module_name] = custom_module
+            return custom_module.execute(inp_dfs)
 
 
 def sink(o_dfs: List[DataSet]):
