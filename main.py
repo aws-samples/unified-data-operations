@@ -63,9 +63,13 @@ if __name__ == '__main__':
         print(f'PYTHONPATH: {os.environ.get("PYTHONPATH")}')
 
         init_aws(args)
+        if hasattr(args, "JOB_NAME"):
+            import zipfile
+            with zipfile.ZipFile(f'{os.path.dirname(os.path.abspath(__file__))}/{args.JOB_NAME}.zip', 'r') as zip_ref:
+                zip_ref.extractall(f'{os.path.dirname(os.path.abspath(__file__))}/')
+
         product_path = args.product_path if hasattr(args, 'product_path') else './'
         init_system(f'{product_path}{os.path.sep if not product_path.endswith(os.path.sep) else ""}')
     except Exception as e:
         print(str(e))
         traceback.print_exc()
-
