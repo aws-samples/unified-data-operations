@@ -45,7 +45,7 @@ wget https://jdbc.postgresql.org/download/postgresql-42.2.23.jar
 Install the AWS dependencies for hadoop:
 
 1. check the current version of hadoop: ```ll -al .venv/lib/python3.9/site-packages/pyspark/jars |grep hadoop```
-2. create a POM file in the spark_deps folder:
+2. create a POM file in the spark_deps folder (make sure the version field matches the current hadoop version):
 ```
 <project>
   <modelVersion>4.0.0</modelVersion>
@@ -78,6 +78,11 @@ Alternatively you can run the whole solution from the command line:
 SPARK_HOME="/Users/csatam/Code/data-mesh-task-interpreter/.venv/lib/python3.9/site-packages/pyspark"
 export SPARK_HOME
 python main.py --JOB_NAME "TEST" --product_path /tests/assets/integration --aws_profile finn --aws_region eu-central-1 --local --jars "aws-java-sdk-bundle-1.11.375.jar,hadoop-aws-3.2.0.jar"
+```
+
+Run the tests from command line (while the virtual environment is activated):
+```commandline
+pytest
 ```
 
 
