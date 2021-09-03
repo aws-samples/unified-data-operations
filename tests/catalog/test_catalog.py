@@ -1,7 +1,7 @@
 from boto3.session import Session
 from pyspark.sql import DataFrame
 from pytest import fixture
-from catalog import CatalogService
+from driver.catalog import CatalogService
 from pyspark.sql.types import (
     StringType,
     StructField,
@@ -48,9 +48,10 @@ def test_update(session: Session, person_frame: DataFrame):
         product_id='customers',
         model_id='person',
         model=SimpleNamespace(
-            options={
-                'stored_as': 'parquet',
-                'location': 's3://job-interpreter/data/customers'
-            }
+            storage=SimpleNamespace(
+                options=SimpleNamespace(
+                    location='s3://job-interpreter/data/customers'
+                )
+            )
         )
     ))
