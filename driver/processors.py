@@ -67,14 +67,26 @@ def rename_col(df: DataFrame, col_name: str, cfg: any = None) -> DataFrame:
 
 
 def bucketize(df: DataFrame, col_name: str, cfg: any = None) -> DataFrame:
-    bucketizer = Bucketizer(splits=[0, 6, 18, 60, float('Inf')], inputCol=col_name, outputCol="buckets")
-    return bucketizer.setHandleInvalid("keep").transform(df)
+    buckets = cfg.buckets.__dict__
+    bucket_labels = dict(zip(range(len(buckets.values())), buckets.values()))
+    bucket_splits = [float(split) for split in buckets.keys()]
+    bucket_splits.append(float('Inf'))
+
+    bucketizer = Bucketizer(splits=bucket_splits, inputCol=col_name, outputCol="tmp_buckets")
+    bucketed = bucketizer.setHandleInvalid("keep").transform(df)
+
+    udf_labels = udf(lambda x: bucket_labels[x], StringType())
+    bucketed = bucketed.withColumn(col_name, udf_labels("tmp_buckets"))
+    bucketed = bucketed.drop(col('tmp_buckets'))
+
+    return bucketed
 
 
 built_in_transformers = {
     'anonymize': hasher,
     'encrypt': encrypt,
     'skip': skip_column,
+    'bucketize': bucketize,
     'rename_column': rename_col
 }
 
