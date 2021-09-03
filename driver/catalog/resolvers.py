@@ -16,11 +16,11 @@ def resolve_storage_descriptor(data_set: DataSet) -> StorageDescriptorTypeDef:
 
     return StorageDescriptorTypeDef(
         Location=options.location,
-        Columns=convert_columns(data_set.df)
+        Columns=resolve_columns(data_set.df)
     )
 
 
-def convert_columns(data_frame: DataFrame) -> List[ColumnTypeDef]:
+def resolve_columns(data_frame: DataFrame) -> List[ColumnTypeDef]:
     columns: List[ColumnTypeDef] = []
 
     for column_name, column_type in data_frame.dtypes:
