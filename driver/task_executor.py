@@ -19,6 +19,7 @@ class DataSet:
     model_id: str
     model: SimpleNamespace
     df: DataFrame
+    product_id: str
 
 
 def register_data_source_handler(src_type_id: str, handler: callable):
@@ -41,7 +42,7 @@ def register_output_handler(output_handler_type: str, handler: callable):
     output_handlers.update({output_handler_type: handler})
 
 
-def load_inputs(inputs: SimpleNamespace, model_def: SimpleNamespace) -> List[DataSet]:
+def load_inputs(product_id: str, inputs: SimpleNamespace, model_def: SimpleNamespace) -> List[DataSet]:
     input_datasets: list[DataSet] = list()
 
     def load_input(input_def):
@@ -52,7 +53,7 @@ def load_inputs(inputs: SimpleNamespace, model_def: SimpleNamespace) -> List[Dat
 
     for inp in inputs:
         model_obj = next(iter([m for m in model_def.models if m.id == inp.model]), None)
-        input_datasets.append(DataSet(inp.id, inp.model, model_obj, load_input(inp)))
+        input_datasets.append(DataSet(inp.id, inp.model, model_obj, load_input(inp), product_id))
     return input_datasets
 
 
@@ -95,12 +96,12 @@ def sink(o_dfs: List[DataSet]):
         handle_output = output_handlers.get(storage_id)
         if not handle_output:
             raise Exception(f'Storage handler identified by {storage_id} is not found.')
-        handle_output(out_dataset.model_id, out_dataset.df, storage_options)
+        handle_output(out_dataset.model.id, out_dataset.df, storage_options)
 
 
-def execute(task: list, models_def: list) -> List[DataSet]:
-    print(f'Executing task > {task.id}')
-    input_dfs: list[DataSet] = run_processors(load_inputs(task.input, models_def), pre_processors)
+def execute(product_id: str, task: list, models_def: list) -> List[DataSet]:
+    print(f'Executing task > {product_id} {task.id}')
+    input_dfs: list[DataSet] = run_processors(load_inputs(product_id, task.input, models_def), pre_processors)
     task_logic_params = task.logic.params.__dict__ if hasattr(task.logic, 'params') else None
     output_dfs: list[DataSet] = transform(input_dfs, task.logic.func, task_logic_params)
     sink(run_processors(output_dfs, post_processors))

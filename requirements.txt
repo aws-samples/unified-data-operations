@@ -1,6 +1,8 @@
-boto3==1.16.62
-wheel==0.36.2
+boto3==1.18.34
+wheel==0.37.0
 pyyaml==5.4.1
 pydantic
 quinn
 numpy
+boto3-stubs[glue]==1.18.34
+mypy-boto3-glue==1.18.34
