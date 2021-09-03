@@ -46,7 +46,7 @@ def load_yaml_into_object(file_type, cfg_file_prefix: str = None) -> SimpleNames
                     object_list.append(parse(e))
                 setattr(x, k, object_list)
             else:
-                setattr(x, k, v)
+                setattr(x, str(k), v)
         return x
 
     path = f'{cfg_file_prefix}{file_type}' if cfg_file_prefix else file_type

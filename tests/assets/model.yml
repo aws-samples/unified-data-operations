@@ -17,6 +17,15 @@ models:
         type: string
         transform:
           - type: skip
+      - id: age
+        type: integer
+        transform:
+          - type: bucketize
+            options:
+              buckets:
+                0: 0-19
+                20: 20-39
+                40: 40+
       - id: gender
         type: string
         constraints:
