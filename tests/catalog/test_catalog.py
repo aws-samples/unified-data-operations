@@ -14,11 +14,6 @@ from unittest import skip
 
 
 @fixture
-def session() -> Session:
-    return Session(profile_name='finn')
-
-
-@fixture
 def person_frame(spark_session) -> DataFrame:
     return spark_session.createDataFrame(
         [
@@ -37,8 +32,8 @@ def person_frame(spark_session) -> DataFrame:
 
 
 @skip("Integration test is skipped for now")
-def test_update(session: Session, person_frame: DataFrame):
-    catalog_service = CatalogService(session)
+def test_update(person_frame: DataFrame):
+    catalog_service = CatalogService(Session(profile_name='finn'))
 
     catalog_service.drain_database('customers')
 
