@@ -1,6 +1,7 @@
 from boto3.session import Session
 from driver.task_executor import DataSet
-from catalog.services import DatabaseService, TableService
+from .database import DatabaseService
+from .table import TableService
 
 
 class CatalogService:

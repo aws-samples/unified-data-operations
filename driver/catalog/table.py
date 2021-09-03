@@ -3,7 +3,7 @@ from typing import List
 from mypy_boto3_glue.client import GlueClient
 from mypy_boto3_glue.type_defs import GetDatabasesResponseTypeDef, DatabaseTypeDef, GetTablesResponseTypeDef, TableTypeDef, TableInputTypeDef, StorageDescriptorTypeDef, ColumnTypeDef
 from driver.task_executor import DataSet
-from catalog.resolvers import resolve_table
+from .resolvers import resolve_table
 
 
 class TableService:

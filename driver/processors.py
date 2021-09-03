@@ -12,6 +12,8 @@ from quinn.dataframe_validator import (
     DataFrameMissingColumnError,
     DataFrameProhibitedColumnError
 )
+from driver import aws_provider
+from .catalog import CatalogService
 
 
 def null_validator(df: DataFrame, col_name: str, cfg: any = None):
@@ -117,4 +119,10 @@ def transformer_processor(data_set: DataSet):
                 trsfrm = next(iter([to for to in col.transform if to.type == trsfrm_type]), None)
                 trsfm_opts = trsfrm.options if trsfrm and hasattr(trsfrm, 'options') else None
                 data_set.df = tcall(data_set.df, col.id, trsfm_opts)
+    return data_set
+
+
+def catalog_processor(data_set: DataSet):
+    catalog_service = CatalogService(aws_provider.get_session())
+    catalog_service.update_database(data_set.product_id, data_set.model_id, data_set)
     return data_set
