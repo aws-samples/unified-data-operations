@@ -8,3 +8,4 @@ pytest-helpers-namespace
 pytest-env
 pytest-cov
 pytest
+numpy

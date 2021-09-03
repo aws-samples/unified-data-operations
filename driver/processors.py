@@ -119,6 +119,11 @@ def constraint_processor(ds: DataSet):
 
 
 def transformer_processor(data_set: DataSet):
+    """
+    Will run custom
+    :param data_set:
+    :return:
+    """
     if not hasattr(data_set, 'model'):
         return data_set
     for col in data_set.model.columns:
