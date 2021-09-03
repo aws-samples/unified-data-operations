@@ -58,9 +58,9 @@ def load_yaml_into_object(file_type, cfg_file_prefix: str = None) -> SimpleNames
 
 
 def execute_tasks(product_id: str, tasks: list, models: list):
-    catalog_service = CatalogService(aws_provider.get_session())
-
-    catalog_service.drain_database(product_id)
+    session = aws_provider.get_session()
+    if session:
+        CatalogService(session).drain_database(product_id)
 
     for task in tasks:
         task_executor.execute(product_id, task, models)
