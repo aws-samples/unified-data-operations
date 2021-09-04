@@ -1,25 +1,15 @@
 import importlib
 import sys
 from types import SimpleNamespace
-from dataclasses import dataclass
 from typing import List, Callable
 
-from pyspark.sql import DataFrame
+from driver.core import DataSet
 
 data_src_handlers: dict = dict()
 pre_processors: list = list()
 post_processors: list = list()
 transformers: dict = dict()
 output_handlers: dict = dict()
-
-
-@dataclass
-class DataSet:
-    id: str
-    model_id: str
-    model: SimpleNamespace
-    df: DataFrame
-    product_id: str
 
 
 def register_data_source_handler(src_type_id: str, handler: callable):
@@ -88,15 +78,10 @@ def transform(inp_dfs: List[DataSet], custom_module_name, params=None) -> List[D
 
 def sink(o_dfs: List[DataSet]):
     for out_dataset in o_dfs:
-        storage_id = 'default'
-        storage_options = None
-        if hasattr(out_dataset, 'model') and hasattr(out_dataset.model, 'storage'):
-            storage_id = out_dataset.model.storage.type
-            storage_options = out_dataset.model.storage.options
-        handle_output = output_handlers.get(storage_id)
+        handle_output = output_handlers.get(out_dataset.storage_type)
         if not handle_output:
-            raise Exception(f'Storage handler identified by {storage_id} is not found.')
-        handle_output(out_dataset.model.id, out_dataset.df, storage_options)
+            raise Exception(f'Storage handler identified by {out_dataset.storage_type} is not found.')
+        handle_output(out_dataset)
 
 
 def execute(product_id: str, task: list, models_def: list) -> List[DataSet]:

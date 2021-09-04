@@ -3,8 +3,9 @@ import traceback
 from types import SimpleNamespace
 import yaml
 from pyspark.sql import SparkSession
-from driver import task_executor, aws_provider
-from .catalog import CatalogService
+from driver import task_executor
+from .aws import providers
+from deprecated import CatalogService
 
 __SPARK__: SparkSession = None
 
@@ -20,6 +21,7 @@ def get_or_create_session(config=None) -> SparkSession:  # pragma: no cover
     """Build spark session for jobs running on cluster."""
     spark = SparkSession.builder.appName(__name__) \
         .config(conf=config) \
+        .enableHiveSupport() \
         .getOrCreate()
 
     return spark
@@ -28,7 +30,6 @@ def get_or_create_session(config=None) -> SparkSession:  # pragma: no cover
 def init(spark_session=None, spark_config=None):
     global __SPARK__
     if not spark_session:
-        # findspark.init()
         __SPARK__ = get_or_create_session(spark_config)
     else:
         __SPARK__ = spark_session
@@ -58,7 +59,7 @@ def load_yaml_into_object(file_type, cfg_file_prefix: str = None) -> SimpleNames
 
 
 def execute_tasks(product_id: str, tasks: list, models: list):
-    session = aws_provider.get_session()
+    session = providers.get_session()
     if session:
         CatalogService(session).drain_database(product_id)
 

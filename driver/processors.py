@@ -2,7 +2,7 @@ import hashlib
 import quinn
 from driver import common
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import col, count, when, lit, udf, hash
+from pyspark.sql.functions import col, lit, udf, hash
 from pyspark.sql.types import StringType
 from pyspark.ml.feature import Bucketizer
 from driver.core import ValidationException
@@ -12,8 +12,6 @@ from quinn.dataframe_validator import (
     DataFrameMissingColumnError,
     DataFrameProhibitedColumnError
 )
-from driver import aws_provider
-from .catalog import CatalogService
 
 
 def null_validator(df: DataFrame, col_name: str, cfg: any = None):
@@ -120,9 +118,9 @@ def constraint_processor(ds: DataSet):
 
 def transformer_processor(data_set: DataSet):
     """
-    Will run custom
-    :param data_set:
-    :return:
+    Will run a prebuilt a transformation on each and every column of the model.
+    :param data_set: the data set that contains the data frame;
+    :return: the data set with the processed data frame
     """
     if not hasattr(data_set, 'model'):
         return data_set
@@ -136,10 +134,4 @@ def transformer_processor(data_set: DataSet):
                 trsfrm = next(iter([to for to in col.transform if to.type == trsfrm_type]), None)
                 trsfm_opts = trsfrm.options if trsfrm and hasattr(trsfrm, 'options') else None
                 data_set.df = tcall(data_set.df, col.id, trsfm_opts)
-    return data_set
-
-
-def catalog_processor(data_set: DataSet):
-    catalog_service = CatalogService(aws_provider.get_session())
-    catalog_service.update_database(data_set.product_id, data_set.model_id, data_set)
     return data_set

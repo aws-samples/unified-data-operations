@@ -4,10 +4,10 @@ import argparse
 from pyspark import SparkConf
 import traceback
 import driver
-import driver.aws_provider
+import driver.aws.providers
 from driver.io_handlers import connection_input_handler
-from driver.processors import schema_checker, constraint_processor, transformer_processor, catalog_processor
-from driver.io_handlers import lake_input_handler, lake_output_handler, connection_input_handler
+from driver.processors import schema_checker, constraint_processor, transformer_processor
+from driver.io_handlers import lake_output_handler, connection_input_handler
 
 
 def init_aws(args):
@@ -17,16 +17,17 @@ def init_aws(args):
         profile = args.aws_profile
     if hasattr(args, 'aws_region'):
         region = args.aws_region
-    driver.aws_provider.init(profile=profile, region=region)
+    driver.aws.providers.init(profile=profile, region=region)
 
 
 def init_system(product_def_path: str):
-    driver.io_handlers.init(driver.aws_provider.connection_provider)
+    driver.io_handlers.init(driver.aws.providers.connection_provider)
     conf = SparkConf()
     if hasattr(args, 'aws_profile'):
         print(f'Setting aws profile: {args.aws_profile}')
         os.environ["AWS_PROFILE"] = args.aws_profile
         conf.set("fs.s3a.aws.credentials.provider", "com.amazonaws.auth.profile.ProfileCredentialsProvider")
+    # conf.set("spark.sql.warehouse.dir", warehouse_location)
     if hasattr(args, 'local') and args.local:
         deps_path = f'{os.path.dirname(os.path.abspath(__file__))}/spark_deps'
         pgres_driver_jars = f'{deps_path}/postgresql-42.2.23.jar'
@@ -37,7 +38,7 @@ def init_system(product_def_path: str):
         conf.set("spark.jars", jars)
     driver.init(spark_config=conf)
     driver.register_data_source_handler('connection', connection_input_handler)
-    driver.register_postprocessors(schema_checker, constraint_processor, transformer_processor, catalog_processor)
+    driver.register_postprocessors(schema_checker, constraint_processor, transformer_processor)
     driver.register_output_handler('default', lake_output_handler)
     driver.register_output_handler('lake', lake_output_handler)
     driver.process_product(f'{os.path.dirname(os.path.abspath(__file__))}/{product_def_path}')
@@ -63,7 +64,7 @@ if __name__ == '__main__':
         print(f'PYTHONPATH: {os.environ.get("PYTHONPATH")}')
 
         init_aws(args)
-        if hasattr(args, "JOB_NAME"):
+        if hasattr(args, "JOB_NAME") and not args.local:
             import zipfile
             with zipfile.ZipFile(f'{os.path.dirname(os.path.abspath(__file__))}/{args.JOB_NAME}.zip', 'r') as zip_ref:
                 zip_ref.extractall(f'{os.path.dirname(os.path.abspath(__file__))}/')

@@ -1,0 +1,49 @@
+{
+  "ResponseMetadata": {
+    "HTTPHeaders": {
+      "connection": "keep-alive",
+      "content-length": "670",
+      "content-type": "application/x-amz-json-1.1",
+      "date": "Fri, 03 Sep 2021 16:17:23 GMT",
+      "x-amzn-requestid": "da930413-ea27-4599-8eee-3bd324576cdd"
+    },
+    "HTTPStatusCode": 200,
+    "RequestId": "da930413-ea27-4599-8eee-3bd324576cdd",
+    "RetryAttempts": 0
+  },
+  "Table": {
+    "CatalogId": "588942721560",
+    "CreateTime": "2021-09-03 12:27:23+02:00",
+    "CreatedBy": "arn:aws:sts::588942721560:assumed-role/DataLakeStack-DBIntegrationstackglueroleDB19F54D-1NAZBBE8DWDUX/GlueJobRunnerSession",
+    "DatabaseName": "customers",
+    "IsRegisteredWithLakeFormation": false,
+    "Name": "person",
+    "Retention": 0,
+    "StorageDescriptor": {
+      "Columns": [
+        {
+          "Name": "id",
+          "Type": "double"
+        },
+        {
+          "Name": "full_name",
+          "Type": "string"
+        },
+        {
+          "Name": "gender",
+          "Type": "string"
+        },
+        {
+          "Name": "time",
+          "Type": "timestamp"
+        }
+      ],
+      "Compressed": false,
+      "Location": "s3a://glue-job-test-destination-bucket/person",
+      "NumberOfBuckets": 0,
+      "SortColumns": [],
+      "StoredAsSubDirectories": false
+    },
+    "UpdateTime": "2021-09-03 12:27:23+02:00"
+  }
+}

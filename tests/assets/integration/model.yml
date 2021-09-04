@@ -1,5 +1,6 @@
 models:
   - id: person
+    description: some description of the stuff
     columns:
       - id: id
         type: double

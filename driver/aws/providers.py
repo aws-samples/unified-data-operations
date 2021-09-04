@@ -1,5 +1,6 @@
 import boto3
-from .core import Connection, ConnectionNotFoundException
+import mypy_boto3_glue
+from driver.core import Connection, ConnectionNotFoundException
 
 __SESSION__ = None
 
@@ -20,11 +21,22 @@ def init(key_id: str = None, key_material: str = None, profile: str = None, regi
         __SESSION__ = boto3.Session()
 
 
-def get_session():
+def get_session() -> boto3.Session:
     return __SESSION__
 
 
+def get_glue() -> mypy_boto3_glue.GlueClient:
+    if not get_session():
+        raise Exception('Boto session is not initialized. Please call init first.')
+    return get_session().client('glue')
+
+
 def connection_provider(connection_id: str) -> Connection:
+    """
+    Returns a data deprecated connection object, that can be used to connect to databases.
+    :param connection_id:
+    :return:
+    """
     if not get_session():
         raise Exception('Boto session is not initialized. Please call init first.')
     glue = get_session().client('glue')

@@ -1,4 +1,5 @@
 boto3==1.18.34
+botocore
 wheel==0.37.0
 pyyaml==5.4.1
 pydantic

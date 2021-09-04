@@ -1,5 +1,7 @@
+from types import SimpleNamespace
+from dataclasses import dataclass
+from pyspark.sql import DataFrame
 from enum import Enum
-
 from pydantic import (
     BaseModel,
     AnyUrl,
@@ -10,6 +12,68 @@ from typing import Dict, List, Tuple, Any, TypeVar, Union
 from pydantic import AnyUrl
 
 Scalar = TypeVar('Scalar', int, float, bool, str)
+
+
+@dataclass
+class DataProduct:
+    id: str
+    description: str
+
+
+@dataclass
+class DataSet:
+    input_id: str
+    model_id: str
+    model: SimpleNamespace
+    df: DataFrame
+    product: DataProduct
+
+    @property
+    def partitions(self) -> List[str]:
+        if self.storage_options and hasattr(self.storage_options, 'partition_by'):
+            if isinstance(self.storage_options.partition_by, str):
+                return [self.storage_options.partition_by]
+            else:
+                return [p for p in self.model.storage_options.partition_by]
+
+    @property
+    def stored_as(self) -> str:
+        if self.storage_options and hasattr(self.storage_options, 'stored_as'):
+            return self.storage_options.stored_as
+        else:
+            return None
+
+    @property
+    def storage_location(self) -> str:
+        if self.storage_options and hasattr(self.storage_options, 'location'):
+            return self.storage_options.location
+        else:
+            return None
+
+    @property
+    def storage_type(self) -> str:
+        if self.model and hasattr(self.model, 'storage'):
+            return self.model.storage.type
+        else:
+            return 'default'
+
+    @property
+    def storage_options(self) -> SimpleNamespace:
+        if self.model and hasattr(self.model, 'storage') and hasattr(self.model.storage, 'options'):
+            return self.model.storage.options
+        else:
+            return None
+
+    @property
+    def product_id(self) -> str:
+        return self.product.id if self.product else None
+
+    @product_id.setter
+    def product_id(self, p_id: str) -> None:
+        if self.product:
+            self.product.id = p_id
+        else:
+            self.product = DataProduct(id=p_id)
 
 
 class ValidationException(Exception):

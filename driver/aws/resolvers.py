@@ -4,9 +4,9 @@ from pyspark.sql import DataFrame
 from driver.task_executor import DataSet
 
 
-def resolve_table(table_name: str, data_set: DataSet) -> TableTypeDef:
+def resolve_table(data_set: DataSet) -> TableTypeDef:
     return TableTypeDef(
-        Name=table_name,
+        Name=data_set.model_id,
         StorageDescriptor=resolve_storage_descriptor(data_set)
     )
 

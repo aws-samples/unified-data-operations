@@ -1,9 +1,9 @@
 from boto3.session import Session
 from typing import List
 from mypy_boto3_glue.client import GlueClient
-from mypy_boto3_glue.type_defs import GetDatabasesResponseTypeDef, DatabaseTypeDef, GetTablesResponseTypeDef, TableTypeDef, TableInputTypeDef, StorageDescriptorTypeDef, ColumnTypeDef
+from mypy_boto3_glue.type_defs import GetTablesResponseTypeDef, TableTypeDef
 from driver.task_executor import DataSet
-from .resolvers import resolve_table
+from driver.aws.resolvers import resolve_table
 
 
 class TableService:

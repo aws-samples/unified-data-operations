@@ -1,9 +1,12 @@
 from types import SimpleNamespace
-from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame, DataFrameWriter
+from driver.aws import glue_api
 from driver.core import Connection
 from driver.driver import get_spark
 
 __CONN_PROVIDER__ = None
+
+from driver.task_executor import DataSet
 
 
 def init(connection_provider: callable):
@@ -45,14 +48,17 @@ def lake_input_handler(props: SimpleNamespace) -> DataFrame:
     pass
 
 
-def disk_output_handler(model_id: str, df: DataFrame, options: SimpleNamespace):
+def disk_output_handler(ds: DataSet, options: SimpleNamespace):
     pass
 
 
-def lake_output_handler(model_id: str, df: DataFrame, options: SimpleNamespace):
-    partitions = [options.partition_by] if isinstance(options.partition_by, str) else [p for p in options.partition_by]
-    df.coalesce(2).write\
-        .partitionBy(*partitions) \
-        .format(options.stored_as) \
+def lake_output_handler(ds: DataSet):
+    dfw: DataFrameWriter = ds.df.coalesce(2).write \
+        .partitionBy(*ds.partitions) \
+        .format(ds.stored_as) \
+        .mode('overwrite') \
         .option('header', 'true') \
-        .save(options.location, mode="overwrite")
+        .save(ds.storage_location)
+    #.saveAsTable('hoppala', path=ds.storage_location)
+
+    # glue_api.update_data_catalog(ds)

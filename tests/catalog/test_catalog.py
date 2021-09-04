@@ -1,7 +1,7 @@
 from boto3.session import Session
 from pyspark.sql import DataFrame
 from pytest import fixture
-from driver.catalog import CatalogService
+from deprecated import CatalogService
 from pyspark.sql.types import (
     StringType,
     StructField,
