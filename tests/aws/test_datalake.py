@@ -12,6 +12,7 @@ def test_partitions():
         partitions.append(po)
     for print_p in partitions:
         print(str(print_p))
-    print(json.dumps(reshuffle_partitions(prefix='s3a://glue-job-test-destination-bucket/', partitions=partitions), indent=4))
+    part_dict = reshuffle_partitions(prefix='s3a://glue-job-test-destination-bucket/', partitions=partitions)
+    print(json.dumps(part_dict, indent=4))
 
     assert len(partitions) > 0

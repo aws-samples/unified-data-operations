@@ -18,30 +18,26 @@ class Partition:
             o = Partition(sub_partition)
             self.subpartitions.append(o)
 
-    def get_partition_chain(self, prefix: str, parent_key: str = None) -> List[Dict[str, str]]:
+    def get_partition_chain(self, prefix: str, parent_key: str = None, parent_value: str = None) -> List[Dict[str, str]]:
         pchain = list()
-        r = {
-            'values': [],
-            'location': None
-        }
         prepped_prefix = os.path.join(prefix, f'{self.name}={self.value}')
+        pkeys = list()
         pkey_values = list()
-        if parent_key:
-            pkey_values.append(parent_key)
+        if parent_key and parent_value:
+            pkeys.append(parent_key)
+            pkey_values.append(parent_value)
+        pkeys.append(self.name)
         pkey_values.append(self.value)
-        pchain.append({'values': pkey_values, 'location': prepped_prefix})
+        pchain.append({'keys': pkeys, 'values': pkey_values, 'location': prepped_prefix})
         if len(self.subpartitions) > 0:
             for sp in self.subpartitions:
-                pchain.extend(sp.get_partition_chain(prepped_prefix, parent_key=self.value))
+                pchain.extend(sp.get_partition_chain(prepped_prefix, parent_key=self.name, parent_value=self.value))
         return pchain
-
-    # def __str__(self):
-    #     return f"{self.name}={self.value}\n\t\t {[str(sp) for sp in self.subpartitions]}"
 
 
 def read_partitions(bucket: str, container_folder: str = None):
     s3 = providers.get_s3()
-    rsp = s3.list_objects_v2(Bucket=bucket, Prefix=os.path.join(container_folder))
+    rsp = s3.list_objects_v2(Bucket=bucket, Prefix=os.path.join(container_folder, ''))
     keys = set(os.path.dirname(k.get('Key')) for k in rsp.get('Contents'))
     prefix = rsp.get('Prefix').rstrip('/')
     partition_keys = [p.lstrip(f'{prefix}/') for p in keys if p != prefix]

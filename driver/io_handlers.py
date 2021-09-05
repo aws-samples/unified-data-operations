@@ -56,7 +56,7 @@ def disk_output_handler(ds: DataSet, options: SimpleNamespace):
 def lake_output_handler(ds: DataSet):
     output = ds.storage_location
     if not os.path.basename(output.split('//')[1]):
-        output = f'{os.path.join(output)}{ds.product_id}'
+        output = f'{os.path.join(output, ds.product_id)}'
     ds.df.coalesce(2).write \
         .partitionBy(*ds.partitions) \
         .format(ds.stored_as) \
@@ -66,5 +66,5 @@ def lake_output_handler(ds: DataSet):
     # .saveAsTable('test_db.hoppala', path=ds.storage_location)
 
     # print(f'# partitions after write {ds.df.rdd.getNumPartitions()}')
-    #todo: detect the extra schema that is not defined in the model but provided by transformations
+    #todo: detect the extra schema info that is not defined in the model but provided by transformations
     glue_api.update_data_catalog(ds)
