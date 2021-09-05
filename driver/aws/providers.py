@@ -31,6 +31,12 @@ def get_glue() -> mypy_boto3_glue.GlueClient:
     return get_session().client('glue')
 
 
+def get_s3():
+    if not get_session():
+        raise Exception('Boto session is not initialized. Please call init first.')
+    return get_session().client('s3')
+
+
 def connection_provider(connection_id: str) -> Connection:
     """
     Returns a data deprecated connection object, that can be used to connect to databases.

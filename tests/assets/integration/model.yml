@@ -26,6 +26,15 @@ models:
           - type: regexp
             options:
               value: '[Male|Female]'
+      - id: age
+        type: integer
+        transform:
+          - type: bucketize
+            options:
+              buckets:
+                0: 0-19
+                20: 20-39
+                40: 40+
     meta:
       contains_pii: true
       steward: jane.doe@acme.com
@@ -33,7 +42,9 @@ models:
       type: lake
       options:
         skip_first_row: true
-        partition_by: gender
+        partition_by:
+          - gender
+          - age
         bucketed_at: 512M
         stored_as: parquet
         location: 's3a://glue-job-test-destination-bucket/person'

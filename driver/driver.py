@@ -44,7 +44,7 @@ def load_yaml_into_object(file_type, cfg_file_prefix: str = None) -> SimpleNames
             elif isinstance(v, list):
                 object_list = list()
                 for e in v:
-                    object_list.append(parse(e))
+                    object_list.append(parse(e) if isinstance(e, dict) else e)
                 setattr(x, k, object_list)
             else:
                 setattr(x, str(k), v)

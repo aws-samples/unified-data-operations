@@ -103,15 +103,19 @@ See [gitlab-ci.yml](.gitlab-ci.yml).
 Make sure that you execute these commands in a virtual environment (see the top of this document for instructions):
 
 ```commandline
-pip install ipython
-iptyhon
+pip install ptpython
+ptpython
 ```
 
-Type the following in the system:
+Type the following in the ptpython console:
 
+[optional] only if you encounter errors with the larger snippent bellow:
 ```python
 import findspark
 findspark.init()
+```
+Interactive development:
+```python
 import sys
 import os
 from pyspark import SparkConf
@@ -124,9 +128,6 @@ from pyspark.sql.types import (
     LongType,
     DoubleType
 )
-
-sys.path.insert(0, f"{os.environ['SPARK_HOME']}/python/lib/pyspark.zip")
-sys.path.insert(0, f"{os.environ['SPARK_HOME']}/python/lib/py4j-0.10.9-src.zip")
 
 os.environ["AWS_PROFILE"] = 'finn'
 conf = SparkConf()
@@ -146,4 +147,12 @@ movie_schema = StructType([
 df = spark.createDataFrame([(1, 'Jumanji(1995)', 'Adventure | Children | Fantasy'),
                                           (2, 'Heat (1995)', 'Action|Crime|Thriller')],
                                          movie_schema)
+```
+Get catalog infromation:
+```python
+import boto3, json
+session = boto3.Session(profile_name='finn', region_name='eu-central-1')
+glue = session.client('glue')
+s = json.dumps(glue.get_table(DatabaseName='test_db', Name='person'), indent=4, default=str)
+print(s)
 ```

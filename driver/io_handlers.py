@@ -1,3 +1,4 @@
+import os
 from types import SimpleNamespace
 from pyspark.sql import DataFrame, DataFrameWriter
 from driver.aws import glue_api
@@ -53,17 +54,17 @@ def disk_output_handler(ds: DataSet, options: SimpleNamespace):
 
 
 def lake_output_handler(ds: DataSet):
-    # print(f'# partitions before write {ds.df.rdd.partitions.size}')
-    dfw: DataFrameWriter = ds.df.coalesce(2).write \
+    output = ds.storage_location
+    if not os.path.basename(output.split('//')[1]):
+        output = f'{os.path.join(output)}{ds.product_id}'
+    ds.df.coalesce(2).write \
         .partitionBy(*ds.partitions) \
         .format(ds.stored_as) \
         .mode('overwrite') \
         .option('header', 'true') \
-        .saveAsTable('test_db.hoppala', path=ds.storage_location)
-        # .save(ds.storage_location)
+        .save(output)
+    # .saveAsTable('test_db.hoppala', path=ds.storage_location)
 
-
-    # df.rdd.getNumPartitions()
-    # ds.df.rdd.
-    # print(f'# partitions after write {ds.df.rdd.partitions.size}')
-    # glue_api.update_data_catalog(ds)
+    # print(f'# partitions after write {ds.df.rdd.getNumPartitions()}')
+    #todo: detect the extra schema that is not defined in the model but provided by transformations
+    glue_api.update_data_catalog(ds)

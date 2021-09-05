@@ -17,7 +17,8 @@ Scalar = TypeVar('Scalar', int, float, bool, str)
 @dataclass
 class DataProduct:
     id: str
-    description: str
+    description: str = None
+    owner: str = None
 
 
 @dataclass
@@ -34,7 +35,9 @@ class DataSet:
             if isinstance(self.storage_options.partition_by, str):
                 return [self.storage_options.partition_by]
             else:
-                return [p for p in self.model.storage_options.partition_by]
+                return [p for p in self.storage_options.partition_by]
+        else:
+            return None
 
     @property
     def stored_as(self) -> str:
@@ -58,6 +61,14 @@ class DataSet:
             return 'default'
 
     @property
+    def storage_format(self) -> str:
+        if self.model and hasattr(self.model, 'storage') and hasattr(self.model.storage, 'options'):
+            opts = self.model.storage.options
+            return opts.stored_as if hasattr(opts, 'stored_as') else None
+        else:
+            return None
+
+    @property
     def storage_options(self) -> SimpleNamespace:
         if self.model and hasattr(self.model, 'storage') and hasattr(self.model.storage, 'options'):
             return self.model.storage.options
@@ -74,6 +85,14 @@ class DataSet:
             self.product.id = p_id
         else:
             self.product = DataProduct(id=p_id)
+
+    @property
+    def product_description(self) -> str:
+        return self.product.description if self.product else None
+
+    @property
+    def product_owner(self) -> str:
+        return self.product.owner if self.product else None
 
 
 class ValidationException(Exception):

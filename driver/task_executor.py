@@ -3,7 +3,7 @@ import sys
 from types import SimpleNamespace
 from typing import List, Callable
 
-from driver.core import DataSet
+from driver.core import DataSet, DataProduct
 
 data_src_handlers: dict = dict()
 pre_processors: list = list()
@@ -43,7 +43,7 @@ def load_inputs(product_id: str, inputs: SimpleNamespace, model_def: SimpleNames
 
     for inp in inputs:
         model_obj = next(iter([m for m in model_def.models if m.id == inp.model]), None)
-        input_datasets.append(DataSet(inp.id, inp.model, model_obj, load_input(inp), product_id))
+        input_datasets.append(DataSet(inp.id, inp.model, model_obj, load_input(inp), DataProduct(product_id)))
     return input_datasets
 
 
