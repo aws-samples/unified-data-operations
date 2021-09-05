@@ -26,12 +26,13 @@ class Partition:
         if parent_key and parent_value:
             pkeys.append(parent_key)
             pkey_values.append(parent_value)
-        pkeys.append(self.name)
-        pkey_values.append(self.value)
-        pchain.append({'keys': pkeys, 'values': pkey_values, 'location': prepped_prefix})
         if len(self.subpartitions) > 0:
             for sp in self.subpartitions:
                 pchain.extend(sp.get_partition_chain(prepped_prefix, parent_key=self.name, parent_value=self.value))
+        else:
+            pkeys.append(self.name)
+            pkey_values.append(self.value)
+            pchain.append({'keys': pkeys, 'values': pkey_values, 'location': prepped_prefix})
         return pchain
 
 

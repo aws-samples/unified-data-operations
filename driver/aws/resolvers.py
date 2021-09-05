@@ -112,13 +112,13 @@ def reshuffle_partitions(prefix: str, partitions: List[Partition]) -> dict:
     for po in partitions:
         partition_list.extend(po.get_partition_chain(prefix=prefix))
     for pdict in partition_list:
-        if pdict.get('location') not in ['glue-job-test-destination-bucket/person/gender=Female',
-                                         'glue-job-test-destination-bucket/person/gender=Male']:
-            #todo: remove this ugly hack
-            partition_dict[pdict.get('location')] = {
-                'keys': pdict.get('keys'),
-                'values': pdict.get('values')
-            }
+        # if pdict.get('location') not in ['glue-job-test-destination-bucket/person/gender=Female',
+        #                                  'glue-job-test-destination-bucket/person/gender=Male']:
+        #     #todo: remove this ugly hack
+        partition_dict[pdict.get('location')] = {
+            'keys': pdict.get('keys'),
+            'values': pdict.get('values')
+        }
     return partition_dict
 
 

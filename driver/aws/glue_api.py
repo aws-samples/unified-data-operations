@@ -43,16 +43,16 @@ def update_data_catalog(ds: DataSet):
         # todo: register with lakeformation
 
     def upsert_partitions():
-        print('UPPPPP\n\n\n\n\n\n')
         # entries = resolve_partition_entries(ds)
         # rsp = glue.batch_update_partition(DatabaseName=ds.product_id, TableName=ds.model_id, Entries=entries)
         partition_inputs = resolve_partition_inputs(ds)
         rsp = glue.batch_create_partition(DatabaseName=ds.product_id, TableName=ds.model_id,
                                           PartitionInputList=partition_inputs)
         if rsp.get('Errors'):
-            raise Exception(f"Could'nt update the ")
             print(str(rsp))
+            raise Exception(f"Could'nt update the ")
         print(str(rsp))
+        #todo: write a proper handling here
 
     upsert_database()
     upsert_table()
