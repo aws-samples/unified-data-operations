@@ -56,11 +56,15 @@ def resolve_serde_info(ds: DataSet) -> SerDeInfoTypeDef:
 
 
 def resolve_storage_descriptor(ds: DataSet, override_location: str = None) -> StorageDescriptorTypeDef:
+    path = f's3://{os.path.join(ds.storage_location.split("//")[1], "")}'
+    if override_location:
+        path = f's3://{os.path.join(override_location, "")}'
     return StorageDescriptorTypeDef(
-        Location=override_location if override_location else f's3://{ds.storage_location.split("//")[1]}',
+        Location=path,
         InputFormat=resolve_input_format(ds),
         OutputFormat=resolve_output_format(ds),
         Compressed=resolve_compressed(ds),
+        NumberOfBuckets=-1,  # todo: check how to calculate this.
         SerdeInfo=resolve_serde_info(ds),
         Parameters=resolve_table_parameters(ds),  # todo: partition size
         Columns=resolve_columns(ds)
@@ -108,11 +112,25 @@ def reshuffle_partitions(prefix: str, partitions: List[Partition]) -> dict:
     for po in partitions:
         partition_list.extend(po.get_partition_chain(prefix=prefix))
     for pdict in partition_list:
-        partition_dict[pdict.get('location')] = {
-            'keys': pdict.get('keys'),
-            'values': pdict.get('values')
-        }
+        if pdict.get('location') not in ['glue-job-test-destination-bucket/person/gender=Female',
+                                         'glue-job-test-destination-bucket/person/gender=Male']:
+            #todo: remove this ugly hack
+            partition_dict[pdict.get('location')] = {
+                'keys': pdict.get('keys'),
+                'values': pdict.get('values')
+            }
     return partition_dict
+
+
+def resolve_partition_inputs(ds: DataSet) -> List[PartitionInputTypeDef]:
+    partition_defs = list()
+    bucket = os.path.dirname(ds.storage_location.split('//')[1])
+    folder = os.path.basename(ds.storage_location.split('//')[1]) or ds.product_id
+    ps: List[Partition] = datalake_api.read_partitions(bucket=bucket, container_folder=folder)
+    pdict = reshuffle_partitions(os.path.join(bucket, folder), ps)
+    for k, v in pdict.items():
+        partition_defs.append(resolve_partition_input(partition_location=k, partition_values=v.get('values'), ds=ds))
+    return partition_defs
 
 
 def resolve_partition_entries(ds: DataSet) -> List[BatchUpdatePartitionRequestEntryTypeDef]:
@@ -123,7 +141,7 @@ def resolve_partition_entries(ds: DataSet) -> List[BatchUpdatePartitionRequestEn
     pdict = reshuffle_partitions(bucket, ps)
     for k, v in pdict.items():
         partition_defs.append(BatchUpdatePartitionRequestEntryTypeDef(
-            PartitionValueList=v.get('keys'),
+            PartitionValueList=v.get('values'),
             PartitionInput=resolve_partition_input(partition_location=k, partition_values=v.get('values'), ds=ds)
         ))
     return partition_defs

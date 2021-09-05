@@ -3,7 +3,7 @@ from mypy_boto3_glue.type_defs import GetDatabasesResponseTypeDef, DatabaseTypeD
     TableTypeDef, TableInputTypeDef, StorageDescriptorTypeDef, ColumnTypeDef, DatabaseInputTypeDef
 from mypy_boto3_glue.client import Exceptions
 from driver.aws import providers
-from driver.aws.resolvers import resolve_table, resolve_partition_entries, resolve_table_input
+from driver.aws.resolvers import resolve_table, resolve_partition_entries, resolve_table_input, resolve_partition_inputs
 from driver.task_executor import DataSet
 
 
@@ -20,7 +20,8 @@ def update_data_catalog(ds: DataSet):
                 print(
                     f'Database {ds.product_id} does not exists in the data catalog. {str(enf)}. It is going to be created.')
                 # todo: add permissions
-                glue.create_database(DatabaseInput=DatabaseInputTypeDef(Name=ds.product_id, Descritpion=ds.product.description))
+                glue.create_database(
+                    DatabaseInput=DatabaseInputTypeDef(Name=ds.product_id, Descritpion=ds.product.description))
             else:
                 raise enf
 
@@ -29,7 +30,7 @@ def update_data_catalog(ds: DataSet):
             rsp: GetTablesResponseTypeDef = glue.get_table(DatabaseName=ds.product_id, Name=ds.model_id)
             # todo: update table
             glue.update_table(DatabaseName=ds.product_id, TableInput=resolve_table_input(ds))
-        except Exception as enf: #EntityNotFoundException
+        except Exception as enf:  # EntityNotFoundException
             # table not found]
             if enf.__class__.__name__ == 'EntityNotFoundException':
                 print(
@@ -42,8 +43,12 @@ def update_data_catalog(ds: DataSet):
         # todo: register with lakeformation
 
     def upsert_partitions():
-        entries = resolve_partition_entries(ds)
-        rsp = glue.batch_update_partition(DatabaseName=ds.product_id, TableName=ds.model_id, Entries=entries)
+        print('UPPPPP\n\n\n\n\n\n')
+        # entries = resolve_partition_entries(ds)
+        # rsp = glue.batch_update_partition(DatabaseName=ds.product_id, TableName=ds.model_id, Entries=entries)
+        partition_inputs = resolve_partition_inputs(ds)
+        rsp = glue.batch_create_partition(DatabaseName=ds.product_id, TableName=ds.model_id,
+                                          PartitionInputList=partition_inputs)
         if rsp.get('Errors'):
             raise Exception(f"Could'nt update the ")
             print(str(rsp))

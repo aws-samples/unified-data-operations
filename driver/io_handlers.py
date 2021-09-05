@@ -67,4 +67,6 @@ def lake_output_handler(ds: DataSet):
 
     # print(f'# partitions after write {ds.df.rdd.getNumPartitions()}')
     #todo: detect the extra schema info that is not defined in the model but provided by transformations
+    #todo: add parquet compression support / the glue catalog needs it too
+    #todo: add bucket support & also to the glue catalog
     glue_api.update_data_catalog(ds)
