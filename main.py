@@ -64,7 +64,7 @@ if __name__ == '__main__':
         print(f'PYTHONPATH: {os.environ.get("PYTHONPATH")}')
 
         init_aws(args)
-        if hasattr(args, "JOB_NAME") and not args.local:
+        if hasattr(args, "JOB_NAME") and not (hasattr(args, 'local') and args.local):
             import zipfile
             with zipfile.ZipFile(f'{os.path.dirname(os.path.abspath(__file__))}/{args.JOB_NAME}.zip', 'r') as zip_ref:
                 zip_ref.extractall(f'{os.path.dirname(os.path.abspath(__file__))}/')
@@ -74,3 +74,4 @@ if __name__ == '__main__':
     except Exception as e:
         print(str(e))
         traceback.print_exc()
+        raise e
