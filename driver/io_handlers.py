@@ -53,12 +53,17 @@ def disk_output_handler(ds: DataSet, options: SimpleNamespace):
 
 
 def lake_output_handler(ds: DataSet):
+    # print(f'# partitions before write {ds.df.rdd.partitions.size}')
     dfw: DataFrameWriter = ds.df.coalesce(2).write \
         .partitionBy(*ds.partitions) \
         .format(ds.stored_as) \
         .mode('overwrite') \
         .option('header', 'true') \
-        .save(ds.storage_location)
-    #.saveAsTable('hoppala', path=ds.storage_location)
+        .saveAsTable('test_db.hoppala', path=ds.storage_location)
+        # .save(ds.storage_location)
 
+
+    # df.rdd.getNumPartitions()
+    # ds.df.rdd.
+    # print(f'# partitions after write {ds.df.rdd.partitions.size}')
     # glue_api.update_data_catalog(ds)
