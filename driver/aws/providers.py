@@ -59,3 +59,6 @@ def connection_provider(connection_id: str) -> Connection:
         'type': native_host.split(':')[0]
     })
     return connection
+
+def datalake_provider(blabla) -> SomeObhect:
+    pass
