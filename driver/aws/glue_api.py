@@ -21,7 +21,7 @@ def update_data_catalog(ds: DataSet):
                     f'Database {ds.product_id} does not exists in the data catalog. {str(enf)}. It is going to be created.')
                 # todo: add permissions
                 glue.create_database(
-                    DatabaseInput=DatabaseInputTypeDef(Name=ds.product_id, Descritpion=ds.product.description))
+                    DatabaseInput=DatabaseInputTypeDef(Name=ds.product_id))
             else:
                 raise enf
 
