@@ -50,10 +50,11 @@ def update_data_catalog(ds: DataSet):
                                           PartitionInputList=partition_inputs)
         if rsp.get('Errors'):
             print(str(rsp))
-            raise Exception(f"Could'nt update the ")
+            raise Exception(f"Couldn't update the table with the partitions.")
+
         print(str(rsp))
         #todo: write a proper handling here
 
     upsert_database()
     upsert_table()
-    upsert_partitions()
+    upsert_partitions() #todo: this is not yet an upsert (in implementation)

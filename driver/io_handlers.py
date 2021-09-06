@@ -6,6 +6,7 @@ from driver.core import Connection
 from driver.driver import get_spark
 
 __CONN_PROVIDER__ = None
+__DATA_PRODUCT_PROVIDER__ = None
 
 from driver.task_executor import DataSet
 
@@ -46,6 +47,8 @@ def disk_input_handler(props: SimpleNamespace) -> DataFrame:
 
 def lake_input_handler(props: SimpleNamespace) -> DataFrame:
     # return df = get_spark().read.load("examples/src/main/resources/users.parquet")
+    some_glue_data = __DATA_PRODUCT_PROVIDER__(props)
+    return df.read().opotions(some_glue_data)
     pass
 
 

@@ -38,6 +38,7 @@ def init_system(product_def_path: str):
         conf.set("spark.jars", jars)
     driver.init(spark_config=conf)
     driver.register_data_source_handler('connection', connection_input_handler)
+    driver.register_data_source_handler('data_product', lake_input_handler)
     driver.register_postprocessors(schema_checker, constraint_processor, transformer_processor)
     driver.register_output_handler('default', lake_output_handler)
     driver.register_output_handler('lake', lake_output_handler)
