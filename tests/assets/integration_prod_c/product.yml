@@ -1,18 +1,19 @@
 product:
-  id: customers
+  id: customers360
   pipeline:
     schedule: "0 3 * * *"
     tasks:
-      - id: extract_customers
+      - id: aggregate_customers
         seq: 1
         logic:
-          func: tasks.custom_business_logic
+          func: tasks.custom_product_c
         input:
           - id: product_a
-              type: data_product
-              product_id: datacatalog_table_name
-              model_id: datacatalog_table
-          - id: product_b
-              type: data_product
-              product_id: datacatalog_table_name
-              model_id: datacatalog_table
+            type: data_product
+            product_id: customers
+            table_id: person
+            model: person
+#          - id: product_b
+#            type: data_products
+#            product_id: datacatalog_table_name
+#            model_id: datacatalog_table

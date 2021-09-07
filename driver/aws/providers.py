@@ -1,6 +1,6 @@
 import boto3
 import mypy_boto3_glue
-from driver.core import Connection, ConnectionNotFoundException
+from driver.core import Connection, ConnectionNotFoundException, DataProductTable
 
 __SESSION__ = None
 
@@ -60,5 +60,6 @@ def connection_provider(connection_id: str) -> Connection:
     })
     return connection
 
-def datalake_provider(blabla) -> SomeObhect:
+
+def datalake_provider(product_id, table_id) -> DataProductTable:
     pass

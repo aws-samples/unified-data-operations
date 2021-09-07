@@ -5,7 +5,8 @@ from pyspark import SparkConf
 import traceback
 import driver
 import driver.aws.providers
-from driver.io_handlers import connection_input_handler
+from driver.aws.providers import connection_provider, datalake_provider
+from driver.io_handlers import connection_input_handler, lake_input_handler
 from driver.processors import schema_checker, constraint_processor, transformer_processor
 from driver.io_handlers import lake_output_handler, connection_input_handler
 
@@ -21,7 +22,7 @@ def init_aws(args):
 
 
 def init_system(product_def_path: str):
-    driver.io_handlers.init(driver.aws.providers.connection_provider)
+    driver.io_handlers.init(connection_provider, datalake_provider)
     conf = SparkConf()
     if hasattr(args, 'aws_profile'):
         print(f'Setting aws profile: {args.aws_profile}')

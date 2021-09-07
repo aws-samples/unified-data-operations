@@ -9,16 +9,16 @@ models:
           - type: not_null
       - id: full_name
         type: string
-        transform:
-          - type: encrypt
-      - id: first_name
-        type: string
-        transform:
-          - type: skip
-      - id: last_name
-        type: string
-        transform:
-          - type: skip
+#        transform:
+#          - type: encrypt
+#      - id: first_name
+#        type: string
+#        transform:
+#          - type: skip
+#      - id: last_name
+#        type: string
+#        transform:
+#          - type: skip
       - id: gender
         type: string
         constraints:
@@ -27,14 +27,8 @@ models:
             options:
               value: '[Male|Female]'
       - id: age
-        type: integer
-        transform:
-          - type: bucketize
-            options:
-              buckets:
-                0: 0-19
-                20: 20-39
-                40: 40+
+        type: string
+
     meta:
       contains_pii: true
       steward: jane.doe@acme.com

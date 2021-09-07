@@ -11,9 +11,10 @@ __DATA_PRODUCT_PROVIDER__ = None
 from driver.task_executor import DataSet
 
 
-def init(connection_provider: callable):
-    global __CONN_PROVIDER__
+def init(connection_provider: callable, data_product_provider: callable):
+    global __CONN_PROVIDER__, __DATA_PRODUCT_PROVIDER__
     __CONN_PROVIDER__ = connection_provider
+    __DATA_PRODUCT_PROVIDER__ = data_product_provider
 
 
 jdbc_drivers = {
@@ -46,10 +47,9 @@ def disk_input_handler(props: SimpleNamespace) -> DataFrame:
 
 
 def lake_input_handler(props: SimpleNamespace) -> DataFrame:
-    # return df = get_spark().read.load("examples/src/main/resources/users.parquet")
-    some_glue_data = __DATA_PRODUCT_PROVIDER__(props)
-    return df.read().opotions(some_glue_data)
-    pass
+    product_table = __DATA_PRODUCT_PROVIDER__(props.product_id, props.table_id)
+    df = get_spark().read.parquet('s3a://glue-job-test-destination-bucket/person')
+    return df
 
 
 def disk_output_handler(ds: DataSet, options: SimpleNamespace):

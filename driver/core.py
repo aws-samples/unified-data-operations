@@ -272,3 +272,8 @@ class Connection(BaseModel):
             raise ValueError('The host and the connection type must be defined.')
         Connection.fill_url_contained_values(values, connection_type)
         return values
+
+
+class DataProductTable(BaseModel):
+    product_id: str
+    table_id: str
