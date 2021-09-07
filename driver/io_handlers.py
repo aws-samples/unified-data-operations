@@ -6,13 +6,15 @@ from driver.core import Connection
 from driver.driver import get_spark
 
 __CONN_PROVIDER__ = None
+__DATA_PRODUCT_PROVIDER__ = None
 
 from driver.task_executor import DataSet
 
 
-def init(connection_provider: callable):
-    global __CONN_PROVIDER__
+def init(connection_provider: callable, data_product_provider: callable):
+    global __CONN_PROVIDER__, __DATA_PRODUCT_PROVIDER__
     __CONN_PROVIDER__ = connection_provider
+    __DATA_PRODUCT_PROVIDER__ = data_product_provider
 
 
 jdbc_drivers = {
@@ -45,8 +47,9 @@ def disk_input_handler(props: SimpleNamespace) -> DataFrame:
 
 
 def lake_input_handler(props: SimpleNamespace) -> DataFrame:
-    # return df = get_spark().read.load("examples/src/main/resources/users.parquet")
-    pass
+    data_product_table = __DATA_PRODUCT_PROVIDER__(props.product_id, props.table_id)
+    df = get_spark().read.parquet(data_product_table.storage_location_s3a)
+    return df
 
 
 def disk_output_handler(ds: DataSet, options: SimpleNamespace):

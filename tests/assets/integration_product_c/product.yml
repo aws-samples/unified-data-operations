@@ -1,0 +1,19 @@
+product:
+  id: league
+  pipeline:
+    schedule: "0 3 * * *"
+    tasks:
+      - id: aggregate_events
+        seq: 1
+        logic:
+          func: tasks.custom_aggregate_events
+        input:
+          - id: product_a
+            type: data_product
+            product_id: sport_events
+            table_id: team
+            model: league
+#          - id: product_b
+#            type: data_products
+#            product_id: datacatalog_table_name
+#            model_id: datacatalog_table

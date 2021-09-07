@@ -13,4 +13,3 @@ product:
             connection_id: test_db_connection
             table: dms_sample.person
             model: person
-
