@@ -1,0 +1,27 @@
+product:
+  id: sport_events
+  version: "1.0.0"
+  description: Sporting Events
+  pipeline:
+    schedule: "0 3 * * *"
+    tasks:
+      - id: extract_sport_events
+        seq: 1
+        logic:
+          func: tasks.ingest
+        input:
+          - id: events
+            type: connection
+            connection_id: test_db_connection
+            table: dms_sample.sporting_event
+            model: event
+      - id: extract_locations
+        seq: 2
+        logic:
+          func: tasks.ingest
+        input:
+          - id: locations
+            type: connection
+            connection_id: test_db_connection
+            table: dms_sample.sport_location_int
+            model: location
