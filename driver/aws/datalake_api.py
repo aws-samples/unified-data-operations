@@ -40,8 +40,8 @@ def read_partitions(bucket: str, container_folder: str = None):
     s3 = providers.get_s3()
     rsp = s3.list_objects_v2(Bucket=bucket, Prefix=os.path.join(container_folder, ''))
     keys = set(os.path.dirname(k.get('Key')) for k in rsp.get('Contents'))
-    prefix = rsp.get('Prefix').rstrip('/')
-    partition_keys = [p.lstrip(f'{prefix}/') for p in keys if p != prefix]
+    prefix = rsp.get('Prefix')
+    partition_keys = [p[len(prefix):] for p in keys if p != prefix.rstrip('/')]
     partitions = list()
     for p in partition_keys:
         partitions.append(Partition(p))

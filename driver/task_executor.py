@@ -65,15 +65,14 @@ def transform(inp_dfs: List[DataSet], custom_module_name, params=None) -> List[D
                 f"Warning > skipping custom transformation logic, because module {custom_module_name} "
                 f"cannot be found on the classpath")
             return inp_dfs
-        else:
-            # module = importlib.util.module_from_spec(spec)
-            # spec.loader.exec_module(module)
-            custom_module = importlib.import_module(custom_module_name)
-            sys.modules[custom_module_name] = custom_module
-            if params:
-                return custom_module.execute(inp_dfs, **params)
-            else:
-                return custom_module.execute(inp_dfs)
+    # module = importlib.util.module_from_spec(spec)
+    # spec.loader.exec_module(module)
+    custom_module = importlib.import_module(custom_module_name)
+    sys.modules[custom_module_name] = custom_module
+    if params:
+        return custom_module.execute(inp_dfs, **params)
+    else:
+        return custom_module.execute(inp_dfs)
 
 
 def sink(o_dfs: List[DataSet]):
