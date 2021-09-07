@@ -1,5 +1,6 @@
 product:
   id: sport_events
+  version: "1.0.0"
   description: Sporting Events
   pipeline:
     schedule: "0 3 * * *"

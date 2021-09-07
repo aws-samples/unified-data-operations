@@ -1,5 +1,6 @@
 models:
   - id: event
+    version: "1.0.0"
     description: Sport event
     columns:
       - id: id
@@ -35,6 +36,7 @@ models:
         skip_first_row: true
         partition_by:
           - sport_type_name
+          - location_id
         bucketed_at: 512M
         stored_as: parquet
         location: 's3a://glue-job-test-destination-bucket/sport_event'
@@ -46,6 +48,7 @@ models:
       confidentiality: private
 
   - id: location
+    version: "1.0.0"
     description: Sport Location
     columns:
       - id: id
