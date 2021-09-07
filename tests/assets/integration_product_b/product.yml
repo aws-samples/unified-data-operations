@@ -15,13 +15,13 @@ product:
             connection_id: test_db_connection
             table: dms_sample.sporting_event
             model: event
-#      - id: extract_locations
-#        seq: 2
-#        logic:
-#          func: tasks.ingest
-#        input:
-#          - id: locations
-#            type: connection
-#            connection_id: test_db_connection
-#            table: dms_sample.sport_location
-#            model: location
+      - id: extract_locations
+        seq: 2
+        logic:
+          func: tasks.ingest
+        input:
+          - id: locations
+            type: connection
+            connection_id: test_db_connection
+            table: dms_sample.sport_location_int
+            model: location
