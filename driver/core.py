@@ -277,3 +277,8 @@ class Connection(BaseModel):
 class DataProductTable(BaseModel):
     product_id: str
     table_id: str
+    storage_location: str
+
+    @property
+    def spark_location(self):
+        return self.storage_location.replace('s3://', 's3a://')

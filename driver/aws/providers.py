@@ -62,4 +62,18 @@ def connection_provider(connection_id: str) -> Connection:
 
 
 def datalake_provider(product_id, table_id) -> DataProductTable:
-    pass
+    if not get_session():
+        raise Exception('Boto session is not initialized. Please call init first.')
+    glue = get_session().client('glue')
+    response = glue.get_table(
+        DatabaseName=product_id,
+        Name=table_id
+    )
+    if 'Table' not in response:
+        raise ConnectionNotFoundException(f'Data Product Table [{product_id}.{table_id}] could not be found.')
+    table = DataProductTable.parse_obj({
+        'product_id': product_id,
+        'table_id': table_id,
+        'storage_location': response.get('Table').get('StorageDescriptor').get('Location'),
+    })
+    return table

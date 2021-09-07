@@ -47,8 +47,8 @@ def disk_input_handler(props: SimpleNamespace) -> DataFrame:
 
 
 def lake_input_handler(props: SimpleNamespace) -> DataFrame:
-    product_table = __DATA_PRODUCT_PROVIDER__(props.product_id, props.table_id)
-    df = get_spark().read.parquet('s3a://glue-job-test-destination-bucket/person')
+    data_product_table = __DATA_PRODUCT_PROVIDER__(props.product_id, props.table_id)
+    df = get_spark().read.parquet(data_product_table.spark_location)
     return df
 
 

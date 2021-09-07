@@ -1,18 +1,18 @@
 product:
-  id: customers360
+  id: league
   pipeline:
     schedule: "0 3 * * *"
     tasks:
-      - id: aggregate_customers
+      - id: aggregate_events
         seq: 1
         logic:
-          func: tasks.custom_product_c
+          func: tasks.custom_aggregate_events
         input:
           - id: product_a
             type: data_product
-            product_id: customers
-            table_id: person
-            model: person
+            product_id: sport_events
+            table_id: team
+            model: league
 #          - id: product_b
 #            type: data_products
 #            product_id: datacatalog_table_name
