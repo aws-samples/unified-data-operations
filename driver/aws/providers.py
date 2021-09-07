@@ -1,6 +1,6 @@
 import boto3
 import mypy_boto3_glue
-from driver.core import Connection, ConnectionNotFoundException, DataProductTable
+from driver.core import Connection, ConnectionNotFoundException, DataProductTable, TableNotFoundException
 
 __SESSION__ = None
 
@@ -65,12 +65,9 @@ def datalake_provider(product_id, table_id) -> DataProductTable:
     if not get_session():
         raise Exception('Boto session is not initialized. Please call init first.')
     glue = get_session().client('glue')
-    response = glue.get_table(
-        DatabaseName=product_id,
-        Name=table_id
-    )
+    response = glue.get_table(DatabaseName=product_id, Name=table_id)
     if 'Table' not in response:
-        raise ConnectionNotFoundException(f'Data Product Table [{product_id}.{table_id}] could not be found.')
+        raise TableNotFoundException(f'Data Product Table [{product_id}.{table_id}] could not be found.')
     table = DataProductTable.parse_obj({
         'product_id': product_id,
         'table_id': table_id,

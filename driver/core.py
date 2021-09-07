@@ -103,6 +103,10 @@ class ConnectionNotFoundException(Exception):
     pass
 
 
+class TableNotFoundException(Exception):
+    pass
+
+
 class LocationDsn(AnyUrl):
     allowed_schemes = {'datastore', 'connection'}
     user_required = False
