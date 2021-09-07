@@ -36,8 +36,7 @@ def resolve_input_format(ds: DataSet) -> str:
 
 def resolve_output_format(ds: DataSet) -> str:
     formats = {
-        'parquet': 'org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat',
-        'orc': 'unsupported'
+        'parquet': 'org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat'
     }
     return formats.get(ds.storage_format)
 

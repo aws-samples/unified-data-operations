@@ -284,5 +284,5 @@ class DataProductTable(BaseModel):
     storage_location: str
 
     @property
-    def spark_location(self):
+    def storage_location_s3a(self):
         return self.storage_location.replace('s3://', 's3a://')
