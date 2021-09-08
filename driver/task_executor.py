@@ -42,8 +42,9 @@ def load_inputs(product_id: str, inputs: SimpleNamespace, model_def: SimpleNames
         return handle_input(input_def)
 
     for inp in inputs:
-        model_obj = next(iter([m for m in model_def.models if m.id == inp.model]), None)
-        input_datasets.append(DataSet(inp.id, inp.model, model_obj, load_input(inp), DataProduct(product_id)))
+        model = inp.model if hasattr(inp, 'model') else None
+        model_obj = next(iter([m for m in model_def.models if m.id == model]), None)
+        input_datasets.append(DataSet(inp.id, model, model_obj, load_input(inp), DataProduct(product_id)))
     return input_datasets
 
 
@@ -83,9 +84,20 @@ def sink(o_dfs: List[DataSet]):
         handle_output(out_dataset)
 
 
+def enrich(datasets, product_id, models_def):
+    for dataset in datasets:
+        if not dataset.product_id:
+            dataset.product_id = product_id
+        if dataset.model is None and dataset.model_id:
+            model_obj = next(iter([m for m in models_def.models if m.id == dataset.model_id]), None)
+            dataset.model = model_obj
+    return datasets
+
+
 def execute(product_id: str, task: list, models_def: list) -> List[DataSet]:
     print(f'Executing task > {product_id} {task.id}')
     input_dfs: list[DataSet] = run_processors(load_inputs(product_id, task.input, models_def), pre_processors)
     task_logic_params = task.logic.params.__dict__ if hasattr(task.logic, 'params') else None
     output_dfs: list[DataSet] = transform(input_dfs, task.logic.func, task_logic_params)
+    output_dfs = enrich(output_dfs, product_id, models_def)
     sink(run_processors(output_dfs, post_processors))
