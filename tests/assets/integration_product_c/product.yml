@@ -1,5 +1,5 @@
 product:
-  id: league
+  id: calendar
   pipeline:
     schedule: "0 3 * * *"
     tasks:
@@ -8,12 +8,15 @@ product:
         logic:
           func: tasks.custom_aggregate_events
         input:
-          - id: product_a
+          - id: events
+            type: data_product
+            product_id: sport_events
+            table_id: event
+          - id: teams
             type: data_product
             product_id: sport_events
             table_id: team
-            model: league
-#          - id: product_b
-#            type: data_products
-#            product_id: datacatalog_table_name
-#            model_id: datacatalog_table
+          - id: locations
+            type: data_product
+            product_id: sport_events
+            table_id: location
