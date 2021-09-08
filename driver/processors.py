@@ -100,7 +100,7 @@ def schema_checker(ds: DataSet):
 
 
 def constraint_processor(ds: DataSet):
-    if not hasattr(ds, 'model'):
+    if not hasattr(ds, 'model') or ds.model is None:
         return ds
 
     for col in ds.model.columns:
@@ -122,7 +122,7 @@ def transformer_processor(data_set: DataSet):
     :param data_set: the data set that contains the data frame;
     :return: the data set with the processed data frame
     """
-    if not hasattr(data_set, 'model'):
+    if not hasattr(data_set, 'model') or data_set.model is None:
         return data_set
     for col in data_set.model.columns:
         if not hasattr(col, 'transform'):
