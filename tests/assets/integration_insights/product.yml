@@ -1,0 +1,18 @@
+product:
+  id: customer_insights
+  version: "1.0.0"
+  pipeline:
+    schedule: "0 3 * * *"
+    tasks:
+      - id: aggregate_customer_revenue
+        logic:
+          func: tasks.aggregate_customer_revenue
+        input:
+          - id: person
+            type: data_product
+            product_id: customers
+            table_id: person_pub
+          - id: sales
+            type: data_product
+            product_id: sales
+            table_id: sales_order

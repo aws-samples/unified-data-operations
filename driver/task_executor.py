@@ -59,6 +59,7 @@ def run_processors(datasets: List[DataSet], processors: List[Callable]) -> List[
 
 
 def transform(inp_dfs: List[DataSet], custom_module_name, params=None) -> List[DataSet]:
+    print('execute custom code: ' + custom_module_name)
     if custom_module_name not in sys.modules:
         spec = importlib.util.find_spec(custom_module_name)
         if spec is None:

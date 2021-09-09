@@ -1,16 +1,12 @@
 models:
-  - id: person
-    description: some description of the stuff
+  - id: person_pub
+    version: "1.0.0"
     columns:
       - id: id
-        type: double
+        type: integer
         constraints:
           - type: unique
           - type: not_null
-      - id: full_name
-        type: string
-        transform:
-          - type: encrypt
       - id: first_name
         type: string
         transform:
@@ -25,7 +21,7 @@ models:
           - type: not_null
           - type: regexp
             options:
-              value: '[Male|Female]'
+              value: '[male|female]'
       - id: age
         type: integer
         transform:
@@ -35,6 +31,48 @@ models:
                 0: 0-19
                 20: 20-39
                 40: 40+
+    meta:
+      contains_pii: false
+      steward: jane.doe@acme.com
+    storage:
+      type: lake
+      options:
+        skip_first_row: true
+        partition_by:
+          - gender
+          - age
+        bucketed_at: 512M
+        stored_as: parquet
+        location: 's3a://glue-job-test-destination-bucket/person_pub'
+    tags:
+      cost_center: 123455
+      use_case: Customer 360
+    access:
+      domain: customer_support
+      confidentiality: public
+
+  - id: person_pii
+    version: "1.0.0"
+    description: A person, who can be a customer, including PII
+    columns:
+      - id: id
+        type: integer
+        constraints:
+          - type: unique
+          - type: not_null
+      - id: first_name
+        type: string
+      - id: last_name
+        type: string
+      - id: gender
+        type: string
+        constraints:
+          - type: not_null
+          - type: regexp
+            options:
+              value: '[Male|Female]'
+      - id: age
+        type: integer
     meta:
       contains_pii: true
       steward: jane.doe@acme.com
@@ -47,7 +85,7 @@ models:
           - age
         bucketed_at: 512M
         stored_as: parquet
-        location: 's3a://glue-job-test-destination-bucket/person'
+        location: 's3a://glue-job-test-destination-bucket/person_pii'
     tags:
       cost_center: 123455
       use_case: Customer 360

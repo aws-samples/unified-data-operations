@@ -1,14 +1,26 @@
 product:
-  id: customers
+  id: product_a_customers
+  version: "1.0.0"
   pipeline:
-    schedule: "0 3 * * *"
+    schedule: "0 */1 * * *"
     tasks:
-      - id: extract_customers
+      - id: extract_customers_pub
         logic:
           func: tasks.custom_business_logic
+          params:
+            create_timestamp: true
         input:
-          - id: person
+          - id: person_pub
             type: connection
             connection_id: test_db_connection
-            table: dms_sample.person
-            model: person
+            table: dms_sample.person_relevant
+            model: person_pub
+      - id: extract_customers_pii
+        logic:
+          func: tasks.ingest
+        input:
+          - id: person_pii
+            type: connection
+            connection_id: test_db_connection
+            table: dms_sample.person_relevant
+            model: person_pii
