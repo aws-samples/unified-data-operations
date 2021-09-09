@@ -1,5 +1,6 @@
 models:
   - id: calendar
+    version: "1.0.0"
     description: Enriched sports calendar events
     columns:
       - id: id

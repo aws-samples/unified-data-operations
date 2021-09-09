@@ -1,5 +1,6 @@
 product:
   id: calendar
+  version: "1.0.0"
   pipeline:
     schedule: "0 3 * * *"
     tasks:
