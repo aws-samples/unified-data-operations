@@ -16,6 +16,10 @@ models:
         type: integer
       - id: ticket_price
         type: double
+      - id: deleter
+        type: integer
+        transform:
+          - type: skip
       - id: seat_level
         type: integer
         transform:

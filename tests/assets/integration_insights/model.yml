@@ -26,7 +26,7 @@ models:
           - age
         bucketed_at: 512M
         stored_as: parquet
-        location: 's3a://glue-job-test-destination-bucket/insights_revenue'
+        location: 's3a://glue-job-test-destination-bucket/customer_insights_revenue'
     tags:
       cost_center: 123455
       use_case: Customer 360

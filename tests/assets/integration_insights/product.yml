@@ -1,5 +1,5 @@
 product:
-  id: customer_insights
+  id: product_c_customer_insights
   version: "1.0.0"
   pipeline:
     schedule: "0 3 * * *"
