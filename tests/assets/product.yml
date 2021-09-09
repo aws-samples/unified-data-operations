@@ -11,7 +11,7 @@ product:
             create_timestamp: true
         seq: 1
         input:
-          - id: person
+          - id: person_pub
             type: connection
             connection_id: test_db_connection
             table: persons
