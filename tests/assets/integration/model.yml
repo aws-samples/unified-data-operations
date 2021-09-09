@@ -7,6 +7,10 @@ models:
         constraints:
           - type: unique
           - type: not_null
+      - id: full_name
+        type: string
+        transform:
+          - type: encrypt
       - id: first_name
         type: string
         transform:
