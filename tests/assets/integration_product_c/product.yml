@@ -5,7 +5,6 @@ product:
     schedule: "0 3 * * *"
     tasks:
       - id: aggregate_events
-        seq: 1
         logic:
           func: tasks.custom_aggregate_events
         input:

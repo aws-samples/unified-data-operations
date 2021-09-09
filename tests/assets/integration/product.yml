@@ -4,7 +4,6 @@ product:
     schedule: "0 3 * * *"
     tasks:
       - id: extract_customers
-        seq: 1
         logic:
           func: tasks.custom_business_logic
         input:
