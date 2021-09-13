@@ -58,17 +58,9 @@ def run_processors(datasets: List[DataSet], processors: List[Callable]) -> List[
     return processed_dfs
 
 
-def transform(inp_dfs: List[DataSet], custom_module_name, params=None) -> List[DataSet]:
-    print('execute custom code: ' + custom_module_name)
-    if custom_module_name not in sys.modules:
-        spec = importlib.util.find_spec(custom_module_name)
-        if spec is None:
-            print(
-                f"Warning > skipping custom transformation logic, because module {custom_module_name} "
-                f"cannot be found on the classpath")
-            return inp_dfs
-    # module = importlib.util.module_from_spec(spec)
-    # spec.loader.exec_module(module)
+def transform(inp_dfs: List[DataSet], custom_module_name, product_path: str, params=None) -> List[DataSet]:
+    sys.path.append(product_path)
+    print('execute custom module: ' + custom_module_name)
     custom_module = importlib.import_module(custom_module_name)
     sys.modules[custom_module_name] = custom_module
     if params:
@@ -95,10 +87,10 @@ def enrich(datasets, product_id, models_def):
     return datasets
 
 
-def execute(product_id: str, task: list, models_def: list) -> List[DataSet]:
+def execute(product_id: str, task: list, models_def: list, product_path: str) -> List[DataSet]:
     print(f'Executing task > {product_id} {task.id}')
     input_dfs: list[DataSet] = run_processors(load_inputs(product_id, task.input, models_def), pre_processors)
     task_logic_params = task.logic.params.__dict__ if hasattr(task.logic, 'params') else None
-    output_dfs: list[DataSet] = transform(input_dfs, task.logic.func, task_logic_params)
+    output_dfs: list[DataSet] = transform(input_dfs, task.logic.func, product_path, task_logic_params)
     output_dfs = enrich(output_dfs, product_id, models_def)
     sink(run_processors(output_dfs, post_processors))

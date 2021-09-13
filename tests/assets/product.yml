@@ -9,7 +9,6 @@ product:
           func: tasks.custom_business_logic
           params:
             create_timestamp: true
-        seq: 1
         input:
           - id: person_pub
             type: connection

@@ -43,7 +43,7 @@ def init_system(product_def_path: str):
     driver.register_postprocessors(schema_checker, constraint_processor, transformer_processor)
     driver.register_output_handler('default', lake_output_handler)
     driver.register_output_handler('lake', lake_output_handler)
-    driver.process_product(f'{os.path.dirname(os.path.abspath(__file__))}/{product_def_path}')
+    driver.process_product(f'{os.path.dirname(os.path.abspath(__file__))}/{product_def_path.lstrip("/")}')
 
 
 if __name__ == '__main__':
