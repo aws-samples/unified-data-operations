@@ -6,8 +6,8 @@ product:
     tasks:
       - id: extract_customers
         logic:
-          func: tasks.custom_business_logic
-          params:
+          module: tasks.custom_business_logic
+          parameters:
             create_timestamp: true
         input:
           - id: person_pub

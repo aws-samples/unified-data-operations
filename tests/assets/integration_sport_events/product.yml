@@ -7,7 +7,7 @@ product:
     tasks:
       - id: extract_sport_events
         logic:
-          func: tasks.ingest
+          module: builtin.ingest
         input:
           - id: events
             type: connection
@@ -16,7 +16,7 @@ product:
             model: event
       - id: extract_locations
         logic:
-          func: tasks.ingest
+          module: builtin.ingest
         input:
           - id: locations
             type: connection
@@ -24,9 +24,8 @@ product:
             table: dms_sample.sport_location_int
             model: location
       - id: extract_teams
-        seq: 3
         logic:
-          func: tasks.ingest
+          module: builtin.ingest
         input:
           - id: teams
             type: connection

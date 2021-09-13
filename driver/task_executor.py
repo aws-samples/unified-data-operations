@@ -58,9 +58,9 @@ def run_processors(datasets: List[DataSet], processors: List[Callable]) -> List[
     return processed_dfs
 
 
-def transform(inp_dfs: List[DataSet], custom_module_name, product_path: str, params=None) -> List[DataSet]:
+def transform(inp_dfs: List[DataSet], product_path: str, custom_module_name, params=None) -> List[DataSet]:
     sys.path.append(product_path)
-    print('execute custom module: ' + custom_module_name)
+    print('executing module: ' + custom_module_name)
     custom_module = importlib.import_module(custom_module_name)
     sys.modules[custom_module_name] = custom_module
     if params:
@@ -90,7 +90,8 @@ def enrich(datasets, product_id, models_def):
 def execute(product_id: str, task: list, models_def: list, product_path: str) -> List[DataSet]:
     print(f'Executing task > {product_id} {task.id}')
     input_dfs: list[DataSet] = run_processors(load_inputs(product_id, task.input, models_def), pre_processors)
-    task_logic_params = task.logic.params.__dict__ if hasattr(task.logic, 'params') else None
-    output_dfs: list[DataSet] = transform(input_dfs, task.logic.func, product_path, task_logic_params)
+    task_logic_module = task.logic.module if hasattr(task, 'logic') and hasattr(task.logic, 'module') else 'builtin.ingest'
+    task_logic_params = task.logic.parameters.__dict__ if hasattr(task, 'logic') and hasattr(task.logic, 'parameters') else {}
+    output_dfs: list[DataSet] = transform(input_dfs, product_path, task_logic_module, task_logic_params)
     output_dfs = enrich(output_dfs, product_id, models_def)
     sink(run_processors(output_dfs, post_processors))
