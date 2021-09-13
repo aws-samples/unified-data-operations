@@ -23,11 +23,5 @@ def execute(inp_dfs: List[DataSet]):
         summe('sales.ticket_price').alias('revenue'),
     )
 
-    # events = events.join(teams, on=events.home_team_id == teams.id).select('events.*', col('location'), col("teams.name").alias('home_team'))
-    #
-    # events = events.drop(col('location_id'))
-    # events = events.drop(col('home_team_id'))
-    # events = events.drop(col('away_team_id'))
-
     output_ds = DataSet(model_id='revenue', df=person, input_id=None, model=None, product=None)
     return [output_ds]
