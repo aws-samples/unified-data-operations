@@ -27,26 +27,26 @@ def update_data_catalog(ds: DataSet):
 
     def upsert_table():
         try:
-            rsp: GetTablesResponseTypeDef = glue.get_table(DatabaseName=ds.product_id, Name=ds.model_id)
+            rsp: GetTablesResponseTypeDef = glue.get_table(DatabaseName=ds.product_id, Name=ds.id)
             # todo: update table
             glue.update_table(DatabaseName=ds.product_id, TableInput=resolve_table_input(ds))
         except Exception as enf:  # EntityNotFoundException
             # table not found]
             if enf.__class__.__name__ == 'EntityNotFoundException':
                 print(
-                    f'Table [{ds.model_id}] cannot be found in the database [{ds.product_id}] in Glue Data Catalog. Table is going to be created.')
+                    f'Table [{ds.id}] cannot be found in the database [{ds.product_id}] in Glue Data Catalog. Table is going to be created.')
                 glue.create_table(DatabaseName=ds.product_id, TableInput=resolve_table_input(ds))
             else:
                 raise enf
-        rsp: GetTablesResponseTypeDef = glue.get_table(DatabaseName=ds.product_id, Name=ds.model_id)
+        rsp: GetTablesResponseTypeDef = glue.get_table(DatabaseName=ds.product_id, Name=ds.id)
         # todo: update partitions
         # todo: register with lakeformation
 
     def upsert_partitions():
         # entries = resolve_partition_entries(ds)
-        # rsp = glue.batch_update_partition(DatabaseName=ds.product_id, TableName=ds.model_id, Entries=entries)
+        # rsp = glue.batch_update_partition(DatabaseName=ds.product_id, TableName=ds.id, Entries=entries)
         partition_inputs = resolve_partition_inputs(ds)
-        rsp = glue.batch_create_partition(DatabaseName=ds.product_id, TableName=ds.model_id,
+        rsp = glue.batch_create_partition(DatabaseName=ds.product_id, TableName=ds.id,
                                           PartitionInputList=partition_inputs)
         if rsp.get('Errors'):
             print(str(rsp))

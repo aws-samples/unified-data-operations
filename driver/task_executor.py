@@ -42,9 +42,9 @@ def load_inputs(product_id: str, inputs: SimpleNamespace, model_def: SimpleNames
         return handle_input(input_def)
 
     for inp in inputs:
-        model = inp.model if hasattr(inp, 'model') else None
-        model_obj = next(iter([m for m in model_def.models if m.id == model]), None)
-        input_datasets.append(DataSet(inp.id, model, model_obj, load_input(inp), DataProduct(product_id)))
+        model_id = inp.model if hasattr(inp, 'model') else None
+        model_obj = next(iter([m for m in model_def.models if m.id == model_id]), None)
+        input_datasets.append(DataSet(inp.id, load_input(inp), model_id, model_obj, DataProduct(product_id)))
     return input_datasets
 
 
@@ -77,21 +77,49 @@ def sink(o_dfs: List[DataSet]):
         handle_output(out_dataset)
 
 
-def enrich(datasets, product_id, models_def):
+def get_model(models, model_id):
+    return next(iter([m for m in models if m.id == model_id]), None)
+
+
+def get_output(outputs, id):
+    return next(iter([o for o in outputs if o.id == id]), None)
+
+
+def validate_outputs(datasets: List[DataSet], outputs: SimpleNamespace):
+    configured_outputs = [o.id for o in outputs]
+    transformed_outputs = [d.id for d in datasets]
+
+    if configured_outputs != transformed_outputs:
+        raise Exception(f'Not all configured outputs [{str(transformed_outputs)}] are generated during transformation [{str(configured_outputs)}].')
+
+
+def assign_models(datasets: List[DataSet], outputs: List[SimpleNamespace], product_id: str, models_def: SimpleNamespace, output_bucket: str):
+    if len(datasets) == 1 and len(outputs) == 1:
+        datasets[0].id = outputs[0].id
+
     for dataset in datasets:
+        if dataset.id is None:
+            raise Exception(f'Dataset id is undefined. Unable to assign model.')
+        output = get_output(outputs, dataset.id)
+        model = get_model(models_def.models, output.model)
+
         if not dataset.product_id:
             dataset.product_id = product_id
-        if dataset.model is None and dataset.model_id:
-            model_obj = next(iter([m for m in models_def.models if m.id == dataset.model_id]), None)
-            dataset.model = model_obj
+        if not dataset.output_bucket:
+            dataset.output_bucket = output_bucket
+
+        dataset.model_id = model.id
+        dataset.model = model
+
     return datasets
 
 
-def execute(product_id: str, task: list, models_def: list, product_path: str) -> List[DataSet]:
+def execute(product_id: str, task: list, models_def: list, product_path: str, output_bucket: str) -> List[DataSet]:
     print(f'Executing task > {product_id} {task.id}')
-    input_dfs: list[DataSet] = run_processors(load_inputs(product_id, task.input, models_def), pre_processors)
+    input_dfs: list[DataSet] = run_processors(load_inputs(product_id, task.inputs, models_def), pre_processors)
     task_logic_module = task.logic.module if hasattr(task, 'logic') and hasattr(task.logic, 'module') else 'builtin.ingest'
     task_logic_params = task.logic.parameters.__dict__ if hasattr(task, 'logic') and hasattr(task.logic, 'parameters') else {}
     output_dfs: list[DataSet] = transform(input_dfs, product_path, task_logic_module, task_logic_params)
-    output_dfs = enrich(output_dfs, product_id, models_def)
+    output_dfs = assign_models(output_dfs, task.outputs, product_id, models_def, output_bucket)
+    validate_outputs(output_dfs, task.outputs)
     sink(run_processors(output_dfs, post_processors))

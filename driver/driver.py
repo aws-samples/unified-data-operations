@@ -58,21 +58,21 @@ def load_yaml_into_object(file_type, cfg_file_prefix: str = None) -> SimpleNames
         return parse(dict_val)
 
 
-def execute_tasks(product_id: str, tasks: list, models: list, product_path: str):
+def execute_tasks(product_id: str, tasks: list, models: list, product_path: str, output_bucket: str):
     session = providers.get_session()
     if session:
         CatalogService(session).drain_database(product_id)
 
     for task in tasks:
-        task_executor.execute(product_id, task, models, product_path)
+        task_executor.execute(product_id, task, models, product_path, output_bucket)
 
 
-def process_product(product_path: str):
+def process_product(product_path: str, output_bucket: str):
     try:
         product = load_yaml_into_object('product.yml', product_path).product
         models = load_yaml_into_object('model.yml', product_path)
 
-        execute_tasks(product.id, product.pipeline.tasks, models, product_path)
+        execute_tasks(product.id, product.pipeline.tasks, models, product_path, output_bucket)
     except Exception as e:
         traceback.print_exc()
         print(f"Couldn't execute job due to >> {type(e).__name__}: {str(e)}")

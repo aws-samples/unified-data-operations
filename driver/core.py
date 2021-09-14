@@ -23,11 +23,12 @@ class DataProduct:
 
 @dataclass
 class DataSet:
-    input_id: str
-    model_id: str
-    model: SimpleNamespace
+    id: str
     df: DataFrame
-    product: DataProduct
+    model_id: str = None
+    model: SimpleNamespace = None
+    product: DataProduct = None
+    output_bucket: str = None
 
     @property
     def partitions(self) -> List[str]:
@@ -48,10 +49,20 @@ class DataSet:
 
     @property
     def storage_location(self) -> str:
-        if self.storage_options and hasattr(self.storage_options, 'location'):
-            return self.storage_options.location
-        else:
-            return None
+        return f's3a://{self.storage_bucket}/{self.storage_path}'
+
+    @property
+    def storage_bucket(self) -> str:
+        if self.output_bucket is None:
+            raise Exception(f'Can not construct storage bucket, output_bucket is not defined.')
+        return self.output_bucket
+
+    @property
+    def storage_path(self) -> str:
+        if self.id is None:
+            raise Exception(f'Can not construct storage location, id is not defined.')
+        return f'{self.product.id}/{self.id}'
+
 
     @property
     def storage_type(self) -> str:

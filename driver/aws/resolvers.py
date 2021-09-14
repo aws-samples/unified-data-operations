@@ -56,9 +56,10 @@ def resolve_serde_info(ds: DataSet) -> SerDeInfoTypeDef:
 
 
 def resolve_storage_descriptor(ds: DataSet, override_location: str = None) -> StorageDescriptorTypeDef:
-    path = f's3://{os.path.join(ds.storage_location.split("//")[1], "")}'
     if override_location:
         path = f's3://{os.path.join(override_location, "")}'
+    else:
+        path = ds.storage_location
     return StorageDescriptorTypeDef(
         Location=path,
         InputFormat=resolve_input_format(ds),
@@ -77,7 +78,7 @@ def resolve_columns(ds: DataSet) -> List[ColumnTypeDef]:
 
 def resolve_table(ds: DataSet) -> TableTypeDef:
     return TableTypeDef(
-        Name=ds.model_id,
+        Name=ds.id,
         DatabaseName=ds.product_id,
         Description=ds.product_description,
         Owner=ds.product_owner,
@@ -90,7 +91,7 @@ def resolve_table(ds: DataSet) -> TableTypeDef:
 
 def resolve_table_input(ds: DataSet) -> TableInputTypeDef:
     return TableInputTypeDef(
-        Name=ds.model_id,
+        Name=ds.id,
         PartitionKeys=resolve_paritions(ds),
         TableType='EXTERNAL_TABLE',
         Parameters=resolve_table_parameters(ds),
@@ -124,8 +125,8 @@ def reshuffle_partitions(prefix: str, partitions: List[Partition]) -> dict:
 
 def resolve_partition_inputs(ds: DataSet) -> List[PartitionInputTypeDef]:
     partition_defs = list()
-    bucket = os.path.dirname(ds.storage_location.split('//')[1])
-    folder = os.path.basename(ds.storage_location.split('//')[1]) or ds.product_id
+    bucket = ds.storage_bucket
+    folder = ds.storage_path
     ps: List[Partition] = datalake_api.read_partitions(bucket=bucket, container_folder=folder)
     pdict = reshuffle_partitions(os.path.join(bucket, folder), ps)
     for k, v in pdict.items():
@@ -135,8 +136,8 @@ def resolve_partition_inputs(ds: DataSet) -> List[PartitionInputTypeDef]:
 
 def resolve_partition_entries(ds: DataSet) -> List[BatchUpdatePartitionRequestEntryTypeDef]:
     partition_defs = list()
-    bucket = os.path.dirname(ds.storage_location.split('//')[1])
-    folder = os.path.basename(ds.storage_location.split('//')[1]) or ds.product_id
+    bucket = ds.storage_bucket
+    folder = ds.storage_path
     ps: List[Partition] = datalake_api.read_partitions(bucket=bucket, container_folder=folder)
     pdict = reshuffle_partitions(bucket, ps)
     for k, v in pdict.items():

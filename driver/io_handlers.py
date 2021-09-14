@@ -7,14 +7,16 @@ from driver.driver import get_spark
 
 __CONN_PROVIDER__ = None
 __DATA_PRODUCT_PROVIDER__ = None
+__OUTPUT_BUCKET__ = None
 
 from driver.task_executor import DataSet
 
 
-def init(connection_provider: callable, data_product_provider: callable):
-    global __CONN_PROVIDER__, __DATA_PRODUCT_PROVIDER__
+def init(connection_provider: callable, data_product_provider: callable, output_bucket: str):
+    global __CONN_PROVIDER__, __DATA_PRODUCT_PROVIDER__, __OUTPUT_BUCKET__
     __CONN_PROVIDER__ = connection_provider
     __DATA_PRODUCT_PROVIDER__ = data_product_provider
+    __OUTPUT_BUCKET__ = output_bucket
 
 
 jdbc_drivers = {

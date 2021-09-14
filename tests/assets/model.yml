@@ -1,5 +1,5 @@
 models:
-  - id: person_pub
+  - id: person
     columns:
       - id: id
         type: integer

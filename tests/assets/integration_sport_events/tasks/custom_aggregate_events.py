@@ -19,5 +19,5 @@ def execute(inp_dfs: List[DataSet]):
     events = events.drop(col('home_team_id'))
     events = events.drop(col('away_team_id'))
 
-    output_ds = DataSet(model_id='calendar', df=events, input_id=None, model=None, product=None)
+    output_ds = DataSet(id='calendar', df=events)
     return [output_ds]

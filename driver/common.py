@@ -7,7 +7,7 @@ from driver.task_executor import DataSet
 
 
 def get_data_set(dss: List[DataSet], dataset_id):
-    return next(iter([ds for ds in dss if ds.input_id == dataset_id]), None)
+    return next(iter([ds for ds in dss if ds.id == dataset_id]), None)
 
 
 def remap_schema(ds: DataFrame):

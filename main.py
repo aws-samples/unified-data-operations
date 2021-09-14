@@ -21,8 +21,8 @@ def init_aws(args):
     driver.aws.providers.init(profile=profile, region=region)
 
 
-def init_system(product_def_path: str):
-    driver.io_handlers.init(connection_provider, datalake_provider)
+def init_system(product_def_path: str, output_bucket: str):
+    driver.io_handlers.init(connection_provider, datalake_provider, output_bucket)
     conf = SparkConf()
     if hasattr(args, 'aws_profile'):
         print(f'Setting aws profile: {args.aws_profile}')
@@ -43,7 +43,7 @@ def init_system(product_def_path: str):
     driver.register_postprocessors(schema_checker, constraint_processor, transformer_processor)
     driver.register_output_handler('default', lake_output_handler)
     driver.register_output_handler('lake', lake_output_handler)
-    driver.process_product(f'{os.path.dirname(os.path.abspath(__file__))}/{product_def_path.lstrip("/")}')
+    driver.process_product(f'{os.path.dirname(os.path.abspath(__file__))}/{product_def_path.lstrip("/")}', output_bucket)
 
 
 if __name__ == '__main__':
@@ -60,6 +60,7 @@ if __name__ == '__main__':
         parser.add_argument('--local', action='store_true', help='local development')
         parser.add_argument('--jars', help='extra jars to be added to the Spark context')
         parser.add_argument('--additional-python-modules', help='this is used by Glue, ignored by this code')
+        parser.add_argument('--output_bucket', help='Data Mesh output S3 bucket name', default='glue-job-test-destination-bucket')
         args = parser.parse_args()
         print(f'PATH: {os.environ["PATH"]}')
         print(f'SPARK_HOME: {os.environ.get("SPARK_HOME")}')
@@ -72,7 +73,7 @@ if __name__ == '__main__':
                 zip_ref.extractall(f'{os.path.dirname(os.path.abspath(__file__))}/')
 
         product_path = args.product_path if hasattr(args, 'product_path') else './'
-        init_system(f'{product_path}{os.path.sep if not product_path.endswith(os.path.sep) else ""}')
+        init_system(f'{product_path}{os.path.sep if not product_path.endswith(os.path.sep) else ""}', args.output_bucket)
     except Exception as e:
         print(str(e))
         traceback.print_exc()
