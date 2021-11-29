@@ -38,7 +38,7 @@ setup(
     install_requires=requirements,
     include_package_data=True,
     platforms='any',
-    license='MIT-0',
+    license='Apache License 2.0',
     zip_safe=False,
     cmdclass={
         'clean_all': CleanCommand,
