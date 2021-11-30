@@ -1,7 +1,9 @@
-[![pipeline status](https://gitlab.aws.dev/aws-sa-dach/teams/dnb/data-mesh-task-interpreter/badges/master/pipeline.svg)](https://gitlab.aws.dev/aws-sa-dach/teams/dnb/data-mesh-task-interpreter/-/commits/master)
-[![coverage report](https://gitlab.aws.dev/aws-sa-dach/teams/dnb/data-mesh-task-interpreter/badges/master/coverage.svg)](https://gitlab.aws.dev/aws-sa-dach/teams/dnb/data-mesh-task-interpreter/-/commits/master)
+[![pipeline status](https://gitlab.aws.dev/aws-sa-dach/teams/dnb/data-product-processor/badges/master/pipeline.svg)](https://gitlab.aws.dev/aws-sa-dach/teams/dnb/data-product-processor/-/commits/master)
+[![coverage report](https://gitlab.aws.dev/aws-sa-dach/teams/dnb/data-product-processor/badges/master/coverage.svg)](https://gitlab.aws.dev/aws-sa-dach/teams/dnb/data-product-processor/-/commits/master)
 
-# Data Mesh Task Interpreter
+# Data Product Processor
+
+Library for dynamically creating and executing ETL Jobs based on a declarative description of a data product.
 
 Interprets YAML based task definition of
 the [data mesh](https://gitlab.aws.dev/aws-sa-dach/teams/dnb/data-mesh-solution) as AWS Glue job.
@@ -83,7 +85,7 @@ Set the following parameters onto the exection context:
 Alternatively you can run the whole solution from the command line:
 
 ```commandline
-SPARK_HOME="/Users/csatam/Code/data-mesh-task-interpreter/.venv/lib/python3.9/site-packages/pyspark"
+SPARK_HOME="/Users/csatam/Code/data-product-processor/.venv/lib/python3.9/site-packages/pyspark"
 export SPARK_HOME
 python main.py --JOB_NAME "TEST" --product_path /tests/assets/integration --aws_profile finn --aws_region eu-central-1 --local --jars "aws-java-sdk-bundle-1.11.375.jar,hadoop-aws-3.2.0.jar"
 ```
