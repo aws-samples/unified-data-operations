@@ -1,6 +1,8 @@
 product:
   id: product_a_customers
   version: "1.0.0"
+  defaults:
+      location:
   pipeline:
     schedule: "0 */1 * * *"
     tasks:
