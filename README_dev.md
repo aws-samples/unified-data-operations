@@ -147,7 +147,7 @@ df = spark.createDataFrame([(1, 'Jumanji(1995)', 'Adventure | Children | Fantasy
                                           (2, 'Heat (1995)', 'Action|Crime|Thriller')],
                                          movie_schema)
 ```
-Get catalog infromation:
+Get catalog information:
 ```python
 import boto3, json
 session = boto3.Session(profile_name='finn', region_name='eu-central-1')
