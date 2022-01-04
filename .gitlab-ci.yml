@@ -34,5 +34,5 @@ deploy_job_interpreter:
   stage: deploy
   image: amazon/aws-cli:latest
   script:
-    - aws s3 cp ./dist/ s3://job-interpreter/  --recursive
-    - aws s3 cp ./main.py s3://job-interpreter/main.py
+    - aws s3 cp ./dist/ s3://dpac-solution-artefacts/  --recursive
+    - aws s3 cp ./main.py s3://dpac-solution-artefacts/main.py
