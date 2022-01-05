@@ -37,4 +37,4 @@ deploy_job_interpreter:
     - yum install -y zip
     - mkdir package && cp ./dist/* ./package && cp ./main.py ./package
     - cd package && zip -r ../data-product-processor.zip ./* && cd -
-    - aws s3 cp ./data-product-processor.zip s3://dpac-solution-artefacts/main.py
+    - aws s3 cp ./data-product-processor.zip s3://dpac-solution-artefacts/data-product-processor.zip
