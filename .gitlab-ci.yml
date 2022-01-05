@@ -34,5 +34,7 @@ deploy_job_interpreter:
   stage: deploy
   image: amazon/aws-cli:latest
   script:
-    - aws s3 cp ./dist/ s3://dpac-solution-artefacts/  --recursive
-    - aws s3 cp ./main.py s3://dpac-solution-artefacts/main.py
+    - yum install -y zip
+    - mkdir package && cp ./dist/* ./package && cp ./main.py ./package
+    - cd package && zip -r ../data-product-processor.zip ./* && cd -
+    - aws s3 cp ./data-product-processor.zip s3://dpac-solution-artefacts/main.py
