@@ -1,4 +1,4 @@
-import boto3
+import boto3, botocore
 import mypy_boto3_glue
 from driver.core import Connection, ConnectionNotFoundException, DataProductTable, TableNotFoundException
 
@@ -43,22 +43,25 @@ def connection_provider(connection_id: str) -> Connection:
     :param connection_id:
     :return:
     """
-    if not get_session():
-        raise Exception('Boto session is not initialized. Please call init first.')
-    glue = get_session().client('glue')
-    response = glue.get_connection(Name=connection_id, HidePassword=False)
-    if 'Connection' not in response:
-        raise ConnectionNotFoundException(f'Connection [{connection_id}] could not be found.')
-    cprops = response.get('Connection').get('ConnectionProperties')
-    native_host = cprops.get('JDBC_CONNECTION_URL')[len('jdbc:'):]
-    connection = Connection.parse_obj({
-        'name': connection_id,
-        'host': native_host,
-        'principal': cprops.get('USERNAME'),
-        'credential': cprops.get('PASSWORD'),
-        'type': native_host.split(':')[0]
-    })
-    return connection
+    try:
+        if not get_session():
+            raise Exception('Boto session is not initialized. Please call init first.')
+        glue = get_session().client('glue')
+        response = glue.get_connection(Name=connection_id, HidePassword=False)
+        if 'Connection' not in response:
+            raise ConnectionNotFoundException(f'Connection [{connection_id}] could not be found.')
+        cprops = response.get('Connection').get('ConnectionProperties')
+        native_host = cprops.get('JDBC_CONNECTION_URL')[len('jdbc:'):]
+        connection = Connection.parse_obj({
+            'name': connection_id,
+            'host': native_host,
+            'principal': cprops.get('USERNAME'),
+            'credential': cprops.get('PASSWORD'),
+            'type': native_host.split(':')[0]
+        })
+        return connection
+    except Exception as e:
+        raise ConnectionNotFoundException(f'Connection [{connection_id}] could not be found. {str(e)}')
 
 
 def datalake_provider(product_id, table_id) -> DataProductTable:

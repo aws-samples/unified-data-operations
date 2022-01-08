@@ -95,7 +95,7 @@ def schema_checker(ds: DataSet):
             ds_schema = common.remap_schema(ds)
             quinn.validate_schema(ds.df, ds_schema)
     except (DataFrameMissingColumnError, DataFrameMissingStructFieldError, DataFrameProhibitedColumnError) as ex:
-        raise ValidationException(f'Schema Validation Error: {str(ex)} of type: {type(ex).__name__}')
+        raise ValidationException(f'Schema Validation Error of: {str(ex)} of type: {type(ex).__name__}')
     return ds
 
 

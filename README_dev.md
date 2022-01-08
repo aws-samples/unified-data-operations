@@ -13,7 +13,7 @@ test examples.
 
 # Setup real-local development environment
 
-## Install environment on OSX
+## Install development environment on OSX
 
 Everything will be installed in virtual environment in your local project folder.
 
@@ -25,9 +25,17 @@ pip install -r requirements-test.txt
 
 Don't forget to switch the new virtual environment in your IDE too.
 
+Building the wheel package:
+
+```commandline
+pip install -U pip wheel setuptools
+python3 setup.py bdist_wheel
+```
+As a result you should see 
+
 Also: make sure Java is installed. On OSX:
 
-```
+```bash
 brew tap homebrew/cask-versions
 brew update
 brew tap  homebrew/cask
@@ -38,7 +46,7 @@ brew install maven
 
 Install spark dependencies:
 
-```
+```bash
 mkdir spark_deps
 cd spark_deps
 wget https://jdbc.postgresql.org/download/postgresql-42.2.23.jar
@@ -49,7 +57,7 @@ Install the AWS dependencies for hadoop:
 1. check the current version of hadoop: ```ll -al .venv/lib/python3.9/site-packages/pyspark/jars |grep hadoop```
 2. create a POM file in the spark_deps folder (make sure the version field matches the current hadoop version):
 
-```
+```xml
 <project>
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.mycompany.app</groupId>
@@ -67,24 +75,26 @@ Install the AWS dependencies for hadoop:
 
 Download the dependencies:
 
-```
-mkdir spark_deps
+```bash
 mvn --batch-mode -f ./pom.xml -DoutputDirectory=./jars dependency:copy-dependencies
 mv jars/* .
 ```
 
-Set the following parameters onto the exection context:
+Set the following parameters onto the execution context in your IDE:
 
 ```commandline
---JOB_NAME "TEST" --product_path /tests/assets/integration --aws_profile finn --aws_region eu-central-1 --local --jars "aws-java-sdk-bundle-1.11.375.jar,hadoop-aws-3.2.0.jar"
+--JOB_NAME "TEST" --product_path /tests/assets/integration --aws_profile <your-aws-account-profile> --aws_region <your-region> --local --jars "aws-java-sdk-bundle-1.11.375.jar,hadoop-aws-3.2.0.jar"
 ```
 
 Alternatively you can run the whole solution from the command line:
+```commandline
+python main.py --JOB_NAME "TEST" --product_path /tests/assets/integration --aws_profile <your-aws-account-profile> --aws_region <your-region> --local --jars "aws-java-sdk-bundle-1.11.375.jar,hadoop-aws-3.2.0.jar"
+```
+
+Optionally you might need to export Spark Home if the Spark environment is not found in your installation.
 
 ```commandline
-SPARK_HOME="/Users/csatam/Code/data-mesh-task-interpreter/.venv/lib/python3.9/site-packages/pyspark"
-export SPARK_HOME
-python main.py --JOB_NAME "TEST" --product_path /tests/assets/integration --aws_profile finn --aws_region eu-central-1 --local --jars "aws-java-sdk-bundle-1.11.375.jar,hadoop-aws-3.2.0.jar"
+export SPARK_HOME="$(pwd)/.venv/lib/python3.9/site-packages/pyspark"
 ```
 
 Run the tests from command line (while the virtual environment is activated):
@@ -93,11 +103,27 @@ Run the tests from command line (while the virtual environment is activated):
 pytest
 ```
 
+## Troubleshooting
+
+On error:
+```
+py4j.protocol.Py4JError: org.apache.spark.api.python.PythonUtils.getPythonAuthSocketTimeout does not exist in the JVM
+```
+
+Type this:
+```commandline
+export PYTHONPATH="${SPARK_HOME}/python;${SPARK_HOME}/python/lib/py4j-0.10.9-src.zip;${PYTHONPATH}"
+```
+
+
+
 ## CI/CD
 
-See [gitlab-ci.yml](.gitlab-ci.yml).
+The Gitlab based CI/CD pipeline can be dound at: [gitlab-ci.yml](.gitlab-ci.yml).
 
 ## Setup local Spark playground
+
+This is a description of an optional and somewhat unrelated step, for setting up an interactive development environment that helps to experiment with Spark concepts in a local environment.
 
 Make sure that you execute these commands in a virtual environment (see the top of this document for instructions):
 

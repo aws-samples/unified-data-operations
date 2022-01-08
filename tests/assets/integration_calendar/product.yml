@@ -7,7 +7,7 @@ product:
       - id: aggregate_events
         logic:
           func: tasks.custom_aggregate_events
-        input:
+        inputs:
           - id: events
             type: data_product
             product_id: sport_events
