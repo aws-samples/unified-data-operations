@@ -59,7 +59,7 @@ def tag_files(bucket: str, prefix: str, tags: dict):
         s3.put_object_tagging(Bucket=bucket, Key=key, Tagging={'TagSet': tags_s3})
 
 
-def find_files(bucket: str, prefix: str):
+def find_files(bucket: str, prefix: str) -> List[str]:
     s3 = providers.get_s3()
     files = s3.list_objects_v2(Bucket=bucket, Prefix=prefix)
     return [f['Key'] for f in files['Contents']]
