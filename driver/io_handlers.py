@@ -1,7 +1,7 @@
 import os
 from types import SimpleNamespace
 from pyspark.sql import DataFrame, DataFrameWriter
-from driver.aws import glue_api
+from driver.aws import glue_api, datalake_api
 from driver.core import Connection
 from driver.driver import get_spark
 
@@ -69,6 +69,8 @@ def lake_output_handler(ds: DataSet):
         .option('header', 'true') \
         .save(output)
     # .saveAsTable('test_db.hoppala', path=ds.storage_location)
+
+    datalake_api.tag_files(ds.storage_bucket, ds.storage_path, ds.all_tags)
 
     # print(f'# partitions after write {ds.df.rdd.getNumPartitions()}')
     #todo: detect the extra schema info that is not defined in the model but provided by transformations

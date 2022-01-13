@@ -46,3 +46,20 @@ def read_partitions(bucket: str, container_folder: str = None):
     for p in partition_keys:
         partitions.append(Partition(p))
     return partitions
+
+
+def tag_files(bucket: str, prefix: str, tags: dict):
+    s3 = providers.get_s3()
+
+    tags_s3 = []
+    for tag_name in tags.keys():
+        tags_s3.append({'Key': tag_name, 'Value': str(tags[tag_name])})
+
+    for key in find_files(bucket, prefix):
+        s3.put_object_tagging(Bucket=bucket, Key=key, Tagging={'TagSet': tags_s3})
+
+
+def find_files(bucket: str, prefix: str):
+    s3 = providers.get_s3()
+    files = s3.list_objects_v2(Bucket=bucket, Prefix=prefix)
+    return [f['Key'] for f in files['Contents']]
