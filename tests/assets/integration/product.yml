@@ -1,32 +1,30 @@
+schema_version: 1.rc-1
 product:
   id: product_a_customers
   version: "1.0.0"
-  defaults: #use-cases to be supported 1 input 2 outputs / 2 inputs 1 output / 2 or more inputs ~ 2 or more outputs
-      location:
+#  defaults:
+#      storage:
+#        location:
+  owner: jane.doe@acme.com
+  name: Customers
+  description: All customer data
   pipeline:
     schedule: "0 */1 * * *"
     tasks:
-      - id: extract_customers_pub
+      - id: extract customer data
+        engine: glue
         logic:
-          func: tasks.custom_business_logic
+          module: tasks.custom_business_logic
           params:
             create_timestamp: true
-        inputs: #todo: input is duplicated
-          - id: person_pub
-            type: connection
-            connection_id: test_db_connection
-            table: dms_sample.person_relevant
-        outputs:
-          - id: person_pub
-            model: person_pub
-      - id: extract_customers_pii
-        logic:
-          func: tasks.ingest
         inputs:
-          - id: person_pii
-            type: connection
-            connection_id: test_db_connection
+          - connection: test_db_connection
             table: dms_sample.person_relevant
         outputs:
-          - id: person_pii
-            model: person_pii
+          - model: person_pii
+          - model: person_pub
+#      - id: save anonymized version of customers
+#        inputs:
+#          - model:
+#        outputs:
+#          - model: person_pub

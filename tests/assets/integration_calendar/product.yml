@@ -1,22 +1,18 @@
+schema_version: 1.rc-1
 product:
   id: calendar
   version: "1.0.0"
+  owner: jane.doe@acme.com
+  name: Customers
+  description: All customer data
   pipeline:
     schedule: "0 3 * * *"
     tasks:
       - id: aggregate_events
+        engine: glue
         logic:
-          func: tasks.custom_aggregate_events
+          module: tasks.custom_aggregate_events
         inputs:
-          - id: events
-            type: data_product
-            product_id: sport_events
-            table_id: event
-          - id: teams
-            type: data_product
-            product_id: sport_events
-            table_id: team
-          - id: locations
-            type: data_product
-            product_id: sport_events
-            table_id: location
+          - model: events
+          - model: teams
+          - model: locations
