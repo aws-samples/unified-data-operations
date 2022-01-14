@@ -21,6 +21,7 @@ Command line parameters:
     --local - local development
     --jars - extra jars to be added to the Spark context
     --additional-python-modules - this parameter is injected by Glue, currently it is not in use
+    ----default_data_lake_bucket - a default bucket location (with s3a:// prefix)
 
 ### Integration into Glue:
 

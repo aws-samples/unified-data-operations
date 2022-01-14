@@ -67,7 +67,7 @@ Install the AWS dependencies for hadoop:
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-aws</artifactId>
-            <version>3.2.0</version>
+            <version>3.3.1</version>
         </dependency>
     </dependencies>
 </project>
