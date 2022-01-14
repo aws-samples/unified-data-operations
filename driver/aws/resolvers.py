@@ -59,7 +59,7 @@ def resolve_storage_descriptor(ds: DataSet, override_location: str = None) -> St
     if override_location:
         path = f's3://{os.path.join(override_location, "")}'
     else:
-        path = ds.storage_location
+        path = f"s3://{ds.dataset_storage_path.lstrip('/')}"
     return StorageDescriptorTypeDef(
         Location=path,
         InputFormat=resolve_input_format(ds),
@@ -125,8 +125,8 @@ def reshuffle_partitions(prefix: str, partitions: List[Partition]) -> dict:
 
 def resolve_partition_inputs(ds: DataSet) -> List[PartitionInputTypeDef]:
     partition_defs = list()
-    bucket = ds.storage_bucket
-    folder = ds.storage_path
+    bucket = ds.storage_location.lstrip('/').split('/')[0]
+    folder = '/'.join(ds.dataset_storage_path.lstrip('/').split('/')[1:])
     ps: List[Partition] = datalake_api.read_partitions(bucket=bucket, container_folder=folder)
     pdict = reshuffle_partitions(os.path.join(bucket, folder), ps)
     for k, v in pdict.items():
@@ -136,8 +136,8 @@ def resolve_partition_inputs(ds: DataSet) -> List[PartitionInputTypeDef]:
 
 def resolve_partition_entries(ds: DataSet) -> List[BatchUpdatePartitionRequestEntryTypeDef]:
     partition_defs = list()
-    bucket = ds.storage_bucket
-    folder = ds.storage_path
+    bucket = ds.storage_location.lstrip('/').split('/')[0]
+    folder = '/'.join(ds.dataset_storage_path.lstrip('/').split('/')[1:])
     ps: List[Partition] = datalake_api.read_partitions(bucket=bucket, container_folder=folder)
     pdict = reshuffle_partitions(bucket, ps)
     for k, v in pdict.items():

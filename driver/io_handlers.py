@@ -7,16 +7,14 @@ from driver.driver import get_spark
 
 __CONN_PROVIDER__ = None
 __DATA_PRODUCT_PROVIDER__ = None
-__OUTPUT_BUCKET__ = None
 
 from driver.task_executor import DataSet
 
 
-def init(connection_provider: callable, data_product_provider: callable, output_bucket: str):
-    global __CONN_PROVIDER__, __DATA_PRODUCT_PROVIDER__, __OUTPUT_BUCKET__
+def init(connection_provider: callable, data_product_provider: callable):
+    global __CONN_PROVIDER__, __DATA_PRODUCT_PROVIDER__
     __CONN_PROVIDER__ = connection_provider
     __DATA_PRODUCT_PROVIDER__ = data_product_provider
-    __OUTPUT_BUCKET__ = output_bucket
 
 
 jdbc_drivers = {
@@ -26,7 +24,7 @@ jdbc_drivers = {
 
 
 def connection_input_handler(props: SimpleNamespace) -> DataFrame:
-    connection: Connection = __CONN_PROVIDER__(props.connection_id)
+    connection: Connection = __CONN_PROVIDER__(props.connection)
     print(connection.get_jdbc_connection_url(generate_creds=False))
     jdbcDF = get_spark().read.format("jdbc") \
         .option("url", connection.get_jdbc_connection_url(generate_creds=False)) \
@@ -59,9 +57,9 @@ def disk_output_handler(ds: DataSet, options: SimpleNamespace):
 
 
 def lake_output_handler(ds: DataSet):
-    output = ds.storage_location
-    if not os.path.basename(output.split('//')[1]):
-        output = f'{os.path.join(output, ds.product_id)}'
+    output = f"{'s3a://'}{ds.dataset_storage_path.lstrip('/')}"
+    # ds.storage_location = f"{'s3://'}{ds.storage_location.lstrip('/')}"
+    print(f'writing data product to {output}')
     ds.df.coalesce(2).write \
         .partitionBy(*ds.partitions) \
         .format(ds.stored_as) \

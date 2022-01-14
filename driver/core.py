@@ -14,6 +14,47 @@ from pydantic import AnyUrl
 Scalar = TypeVar('Scalar', int, float, bool, str)
 
 
+def filter_list_by_id(object_list, object_id):
+    return next(iter([m for m in object_list if m.id == object_id]), None)
+
+
+def compile_product(product, args):
+    # todo: check schema
+    if not hasattr(product, 'defaults'):
+        setattr(product, 'defaults', SimpleNamespace())
+    if hasattr(args, 'default_data_lake_bucket') and not hasattr(product.defaults, 'storage'):
+        storage = SimpleNamespace()
+        setattr(storage, 'location', args.default_data_lake_bucket)
+        setattr(product.defaults, 'storage', storage)
+    return product
+
+
+def compile_models(product: SimpleNamespace, models: List[SimpleNamespace]):
+    # todo: check schema
+    def add_back_types(model, extended_model):
+        columns_with_missing_type = [col for col in model.columns if not hasattr(col, 'type')]
+        for col in columns_with_missing_type:
+            setattr(col, 'type', filter_list_by_id(extended_model.columns, col.id).type)
+
+    compiled_models = list()
+    for model in models:
+        if hasattr(model, 'extends'):
+            extended_model = filter_list_by_id(models, model.extends)
+            if not extended_model:
+                raise Exception(
+                    f'Cannot extend model {model.id} with {extended_model} because the root model is not found.')
+            current_model_columns = set([col.id for col in model.columns])
+            extended_model_columns = set([col.id for col in extended_model.columns])
+            inherited_column_ids = extended_model_columns - current_model_columns
+            inherited_columns = [filter_list_by_id(extended_model.columns, col_id) for col_id in inherited_column_ids]
+            model.columns.extend(inherited_columns)
+            add_back_types(model, extended_model)
+        if not hasattr(model.storage, 'location') and hasattr(product.defaults.storage, 'location'):
+            setattr(model.storage, 'location', product.defaults.storage.location)
+        compiled_models.append(model)
+    return compiled_models
+
+
 @dataclass
 class DataProduct:
     id: str
@@ -25,10 +66,17 @@ class DataProduct:
 class DataSet:
     id: str
     df: DataFrame
-    model_id: str = None
     model: SimpleNamespace = None
     product: DataProduct = None
-    output_bucket: str = None
+
+    @classmethod
+    def find_by_id(cls, dataset_list, ds_id):
+        return next(iter([m for m in dataset_list if m.id == ds_id]), None)
+
+    # @property
+    # def model_id(self) -> str:
+    #     if self.model:
+    #         return self.model.id
 
     @property
     def partitions(self) -> List[str]:
@@ -49,20 +97,29 @@ class DataSet:
 
     @property
     def storage_location(self) -> str:
-        return f's3a://{self.storage_bucket}/{self.storage_path}'
+        if self.model and hasattr(self.model, 'storage') and hasattr(self.model.storage, 'location'):
+            return self.model.storage.location
+        else:
+            return None
+
+    @storage_location.setter
+    def storage_location(self, path: str):
+        if not self.model:
+            raise Exception("There's no model on the dataset, so location cannot be set yet.")
+        elif not hasattr(self.model, 'storage'):
+            storage = SimpleNamespace()
+            setattr(storage, 'location', path)
+            setattr(self.model, 'storage', storage)
+        elif not hasattr(self.model.storage, 'location'):
+            setattr(self.model.storage, 'location', path)
+        else:
+            self.model.storage.location = path
 
     @property
-    def storage_bucket(self) -> str:
-        if self.output_bucket is None:
-            raise Exception(f'Can not construct storage bucket, output_bucket is not defined.')
-        return self.output_bucket
-
-    @property
-    def storage_path(self) -> str:
+    def dataset_storage_path(self) -> str:
         if self.id is None:
-            raise Exception(f'Can not construct storage location, id is not defined.')
-        return f'{self.product.id}/{self.id}'
-
+            raise Exception(f'Can not construct storage location because product id is not defined.')
+        return f'{self.storage_location}/{self.product.id}/{self.id}'
 
     @property
     def storage_type(self) -> str:
@@ -107,7 +164,9 @@ class DataSet:
 
 
 class ValidationException(Exception):
-    pass
+    def __init__(self, message: str, data_set: DataSet):
+        self.data_set = data_set
+        super().__init__(message)
 
 
 class ConnectionNotFoundException(Exception):
@@ -115,6 +174,14 @@ class ConnectionNotFoundException(Exception):
 
 
 class TableNotFoundException(Exception):
+    pass
+
+
+class JobExecutionException(Exception):
+    pass
+
+
+class ProcessorChainExecutionException(Exception):
     pass
 
 
@@ -136,6 +203,11 @@ class JdbcDsn(AnyUrl):
 class MysqlDsn(AnyUrl):
     allowed_schemes = {'mysql', 'mysql'}
     user_required = False
+
+
+class IOType(str, Enum):
+    model = 'model'
+    connection = 'connection'
 
 
 class ConnectionType(str, Enum):

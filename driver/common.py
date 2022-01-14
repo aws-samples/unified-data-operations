@@ -6,13 +6,15 @@ from driver import driver
 from driver.task_executor import DataSet
 
 
-def get_data_set(dss: List[DataSet], dataset_id):
+def find_dataset_by_id(dss: List[DataSet], dataset_id):
     return next(iter([ds for ds in dss if ds.id == dataset_id]), None)
 
 
-def remap_schema(ds: DataFrame):
+def remap_schema(ds: DataFrame) -> List[StructType]:
     schema_fields = list()
     for col in ds.model.columns:
+        if hasattr(col, 'transform') and 'skip' in [t.type for t in col.transform]:
+            continue
         not_null = True
         if hasattr(col, 'constraints'):
             not_null = 'not_null' in [c.type for c in col.constraints]

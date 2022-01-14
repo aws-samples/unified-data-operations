@@ -1,11 +1,13 @@
 import hashlib
-import quinn
+from typing import List
+
+
 from driver import common
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, lit, udf, hash
-from pyspark.sql.types import StringType
+from pyspark.sql.types import StringType, StructField
 from pyspark.ml.feature import Bucketizer
-from driver.core import ValidationException
+from driver.core import ValidationException, filter_list_by_id
 from driver.task_executor import DataSet
 from quinn.dataframe_validator import (
     DataFrameMissingStructFieldError,
@@ -89,13 +91,36 @@ built_in_transformers = {
 }
 
 
-def schema_checker(ds: DataSet):
+def find_schema_delta(ds: DataSet) -> List[StructField]:
+    if ds.model:
+        required_schema = common.remap_schema(ds)
+        data_frame_field_hashes = [x.__hash__() for x in ds.df.schema]
+        return [x for x in required_schema if x.__hash__() not in data_frame_field_hashes]
+    else:
+        return None
+
+
+def type_caster(ds: DataSet):
     try:
-        if ds.model:
-            ds_schema = common.remap_schema(ds)
-            quinn.validate_schema(ds.df, ds_schema)
-    except (DataFrameMissingColumnError, DataFrameMissingStructFieldError, DataFrameProhibitedColumnError) as ex:
-        raise ValidationException(f'Schema Validation Error of: {str(ex)} of type: {type(ex).__name__}')
+        mismatched_fields = find_schema_delta(ds)
+        for mismatched_field in mismatched_fields:
+            print(f'--> typecasting [{mismatched_field.name}] to type: [{mismatched_field.dataType.typeName()}] in [{ds.id}]')
+            field_in_df = next(iter([f for f in ds.df.schema.fields if f.name == mismatched_field.name]), None)
+            if field_in_df:
+                ds.df = ds.df.withColumn(mismatched_field.name, col(mismatched_field.name).cast(mismatched_field.dataType.typeName()))
+        return ds
+    except Exception as e:
+        raise
+
+
+def schema_checker(ds: DataSet):
+    if ds.model:
+        print(
+            f'--> schema checking for dataset [{ds.id}] with model id: [{ds.model.id}]. Data frame columns: {len(ds.df.columns)}')
+        missing_fields = find_schema_delta(ds)
+        if missing_fields:
+            raise ValidationException(
+                f'The following fields are missing from the data set [{ds.id}]: {missing_fields}', ds)
     return ds
 
 

@@ -44,7 +44,7 @@ def update_data_catalog(ds: DataSet):
 
     def upsert_partitions():
         # entries = resolve_partition_entries(ds)
-        # rsp = glue.batch_update_partition(DatabaseName=ds.product_id, TableName=ds.id, Entries=entries)
+        # rsp = glue.batch_update_partition(DatabaseName=ds.product_id, TableName=ds.model_id, Entries=entries)
         partition_inputs = resolve_partition_inputs(ds)
         rsp = glue.batch_create_partition(DatabaseName=ds.product_id, TableName=ds.id,
                                           PartitionInputList=partition_inputs)
