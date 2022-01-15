@@ -1,17 +1,15 @@
-from typing import List
-
 import sys, os
 import traceback
+
+from typing import List
 from types import SimpleNamespace
-import yaml
 from pyspark.sql import SparkSession
 from driver import task_executor
 from .aws import providers
 from deprecated import CatalogService
+from .util import compile_models, compile_product
 
 __SPARK__: SparkSession = None
-
-from .core import compile_models, compile_product
 
 
 def get_spark():
@@ -40,30 +38,6 @@ def init(spark_session=None, spark_config=None):
     # sc  = __SPARK__.sparkContext
     # sc.setSystemProperty("com.amazonaws.services.s3.enableV4", "true")
 
-
-
-def load_yaml_into_object(file_type, cfg_file_prefix: str = None) -> SimpleNamespace:
-    def parse(d: dict):
-        x = SimpleNamespace()
-        for k, v in d.items():
-            if isinstance(v, dict):
-                setattr(x, k, parse(v))
-            elif isinstance(v, list):
-                object_list = list()
-                for e in v:
-                    object_list.append(parse(e) if isinstance(e, dict) else e)
-                setattr(x, k, object_list)
-            else:
-                setattr(x, str(k), v)
-        return x
-
-    path = f'{cfg_file_prefix}{file_type}' if cfg_file_prefix else file_type
-    print(f'loading file {path}')
-    with open(fr'{path}') as file:
-        dict_val = yaml.load(file, Loader=yaml.FullLoader)
-        return parse(dict_val)
-
-
 def execute_tasks(product_id: str, tasks: list, models: List[SimpleNamespace], product_path: str):
     session = providers.get_session()
     if session:
@@ -76,11 +50,12 @@ def execute_tasks(product_id: str, tasks: list, models: List[SimpleNamespace], p
 def process_product(args):
     try:
         # script_folder = os.path.dirname(os.path.abspath(__file__))
+        # path = f'{config_file_path_prefix}{file_type}' if config_file_path_prefix else file_type
         rel_product_path = os.path.join(args.product_path, '') if hasattr(args, 'product_path') else os.path.join('./',
                                                                                                                   '')
         abs_product_path = os.path.join(os.path.abspath(rel_product_path), '')
-        product = compile_product(load_yaml_into_object('product.yml', abs_product_path).product, args)
-        models = compile_models(product, load_yaml_into_object('model.yml', abs_product_path).models)
+        product = compile_product(abs_product_path, args)
+        models = compile_models(abs_product_path, product)
         execute_tasks(product.id, product.pipeline.tasks, models, abs_product_path)
     except Exception as e:
         traceback.print_exc()

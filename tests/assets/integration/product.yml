@@ -1,4 +1,4 @@
-schema_version: 1.rc-1
+  schema_version: 1.rc-1
 product:
   id: product_a_customers
   version: "1.0.0"
@@ -15,7 +15,7 @@ product:
         engine: glue
         logic:
           module: tasks.custom_business_logic
-          params:
+          parameters:
             create_timestamp: true
         inputs:
           - connection: test_db_connection

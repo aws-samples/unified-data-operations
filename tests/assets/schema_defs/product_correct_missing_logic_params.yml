@@ -10,12 +10,10 @@ product:
       - id: extract_customers
         logic:
           module: tasks.custom_business_logic
-          engine: glue
           parameters:
             create_timestamp: true
         inputs:
-          - connection: test_db_connection
-            table: persons
-            model: person
+          - model: a
         outputs:
-          - model: person
+          - model: b
+          - model: c

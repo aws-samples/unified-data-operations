@@ -17,55 +17,6 @@ from pydantic import AnyUrl
 Scalar = TypeVar('Scalar', int, float, bool, str)
 
 
-def filter_list_by_id(object_list, object_id):
-    return next(iter([m for m in object_list if m.id == object_id]), None)
-
-
-def get_schema(schema_type):
-    script_folder = os.path.dirname(os.path.abspath(__file__))
-    schema_path = f'{script_folder}{os.sep}schema{os.sep}{schema_type}.json'
-    with open(schema_path) as schema:
-        schema = json.load(schema)
-    return schema
-
-
-def compile_product(product, args):
-    validate(product, get_schema('product'))
-    if not hasattr(product, 'defaults'):
-        setattr(product, 'defaults', SimpleNamespace(storage=None))
-    if hasattr(args, 'default_data_lake_bucket') and not hasattr(product.defaults, 'storage'):
-        storage = SimpleNamespace()
-        setattr(storage, 'location', args.default_data_lake_bucket)
-        setattr(product.defaults, 'storage', storage)
-    return product
-
-
-def compile_models(product: SimpleNamespace, models: List[SimpleNamespace]):
-    # todo: check schema
-    def add_back_types(model, extended_model):
-        columns_with_missing_type = [col for col in model.columns if not hasattr(col, 'type')]
-        for col in columns_with_missing_type:
-            setattr(col, 'type', filter_list_by_id(extended_model.columns, col.id).type)
-
-    compiled_models = list()
-    for model in models:
-        if hasattr(model, 'extends'):
-            extended_model = filter_list_by_id(models, model.extends)
-            if not extended_model:
-                raise Exception(
-                    f'Cannot extend model {model.id} with {extended_model} because the root model is not found.')
-            current_model_columns = set([col.id for col in model.columns])
-            extended_model_columns = set([col.id for col in extended_model.columns])
-            inherited_column_ids = extended_model_columns - current_model_columns
-            inherited_columns = [filter_list_by_id(extended_model.columns, col_id) for col_id in inherited_column_ids]
-            model.columns.extend(inherited_columns)
-            add_back_types(model, extended_model)
-        if not hasattr(model.storage, 'location') and hasattr(product.defaults.storage, 'location'):
-            setattr(model.storage, 'location', product.defaults.storage.location)
-        compiled_models.append(model)
-    return compiled_models
-
-
 @dataclass
 class DataProduct:
     id: str
@@ -219,6 +170,11 @@ class MysqlDsn(AnyUrl):
 class IOType(str, Enum):
     model = 'model'
     connection = 'connection'
+
+
+class ArtefactType(str, Enum):
+    models = 'model'
+    product = 'product'
 
 
 class ConnectionType(str, Enum):

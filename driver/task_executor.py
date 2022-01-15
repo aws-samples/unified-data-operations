@@ -1,11 +1,10 @@
 import importlib
 import sys
+
 from types import SimpleNamespace
 from typing import List, Callable
-
-from driver.core import filter_list_by_id, DataSet, DataProduct, IOType, JobExecutionException, \
-    ProcessorChainExecutionException, \
-    ValidationException
+from .util import filter_list_by_id
+from .core import DataSet, DataProduct, IOType, ProcessorChainExecutionException, ValidationException
 
 data_src_handlers: dict = dict()
 pre_processors: list = list()
@@ -43,7 +42,7 @@ def resolve_data_set_id(io_def: SimpleNamespace, io_type: IOType) -> str:
         return getattr(io_def, io_type)
     else:
         table_name_elements = io_def.table.rsplit('.')
-        return table_name_elements[len(table_name_elements)-1]
+        return table_name_elements[len(table_name_elements) - 1]
 
 
 def load_inputs(product_id: str, inputs: SimpleNamespace, models: List[SimpleNamespace]) -> List[DataSet]:

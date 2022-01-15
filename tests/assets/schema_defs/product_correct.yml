@@ -10,7 +10,6 @@ product:
       - id: extract_customers
         logic:
           module: tasks.custom_business_logic
-          engine: glue
           parameters:
             create_timestamp: true
         inputs:
@@ -18,4 +17,5 @@ product:
             table: persons
             model: person
         outputs:
-          - model: person
+          - model: a
+          - model: b

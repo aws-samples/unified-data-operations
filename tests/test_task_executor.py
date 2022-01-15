@@ -1,6 +1,5 @@
 import json
 from types import SimpleNamespace
-
 import os
 from pyspark.sql import DataFrame
 import driver

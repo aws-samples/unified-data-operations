@@ -7,7 +7,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, lit, udf, hash
 from pyspark.sql.types import StringType, StructField
 from pyspark.ml.feature import Bucketizer
-from driver.core import ValidationException, filter_list_by_id
+from driver.core import ValidationException
 from driver.task_executor import DataSet
 from quinn.dataframe_validator import (
     DataFrameMissingStructFieldError,

@@ -1,5 +1,8 @@
+schema_version: 1.rc-1
 models:
   - id: person
+    version: "1.0"
+    description: "Person Model"
     columns:
       - id: id
         type: integer

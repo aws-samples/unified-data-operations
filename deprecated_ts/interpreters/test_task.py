@@ -44,7 +44,7 @@ def provide_file(spark_session, path: str):
 
 
 def test_single_product_with_connection_as_input(spark_session):
-    provide_file(spark_session, './deprecated/tests/interpreters/product.yml')
+    provide_file(spark_session, './deprecated/tests/interpreters/product_wrong_output.yml')
     provide_file(spark_session, './deprecated/tests/interpreters/model.yml')
     interpreter = TaskInterpreter(GlueContext(spark_session.sparkContext))
     interpreter.dataset_mapper = Mock()
