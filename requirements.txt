@@ -6,3 +6,4 @@ pydantic
 quinn
 boto3-stubs[glue]==1.18.34
 mypy-boto3-glue==1.18.34
+jsonschema==3.0.2

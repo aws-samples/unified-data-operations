@@ -59,7 +59,7 @@ def resolve_storage_descriptor(ds: DataSet, override_location: str = None) -> St
     if override_location:
         path = f's3://{os.path.join(override_location, "")}'
     else:
-        path = f"s3://{ds.dataset_storage_path.lstrip('/')}"
+            path = f"s3://{ds.dataset_storage_path.lstrip('/')}"
     return StorageDescriptorTypeDef(
         Location=path,
         InputFormat=resolve_input_format(ds),

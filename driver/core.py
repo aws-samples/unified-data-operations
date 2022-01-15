@@ -1,3 +1,6 @@
+import json
+from jsonschema import validate, ValidationError
+import os
 from types import SimpleNamespace
 from dataclasses import dataclass
 from pyspark.sql import DataFrame
@@ -18,8 +21,16 @@ def filter_list_by_id(object_list, object_id):
     return next(iter([m for m in object_list if m.id == object_id]), None)
 
 
+def get_schema(schema_type):
+    script_folder = os.path.dirname(os.path.abspath(__file__))
+    schema_path = f'{script_folder}{os.sep}schema{os.sep}{schema_type}.json'
+    with open(schema_path) as schema:
+        schema = json.load(schema)
+    return schema
+
+
 def compile_product(product, args):
-    # todo: check schema
+    validate(product, get_schema('product'))
     if not hasattr(product, 'defaults'):
         setattr(product, 'defaults', SimpleNamespace(storage=None))
     if hasattr(args, 'default_data_lake_bucket') and not hasattr(product.defaults, 'storage'):
