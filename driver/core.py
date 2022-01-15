@@ -21,7 +21,7 @@ def filter_list_by_id(object_list, object_id):
 def compile_product(product, args):
     # todo: check schema
     if not hasattr(product, 'defaults'):
-        setattr(product, 'defaults', SimpleNamespace())
+        setattr(product, 'defaults', SimpleNamespace(storage=None))
     if hasattr(args, 'default_data_lake_bucket') and not hasattr(product.defaults, 'storage'):
         storage = SimpleNamespace()
         setattr(storage, 'location', args.default_data_lake_bucket)

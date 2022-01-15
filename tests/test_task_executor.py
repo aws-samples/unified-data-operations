@@ -15,7 +15,7 @@ def test_end_to_end(spark_session, person_df: DataFrame):
         return dfs.get(props.table)
 
     def mock_output_handler(ds: DataSet):
-        assert ds.model_id == 'person'
+        assert ds.id == 'persons'
         assert ds.df.count() == person_df.count()
         ds.df.show()
         ds.df.describe()
@@ -25,4 +25,5 @@ def test_end_to_end(spark_session, person_df: DataFrame):
     driver.register_postprocessors(schema_checker, constraint_processor, transformer_processor)
     driver.register_output_handler('default', mock_output_handler)
     driver.register_output_handler('lake', mock_output_handler)
-    driver.process_product(f'{os.path.dirname(os.path.abspath(__file__))}/assets/')
+    args = SimpleNamespace(product_path=f'{os.path.dirname(os.path.abspath(__file__))}/assets/')
+    driver.process_product(args)

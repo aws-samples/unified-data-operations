@@ -42,7 +42,8 @@ def resolve_data_set_id(io_def: SimpleNamespace, io_type: IOType) -> str:
     if io_type == IOType.model:
         return getattr(io_def, io_type)
     else:
-        return io_def.table.rsplit('.')[1]
+        table_name_elements = io_def.table.rsplit('.')
+        return table_name_elements[len(table_name_elements)-1]
 
 
 def load_inputs(product_id: str, inputs: SimpleNamespace, models: List[SimpleNamespace]) -> List[DataSet]:

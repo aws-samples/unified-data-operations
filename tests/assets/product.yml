@@ -10,10 +10,8 @@ product:
           parameters:
             create_timestamp: true
         inputs:
-          - id: persons
-            type: connection
-            connection_id: test_db_connection
+          - connection: test_db_connection
             table: persons
-        outputs:
-          - id: person_pub
             model: person
+        outputs:
+          - model: person
