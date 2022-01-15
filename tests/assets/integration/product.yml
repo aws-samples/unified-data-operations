@@ -8,11 +8,11 @@ product:
   owner: jane.doe@acme.com
   name: Customers
   description: All customer data
+  engine: glue
   pipeline:
     schedule: "0 */1 * * *"
     tasks:
       - id: extract customer data
-        engine: glue
         logic:
           module: tasks.custom_business_logic
           parameters:

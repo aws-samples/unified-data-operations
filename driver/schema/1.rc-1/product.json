@@ -48,6 +48,14 @@
         "defaults": {
           "$ref": "#/$defs/defaults"
         },
+        "engine": {
+          "type": "string",
+          "enum": [
+            "glue",
+            "emr",
+            "dbt"
+          ]
+        },
         "pipeline": {
           "$ref": "#/$defs/pipeline"
         }
@@ -132,10 +140,6 @@
         "module": {
           "type": "string",
           "minLength": 1
-        },
-        "engine": {
-          "type": "string",
-          "enum": ["glue", "emr", "dbt"]
         },
         "parameters": {
           "type": "object",
