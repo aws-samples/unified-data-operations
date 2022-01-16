@@ -1,3 +1,5 @@
+import datetime
+
 from pytest import fixture
 from pyspark.sql.types import (
     StringType,
@@ -5,7 +7,7 @@ from pyspark.sql.types import (
     StructType,
     IntegerType,
     LongType,
-    DoubleType
+    DoubleType, TimestampType
 )
 
 
@@ -71,3 +73,23 @@ def person_df(spark_session, person_schema):
                                           (2, "Jane", "Doe", 41, "Berlin", "Female"),
                                           (3, "Maxx", "Mustermann", 30, "Berlin", "Male")
                                           ], person_schema)
+
+
+@fixture(scope='module')
+def transaction_schema():
+    return StructType([
+        StructField('id', IntegerType(), False),
+        StructField('sku', StringType(), True),
+        StructField('trx_date', TimestampType(), True),
+        StructField('geo', StringType(), True),
+        StructField('items', IntegerType(), True)
+    ])
+
+
+@fixture(scope='module')
+def transaction_df(spark_session, transaction_schema):
+    date_field = datetime.datetime.now()
+    return spark_session.createDataFrame([(1, "1234", date_field, "EMEA", 25),
+                                          (2, "1235", date_field, "EMEA", 41),
+                                          (3, "1236", date_field, "US", 30)
+                                          ], transaction_schema)

@@ -22,7 +22,7 @@ models:
           - type: not_null
           - type: regexp
             options:
-              value: '[Male|Female]'
+              value: '^Male|Female&'
       - id: age
         type: integer
     meta:

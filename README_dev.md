@@ -134,7 +134,7 @@ ptpython
 
 Type the following in the ptpython console:
 
-[optional] only if you encounter errors with the larger snippent bellow:
+[optional] only if you encounter errors with the larger snippet bellow:
 ```python
 import findspark
 findspark.init()

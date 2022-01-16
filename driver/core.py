@@ -125,9 +125,14 @@ class DataSet:
         return self.product.owner if self.product else None
 
 
-class ValidationException(Exception):
+class SchemaValidationException(Exception):
     def __init__(self, message: str, data_set: DataSet):
         self.data_set = data_set
+        super().__init__(message)
+
+
+class ValidationException(Exception):
+    def __init__(self, message: str):
         super().__init__(message)
 
 

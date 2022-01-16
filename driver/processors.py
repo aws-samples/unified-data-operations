@@ -1,13 +1,14 @@
 import hashlib
+import re
+from datetime import datetime, timedelta
 from typing import List
 
-
 from driver import common
-from pyspark.sql import DataFrame
-from pyspark.sql.functions import col, lit, udf, hash
-from pyspark.sql.types import StringType, StructField
+from pyspark.sql import DataFrame, Window
+from pyspark.sql.functions import col, lit, udf, hash, to_date, row_number
+from pyspark.sql.types import StringType, StructField, TimestampType
 from pyspark.ml.feature import Bucketizer
-from driver.core import ValidationException
+from driver.core import ValidationException, SchemaValidationException
 from driver.task_executor import DataSet
 from quinn.dataframe_validator import (
     DataFrameMissingStructFieldError,
@@ -20,13 +21,16 @@ def null_validator(df: DataFrame, col_name: str, cfg: any = None):
     # null_value_ratio = df.select(count(when(col(col_name).isNull(), True)) / count(lit(1)).alias('count')) \
     #     .first()[0]
     # ('not_null', self.column, null_value_ratio <= self.threshold, self.threshold, null_value_ratio
-
-    if df.filter((df[col_name].isNull()) | (df[col_name] == "")).count() > 0:
+    col = df.select(col_name)
+    if col.filter((col[col_name].isNull()) | (col[col_name] == "")).count() > 0:
         raise ValidationException(f'Column: {col_name} is expected to be not null.')
 
 
 def regexp_validator(df: DataFrame, col_name: str, cfg: any = None):
-    if df.select(col(col_name)).count() != df.select(col(col_name).rlike(cfg.value)).count():
+    if not hasattr(cfg, 'value'):
+        raise ValidationException(f'Column {col_name} has regexp constraint validator, but no value option provided.')
+    cosl = df.select(col_name)
+    if col.count() != col.filter(col[col_name].rlike(cfg.value)).count():
         raise ValidationException(f"Column: {col_name} doesn't match regexp: {cfg.value}")
 
 
@@ -36,18 +40,87 @@ def unique_validator(df: DataFrame, col_name: str, cfg: any = None):
         raise ValidationException(f'Column: {col_name} is expected to be unique.')
 
 
+def resolve_time_delta(cfg):
+    if hasattr(cfg, 'time_unit'):
+        if cfg.time_unit == 'minutes':
+            return timedelta(minutes=cfg.threshold)
+        elif cfg.time_unit == 'hours':
+            return timedelta(hours=cfg.threshold)
+        elif cfg.time_unit == 'days':
+            return timedelta(days=cfg.threshold)
+        elif cfg.time_unit == 'weeks':
+            return timedelta(weeks=cfg.threshold)
+        elif cfg.time_unit == 'seconds':
+            return timedelta(seconds=cfg.threshold)
+    else:
+        return timedelta(minutes=cfg.threshold)
+
+
+def past_validator(df: DataFrame, col_name: str, cfg: any = None):
+    now = datetime.now()
+    if cfg and hasattr(cfg, 'threshold'):
+        now = now + resolve_time_delta(cfg)
+    count = df.filter(df["trx_date"].cast(TimestampType()) >= lit(now)).count()
+    if count > 0:
+        raise ValidationException(f'Column {col_name} has values in the future (beyond {now}).')
+
+
+def future_validator(df: DataFrame, col_name: str, cfg: any = None):
+    now = datetime.now()
+    if cfg and hasattr(cfg, 'threshold'):
+        now = now - resolve_time_delta(cfg)
+    count = df.filter(df["trx_date"].cast(TimestampType()) <= lit(now)).count()
+    if count > 0:
+        raise ValidationException(f'Column {col_name} has values in the past (before {now}).')
+
+
+def freshness_validator(df: DataFrame, col_name: str, cfg: any = None):
+    regex = re.compile('seconds|minutes|hours|days|weeks', re.I)
+    if not hasattr(cfg, 'threshold') or not hasattr(cfg, 'time_unit') or not regex.match(str(cfg.time_unit)):
+        raise ValidationException(
+            f'[threshold] and [time_unit] options must be specified. Time units shoudl have one of the following values: seconds|minutes|hours|days|weeks.')
+    if hasattr(cfg, 'group_by'):
+        # df.withColumn("rn", row_number().over(Window.partitionBy(cfg.group_by).orderBy(col(col_name).desc())))
+        # df = df.filter(col("rn") == 1).drop("rn")
+        res_df = df.select(col(col_name), col(cfg.group_by)).withColumn('rn', row_number().over(
+            Window.partitionBy(cfg.group_by).orderBy(col(col_name).desc()))).filter(col('rn') == 1).drop('rn')
+        threshold = datetime.now() - resolve_time_delta(cfg)
+        for row in res_df.collect():
+            if row[col_name] < threshold:
+                raise ValidationException(
+                    f'The most recent row for group [{cfg.group_by}] is older ({row[col_name]}) than the threshold ({threshold}).')
+    else:
+        threshold = datetime.now() - resolve_time_delta(cfg)
+        most_recent = df.select(col(col_name)).orderBy(col(col_name).desc()).first()[col_name]
+        if most_recent < threshold:
+            raise ValidationException(f'The most recent row is older ({most_recent}) than the threshold ({threshold}).')
+
+
+def min_validator(df: DataFrame, col_name: str, cfg: any = None):
+    pass
+
+
+def max_validator(df: DataFrame, col_name: str, cfg: any = None):
+    pass
+
+
 constraint_validators = {
     "not_null": null_validator,
     "unique": unique_validator,
-    "regexp": regexp_validator
+    "regexp": regexp_validator,
+    "past": past_validator,
+    "future": future_validator,
+    "freshness": freshness_validator
 }
 
 
 def hasher(df: DataFrame, col_name: str, cfg: any = None) -> DataFrame:
+    #todo: implement salting
     return df.withColumn(col_name, hash(col(col_name)))
 
 
 def encrypt(df: DataFrame, col_name: str, cfg: any = None) -> DataFrame:
+    #todo: implement key handling + kms
     def encrypt_f(value: object, key: str = None):
         if key:
             return hashlib.sha256(str(value).encode() + key.encode()).hexdigest()
@@ -63,6 +136,7 @@ def skip_column(df: DataFrame, col_name: str, cfg: any = None) -> DataFrame:
 
 
 def rename_col(df: DataFrame, col_name: str, cfg: any = None) -> DataFrame:
+    #todo: update the schema for the dataset or remove this one
     return df.withColumnRenamed(col_name, cfg.name)
 
 
@@ -104,10 +178,12 @@ def type_caster(ds: DataSet):
     try:
         mismatched_fields = find_schema_delta(ds)
         for mismatched_field in mismatched_fields:
-            print(f'--> typecasting [{mismatched_field.name}] to type: [{mismatched_field.dataType.typeName()}] in [{ds.id}]')
+            print(
+                f'--> typecasting [{mismatched_field.name}] to type: [{mismatched_field.dataType.typeName()}] in [{ds.id}]')
             field_in_df = next(iter([f for f in ds.df.schema.fields if f.name == mismatched_field.name]), None)
             if field_in_df:
-                ds.df = ds.df.withColumn(mismatched_field.name, col(mismatched_field.name).cast(mismatched_field.dataType.typeName()))
+                ds.df = ds.df.withColumn(mismatched_field.name,
+                                         col(mismatched_field.name).cast(mismatched_field.dataType.typeName()))
         return ds
     except Exception as e:
         raise
@@ -119,7 +195,7 @@ def schema_checker(ds: DataSet):
             f'--> schema checking for dataset [{ds.id}] with model id: [{ds.model.id}]. Data frame columns: {len(ds.df.columns)}')
         missing_fields = find_schema_delta(ds)
         if missing_fields:
-            raise ValidationException(
+            raise SchemaValidationException(
                 f'The following fields are missing from the data set [{ds.id}]: {missing_fields}', ds)
     return ds
 

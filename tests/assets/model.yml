@@ -35,12 +35,12 @@ models:
           - type: not_null
           - type: regexp
             options:
-              value: '[Male|Female]'
+              value: '^Male|Female$'
     meta:
       contains_pii: true
       steward: jane.doe@acme.com
     storage:
-      location: 's3://some_data_lake/some_folder'
+      location: '/some_data_lake/some_folder'
       type: lake
       options:
         skip_first_row: true
