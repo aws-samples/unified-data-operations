@@ -1,4 +1,4 @@
-  schema_version: 1.rc-1
+schema_version: 1.rc-1
 product:
   id: product_a_customers
   version: "1.0.0"

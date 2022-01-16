@@ -81,6 +81,8 @@ class DataSet:
     def dataset_storage_path(self) -> str:
         if self.id is None:
             raise Exception(f'Can not construct storage location because product id is not defined.')
+        if not self.storage_location:
+            raise Exception(f'The data set storage location is not set.')
         return f'{self.storage_location}/{self.product.id}/{self.id}'
 
     @property

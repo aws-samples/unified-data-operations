@@ -75,7 +75,7 @@ def run_processors(phase: str, datasets: List[DataSet], processors: List[Callabl
         return processed_dfs
     except ValidationException as vex:
         raise ProcessorChainExecutionException(
-            f'{type(vex).__name__} in processor [{processor.__name__}] with dataset [{vex.data_set.id}] at processor chain: [{phase}]') from vex
+            f'{type(vex).__name__} in processor [{processor.__name__}] at processor chain: [{phase}]: {str(vex)}') from vex
     except Exception as e:
         raise ProcessorChainExecutionException(
             f'{type(e).__name__} in [{processor.__name__}] at processor chain: [{phase}]') from e

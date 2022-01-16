@@ -29,9 +29,9 @@ def null_validator(df: DataFrame, col_name: str, cfg: any = None):
 def regexp_validator(df: DataFrame, col_name: str, cfg: any = None):
     if not hasattr(cfg, 'value'):
         raise ValidationException(f'Column {col_name} has regexp constraint validator, but no value option provided.')
-    cosl = df.select(col_name)
+    col = df.select(col_name)
     if col.count() != col.filter(col[col_name].rlike(cfg.value)).count():
-        raise ValidationException(f"Column: {col_name} doesn't match regexp: {cfg.value}")
+        raise ValidationException(f"Column: [{col_name}] doesn't match regexp: {cfg.value}")
 
 
 def unique_validator(df: DataFrame, col_name: str, cfg: any = None):

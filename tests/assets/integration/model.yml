@@ -22,7 +22,7 @@ models:
           - type: not_null
           - type: regexp
             options:
-              value: '^Male|Female&'
+              value: '^male|female$'
       - id: age
         type: integer
     meta:
@@ -46,6 +46,7 @@ models:
 
   - id: person_pub
     version: "1.0.0"
+    description: public personal data
     extends: person_pii
     columns:
       - id: full_name

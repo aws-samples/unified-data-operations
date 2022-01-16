@@ -66,7 +66,7 @@ def validate_schema(validable_dict: dict, artefact_type: ArtefactType):
 def enrich_product(product_input: SimpleNamespace, args):
     product = product_input.product
     if not hasattr(product, 'defaults'):
-        setattr(product, 'defaults', SimpleNamespace(storage=None))
+        setattr(product, 'defaults', SimpleNamespace())
     if hasattr(args, 'default_data_lake_bucket') and not hasattr(product.defaults, 'storage'):
         storage = SimpleNamespace()
         setattr(storage, 'location', args.default_data_lake_bucket)
@@ -83,7 +83,7 @@ def enrich_models(models: SimpleNamespace, product: SimpleNamespace):
     compiled_models = list()
     for model in models.models:
         if hasattr(model, 'extends'):
-            extended_model = filter_list_by_id(models, model.extends)
+            extended_model = filter_list_by_id(models.models, model.extends)
             if not extended_model:
                 raise Exception(
                     f'Cannot extend model {model.id} with {extended_model} because the root model is not found.')

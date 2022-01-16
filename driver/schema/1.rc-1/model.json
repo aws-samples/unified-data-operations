@@ -4,7 +4,8 @@
   "title": "Data product schema",
   "type": "object",
   "required": [
-    "models"
+    "models",
+    "schema_version"
   ],
   "additionalProperties": false,
   "properties": {
