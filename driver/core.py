@@ -124,6 +124,24 @@ class DataSet:
     def product_owner(self) -> str:
         return self.product.owner if self.product else None
 
+    @property
+    def tags(self) -> dict:
+        if self.id is None:
+            raise Exception(f'Can not construct tags, id is not defined.')
+        return self.model.tags.__dict__
+
+    @property
+    def access_tags(self) -> dict:
+        if self.id is None:
+            raise Exception(f'Can not construct tags, id is not defined.')
+        return self.model.access.__dict__
+
+    @property
+    def all_tags(self) -> dict:
+        if self.id is None:
+            raise Exception(f'Can not construct tags, id is not defined.')
+        return {**self.tags, **{'access_' + k: v for k, v in self.access_tags.items()}}
+
 
 class ValidationException(Exception):
     def __init__(self, message: str, data_set: DataSet):
