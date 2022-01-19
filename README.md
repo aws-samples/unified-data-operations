@@ -41,7 +41,7 @@ The access management concept is based on two separate mechanisms:
     - the platform takes over this process and tags all produced data files based on the configuration in the YAML files
 2. Managing groups of people (or services) who are allows to join those groups to gain access to the data.
     - IAM policies, which provide access to S3 data files which have been tagged as mentioned before have to be created manually (as of now)
-      - please see `access/policie.json` as an example for providing access to files which have specific tags defined.
+      - please see `access/policy_template.json` as an example for providing access to files which have specific tags defined.
     - those policies can be attached to IAM groups to provide access to one or multiple combinations of access control tags
     - IAM users then can join and leave groups to gain access to the data, matching the policies assigned to those groups
 
