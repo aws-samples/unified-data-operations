@@ -53,8 +53,12 @@ The S3 writer automatically applies the following tags to all data files written
 
 
 ### Limitations
-Based on the metadata defined in the model's YAML files, the interpreter will set tags to all files written out to 
-Amazon S3. Currently, only files written to S3 are supported to be tagged automatically. Access policies and group have to be created by the user manually and IAM users have to be assigned to IAM groups manually to actually manage access to the data.  
+Based on the metadata defined in the model's YAML files, the processor will set S3 tags to all files written out to 
+Amazon S3, found in the data dataset's "folder" (meaning all files, with the prefix `<data product id>/<output dataset id>/`)
+
+Currently, only files written to S3 are supported to be tagged automatically. 
+
+Access policies and group have to be created by the user manually and IAM users have to be assigned to IAM groups manually to actually manage access to the data.  
 
 ## Architecture
 
