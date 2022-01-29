@@ -61,7 +61,7 @@ def disk_output_handler(ds: DataSet, options: SimpleNamespace):
 def lake_output_handler(ds: DataSet):
     output = f"{'s3a://'}{ds.dataset_storage_path.lstrip('/')}"
     # ds.storage_location = f"{'s3://'}{ds.storage_location.lstrip('/')}"
-    print(f'writing data product to {output}')
+    print(f'--> [Lake Output Handler]: writing data product to: {output}')
     ds.df.coalesce(2).write \
         .partitionBy(*ds.partitions) \
         .format(ds.stored_as) \

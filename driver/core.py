@@ -82,7 +82,7 @@ class DataSet:
         if self.id is None:
             raise Exception(f'Can not construct storage location because product id is not defined.')
         if not self.storage_location:
-            raise Exception(f'The data set storage location is not set.')
+            raise Exception(f'The data set storage location is not set for dataset id: {self.id}.')
         return f'{self.storage_location}/{self.product.id}/{self.id}'
 
     @property

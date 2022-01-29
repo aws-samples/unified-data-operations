@@ -9,6 +9,7 @@ from driver.task_executor import DataSet
 
 def update_data_catalog(ds: DataSet):
     glue = providers.get_glue()
+    print(f'--> Updating the data catalog for data product [{ds.product_id}] and model [{ds.model.id}].')
 
     def upsert_database():
         try:
@@ -34,7 +35,7 @@ def update_data_catalog(ds: DataSet):
             # table not found]
             if enf.__class__.__name__ == 'EntityNotFoundException':
                 print(
-                    f'Table [{ds.id}] cannot be found in the database [{ds.product_id}] in Glue Data Catalog. Table is going to be created.')
+                    f'Table [{ds.id}] cannot be found in the catalog schmea [{ds.product_id}]. Table is going to be created.')
                 glue.create_table(DatabaseName=ds.product_id, TableInput=resolve_table_input(ds))
             else:
                 raise enf
@@ -53,8 +54,8 @@ def update_data_catalog(ds: DataSet):
             raise Exception(f"Couldn't update the table with the partitions.")
 
         print(str(rsp))
-        #todo: write a proper handling here
+        # todo: write a proper handling here
 
     upsert_database()
     upsert_table()
-    upsert_partitions() #todo: this is not yet an upsert (in implementation)
+    upsert_partitions()  # todo: this is not yet an upsert (in implementation)
