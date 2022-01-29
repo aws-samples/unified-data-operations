@@ -70,8 +70,8 @@ def test_model_extend_compilation():
     pub_full_id_col = filter_list_by_id(person_pub.columns, 'id')
     assert pub_full_id_col
     assert pub_full_id_col.type == 'integer'
-    genre = filter_list_by_id(person_pub.columns, 'genre')
-    assert genre, 'The model should inherit the Genre column from the person pii model'
+    gender = filter_list_by_id(person_pub.columns, 'gender')
+    assert gender, 'The model should inherit the Genre column from the person pii model'
 
 
 # def test_mode_extend_compilation_non_specified_field():
