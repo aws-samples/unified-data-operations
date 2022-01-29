@@ -2,7 +2,7 @@ import os
 from types import SimpleNamespace
 from pyspark.sql import DataFrame, DataFrameWriter
 from driver.aws import glue_api
-from driver.core import Connection
+from driver.core import Connection, resolve_data_set_id, resolve_data_product_id
 from driver.driver import get_spark
 
 __CONN_PROVIDER__ = None
@@ -47,7 +47,9 @@ def disk_input_handler(props: SimpleNamespace) -> DataFrame:
 
 
 def lake_input_handler(props: SimpleNamespace) -> DataFrame:
-    data_product_table = __DATA_PRODUCT_PROVIDER__(props.product_id, props.table_id)
+    prod_id = resolve_data_product_id(props)
+    ds_id = resolve_data_set_id(props)
+    data_product_table = __DATA_PRODUCT_PROVIDER__(prod_id, ds_id)
     df = get_spark().read.parquet(data_product_table.storage_location_s3a)
     return df
 

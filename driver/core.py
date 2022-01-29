@@ -343,3 +343,27 @@ class DataProductTable(BaseModel):
     @property
     def storage_location_s3a(self):
         return self.storage_location.replace('s3://', 's3a://')
+
+
+def resolve_data_set_id(io_def: SimpleNamespace) -> str:
+    def xtract_domain(s):
+        domain_elements = s.rsplit('.')
+        return domain_elements[len(domain_elements) - 1]
+
+    if io_def.type == IOType.model:
+        model_url = getattr(io_def, io_def.type)
+        if '.' in model_url:
+            return xtract_domain(model_url)
+        else:
+            return model_url
+    else:
+        return xtract_domain(io_def.table)
+
+
+def resolve_data_product_id(io_def: SimpleNamespace) -> str:
+    if not io_def.type == IOType.model:
+        raise Exception('This method can only process model IO Definitions')
+    model_url = getattr(io_def, io_def.type)
+    if '.' not in model_url:
+        raise Exception('This method requires a . notation for data product id and data set operation')
+    return model_url.rsplit('.')[0]

@@ -28,7 +28,6 @@
       "required": [
         "id",
         "version",
-        "description",
         "columns"
       ],
       "properties": {

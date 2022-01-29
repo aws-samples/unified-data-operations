@@ -177,7 +177,7 @@ def find_schema_delta(ds: DataSet) -> List[StructField]:
 def type_caster(ds: DataSet):
     try:
         mismatched_fields = find_schema_delta(ds)
-        for mismatched_field in mismatched_fields:
+        for mismatched_field in mismatched_fields or []:
             print(
                 f'--> typecasting [{mismatched_field.name}] to type: [{mismatched_field.dataType.typeName()}] in [{ds.id}]')
             field_in_df = next(iter([f for f in ds.df.schema.fields if f.name == mismatched_field.name]), None)

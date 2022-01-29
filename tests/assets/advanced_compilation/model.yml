@@ -1,0 +1,86 @@
+schema_version: 1.rc-1
+models:
+  - id: person_pii
+    version: "1.0.0"
+    name: xxxxxxx
+    description: A person, who can be a customer, including PII
+    columns:
+      - id: id
+        type: integer
+        constraints:
+          - type: unique
+          - type: not_null
+      - id: first_name
+        type: string
+      - id: last_name
+        type: string
+      - id: full_name
+        type: string
+      - id: gender
+        type: string
+        constraints:
+          - type: not_null
+          - type: regexp
+            options:
+              value: '[Male|Female]'
+      - id: age
+        type: integer
+    meta:
+      contains_pii: true
+    storage:
+      type: lake
+      options:
+        skip_first_row: true
+        partition_by:
+          - gender
+          - age
+        bucketed_at: 512M
+        stored_as: parquet
+    tags:
+      cost_center: 123455
+      use_case: Customer 360
+    access:
+      domain: customer_support
+      confidentiality: private
+
+  - id: person_pub
+    version: "1.0.0"
+    extends: person_pii
+    description: a dataset with anonymised and pseudoanonimised columns
+    columns:
+      - id: full_name
+        transform:
+          - type: encrypt
+      - id: first_name
+        transform:
+          - type: skip
+      - id: last_name
+        transform:
+          - type: skip
+      - id: age
+        type: string
+        transform:
+          - type: bucketize
+            options:
+              buckets:
+                0: 0-19
+                20: 20-39
+                40: 40+
+    meta:
+      contains_pii: false
+    storage:
+      type: lake
+      location: 'glue-job-test-destination-bucket/person_pub'
+      options:
+        skip_first_row: true
+        partition_by:
+          - gender
+          - age
+        bucketed_at: 512M
+        stored_as: parquet
+    tags:
+      cost_center: 123455
+      use_case: Customer 360
+    access:
+      domain: customer_support
+      confidentiality: public

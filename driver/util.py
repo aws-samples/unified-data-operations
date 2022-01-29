@@ -6,6 +6,7 @@ import yaml
 from types import SimpleNamespace
 from typing import List
 from jsonschema import validate, ValidationError, Draft3Validator
+from yaml.scanner import ScannerError
 
 from .core import ArtefactType
 
@@ -15,8 +16,13 @@ def run_chain(input_payload, *callables: callable):
     functions.extend(callables)
     result = input_payload
     for func in functions:
-        print(f'Chain > executing: {func.func.__name__ if isinstance(func, functools.partial) else func.__name__}')
-        result = func(result)
+        func_name = func.func.__name__ if isinstance(func, functools.partial) else func.__name__
+        print(f'Chain > executing: {func_name}')
+        try:
+            result = func(result)
+        except Exception as exc:
+            print(f'{type(exc).__name__} while executing <{func_name}> with error: {str(exc)}')
+            raise
     return result
 
 
@@ -37,8 +43,12 @@ def parse_dict_into_object(d: dict):
 
 def load_yaml(file_path: str):
     print(f'loading file {file_path}')
-    with open(fr'{file_path}') as file:
-        return yaml.load(file, Loader=yaml.FullLoader)
+    try:
+        with open(fr'{file_path}') as file:
+            return yaml.load(file, Loader=yaml.FullLoader)
+    except ScannerError as scerr:
+        print(f'Could not read [{file_path}] due to: {str(scerr)}')
+        raise scerr
 
 
 def filter_list_by_id(object_list, object_id):
@@ -58,7 +68,7 @@ def validate_schema(validable_dict: dict, artefact_type: ArtefactType):
     except ValidationError as verr:
         for err in sorted(Draft3Validator(schema).iter_errors(validable_dict), key=str):
             print(f'validation error detail: {err.message}')
-        print(f"{type(verr).__name__}: {str(verr)}")
+        print(f"{type(verr).__name__} while checking [{artefact_type.name}]: {str(verr)}")
         raise verr
     return validable_dict
 
@@ -93,6 +103,8 @@ def enrich_models(models: SimpleNamespace, product: SimpleNamespace):
             inherited_columns = [filter_list_by_id(extended_model.columns, col_id) for col_id in inherited_column_ids]
             model.columns.extend(inherited_columns)
             add_back_types(model, extended_model)
+        if not hasattr(model, 'storage'):
+            setattr(model, 'storage', SimpleNamespace())
         if not hasattr(model.storage, 'location') and hasattr(product.defaults.storage, 'location'):
             setattr(model.storage, 'location', product.defaults.storage.location)
         compiled_models.append(model)
@@ -107,7 +119,7 @@ def compile_product(product_path: str, args):
     return run_chain(product_path, *product_processing_chain)
 
 
-def compile_models(product_path: str, product: SimpleNamespace):
+def compile_models(product_path: str, product: SimpleNamespace) -> List[SimpleNamespace]:
     model_path = os.path.join(product_path, 'model.yml')
     part_validate_schema = functools.partial(validate_schema, artefact_type=ArtefactType.models)
     part_enrich_models = functools.partial(enrich_models, product=product)

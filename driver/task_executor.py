@@ -4,7 +4,8 @@ import sys
 from types import SimpleNamespace
 from typing import List, Callable
 from .util import filter_list_by_id
-from .core import DataSet, DataProduct, IOType, ProcessorChainExecutionException, ValidationException
+from .core import DataSet, DataProduct, IOType, ProcessorChainExecutionException, ValidationException, \
+    resolve_data_set_id
 
 data_src_handlers: dict = dict()
 pre_processors: list = list()
@@ -37,14 +38,6 @@ def resolve_io_type(io_definition: SimpleNamespace) -> IOType:
     return IOType.connection if hasattr(io_definition, IOType.connection.name) else IOType.model
 
 
-def resolve_data_set_id(io_def: SimpleNamespace, io_type: IOType) -> str:
-    if io_type == IOType.model:
-        return getattr(io_def, io_type)
-    else:
-        table_name_elements = io_def.table.rsplit('.')
-        return table_name_elements[len(table_name_elements) - 1]
-
-
 def load_inputs(product_id: str, inputs: SimpleNamespace, models: List[SimpleNamespace]) -> List[DataSet]:
     input_datasets: list[DataSet] = list()
 
@@ -57,7 +50,7 @@ def load_inputs(product_id: str, inputs: SimpleNamespace, models: List[SimpleNam
     for inp in inputs:
         model_id = inp.model if hasattr(inp, 'model') else None
         setattr(inp, 'type', resolve_io_type(inp))
-        dataset_id = resolve_data_set_id(inp, inp.type)
+        dataset_id = resolve_data_set_id(inp)
         model_obj = filter_list_by_id(models, model_id)
         input_datasets.append(DataSet(dataset_id, load_input(inp), model_obj, DataProduct(product_id)))
     return input_datasets
@@ -78,7 +71,7 @@ def run_processors(phase: str, datasets: List[DataSet], processors: List[Callabl
             f'{type(vex).__name__} in processor [{processor.__name__}] at processor chain: [{phase}]: {str(vex)}') from vex
     except Exception as e:
         raise ProcessorChainExecutionException(
-            f'{type(e).__name__} in [{processor.__name__}] at processor chain: [{phase}]') from e
+            f'{type(e).__name__} in [{processor.__name__}] at processor chain: [{phase}]: {str(e)}') from e
 
 
 def transform(inp_dfs: List[DataSet], product_path: str, custom_module_name, params=None) -> List[DataSet]:

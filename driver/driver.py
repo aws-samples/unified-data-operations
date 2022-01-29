@@ -38,6 +38,7 @@ def init(spark_session=None, spark_config=None):
     # sc  = __SPARK__.sparkContext
     # sc.setSystemProperty("com.amazonaws.services.s3.enableV4", "true")
 
+
 def execute_tasks(product_id: str, tasks: list, models: List[SimpleNamespace], product_path: str):
     session = providers.get_session()
     if session:

@@ -1,5 +1,9 @@
 import datetime
+import ntpath
+import os
+from types import SimpleNamespace
 
+from pyspark.sql import DataFrame
 from pytest import fixture
 from pyspark.sql.types import (
     StringType,
@@ -10,9 +14,23 @@ from pyspark.sql.types import (
     DoubleType, TimestampType
 )
 
+from driver.util import compile_product, compile_models
+
 
 @fixture(scope='module')
-def movie_schema():
+def app_args() -> SimpleNamespace:
+    args = SimpleNamespace()
+    setattr(args, 'default_data_lake_bucket', 's3://test-bucket')
+    return args
+
+
+@fixture(scope='module')
+def fixture_assets_path() -> ntpath:
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', 'fixture')
+
+
+@fixture(scope='module')
+def movie_schema() -> StructType:
     return StructType([
         StructField('movieId', IntegerType(), True),
         StructField('title', StringType(), True),
@@ -21,7 +39,7 @@ def movie_schema():
 
 
 @fixture(scope='module')
-def ratings_schema():
+def ratings_schema() -> StructType:
     return StructType([
         StructField('userId', IntegerType(), True),
         StructField('movieId', IntegerType(), True),
@@ -31,7 +49,7 @@ def ratings_schema():
 
 
 @fixture(scope='module')
-def result_schema():
+def result_schema() -> StructType:
     return StructType([
         StructField('title', StringType(), True),
         StructField('weight_avg', DoubleType(), True),
@@ -40,14 +58,14 @@ def result_schema():
 
 
 @fixture(scope='module')
-def movies_df(spark_session, movie_schema):
+def movies_df(spark_session, movie_schema) -> DataFrame:
     return spark_session.createDataFrame([(1, 'Jumanji(1995)', 'Adventure | Children | Fantasy'),
                                           (2, 'Heat (1995)', 'Action|Crime|Thriller')],
                                          movie_schema)
 
 
 @fixture(scope='module')
-def ratings_df(spark_session, ratings_schema):
+def ratings_df(spark_session, ratings_schema) -> DataFrame:
     return spark_session.createDataFrame([(1, 1, 4, 1256677221),
                                           (2, 1, 4, 1256677222),
                                           (3, 1, 1, 1256677222),
@@ -56,7 +74,7 @@ def ratings_df(spark_session, ratings_schema):
 
 
 @fixture(scope='module')
-def person_schema():
+def person_schema() -> StructType:
     return StructType([
         StructField('id', IntegerType(), False),
         StructField('first_name', StringType(), True),
@@ -68,7 +86,7 @@ def person_schema():
 
 
 @fixture(scope='module')
-def person_df(spark_session, person_schema):
+def person_df(spark_session, person_schema) -> DataFrame:
     return spark_session.createDataFrame([(1, "John", "Doe", 25, "Berlin", "Male"),
                                           (2, "Jane", "Doe", 41, "Berlin", "Female"),
                                           (3, "Maxx", "Mustermann", 30, "Berlin", "Male")
@@ -76,7 +94,7 @@ def person_df(spark_session, person_schema):
 
 
 @fixture(scope='module')
-def transaction_schema():
+def transaction_schema() -> StructType:
     return StructType([
         StructField('id', IntegerType(), False),
         StructField('sku', StringType(), True),
@@ -87,9 +105,19 @@ def transaction_schema():
 
 
 @fixture(scope='module')
-def transaction_df(spark_session, transaction_schema):
+def transaction_df(spark_session, transaction_schema) -> DataFrame:
     date_field = datetime.datetime.now()
     return spark_session.createDataFrame([(1, "1234", date_field, "EMEA", 25),
                                           (2, "1235", date_field, "EMEA", 41),
                                           (3, "1236", date_field, "US", 30)
                                           ], transaction_schema)
+
+
+@fixture(scope='module')
+def product(app_args, fixture_assets_path):
+    return compile_product(fixture_assets_path, app_args)
+
+
+@fixture(scope='module')
+def models(app_args, fixture_assets_path, product):
+    return compile_models(fixture_assets_path, product)
