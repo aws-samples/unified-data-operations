@@ -1,14 +1,15 @@
+import logging
 import os
 from types import SimpleNamespace
 from pyspark.sql import DataFrame, DataFrameWriter
 from driver.aws import glue_api
 from driver.core import Connection, resolve_data_set_id, resolve_data_product_id
 from driver.driver import get_spark
+from driver.task_executor import DataSet
 
 __CONN_PROVIDER__ = None
 __DATA_PRODUCT_PROVIDER__ = None
-
-from driver.task_executor import DataSet
+logger = logging.getLogger(__name__)
 
 
 def init(connection_provider: callable, data_product_provider: callable):
@@ -25,7 +26,7 @@ jdbc_drivers = {
 
 def connection_input_handler(props: SimpleNamespace) -> DataFrame:
     connection: Connection = __CONN_PROVIDER__(props.connection)
-    print(connection.get_jdbc_connection_url(generate_creds=False))
+    logger.info(connection.get_jdbc_connection_url(generate_creds=False))
     jdbcDF = get_spark().read.format("jdbc") \
         .option("url", connection.get_jdbc_connection_url(generate_creds=False)) \
         .option("dbtable", props.table) \
@@ -61,7 +62,7 @@ def disk_output_handler(ds: DataSet, options: SimpleNamespace):
 def lake_output_handler(ds: DataSet):
     output = f"{'s3a://'}{ds.dataset_storage_path.lstrip('/')}"
     # ds.storage_location = f"{'s3://'}{ds.storage_location.lstrip('/')}"
-    print(f'--> [Lake Output Handler]: writing data product to: {output}')
+    logging.info(f'-> [Lake Output Handler]: writing data product to: {output}')
     ds.df.coalesce(2).write \
         .partitionBy(*ds.partitions) \
         .format(ds.stored_as) \
@@ -71,7 +72,7 @@ def lake_output_handler(ds: DataSet):
     # .saveAsTable('test_db.hoppala', path=ds.storage_location)
 
     # print(f'# partitions after write {ds.df.rdd.getNumPartitions()}')
-    #todo: detect the extra schema info that is not defined in the model but provided by transformations
-    #todo: add parquet compression support / the glue catalog needs it too
-    #todo: add bucket support & also to the glue catalog
+    # todo: detect the extra schema info that is not defined in the model but provided by transformations
+    # todo: add parquet compression support / the glue catalog needs it too
+    # todo: add bucket support & also to the glue catalog
     glue_api.update_data_catalog(ds)

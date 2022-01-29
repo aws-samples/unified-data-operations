@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import re
 from datetime import datetime, timedelta
 from types import SimpleNamespace
@@ -16,6 +17,7 @@ from quinn.dataframe_validator import (
     DataFrameMissingColumnError,
     DataFrameProhibitedColumnError
 )
+logger = logging.getLogger(__name__)
 
 
 def null_validator(df: DataFrame, col_name: str, cfg: any = None):
@@ -184,7 +186,7 @@ def type_caster(ds: DataSet):
     try:
         mismatched_fields = find_schema_delta(ds)
         for mismatched_field in mismatched_fields or []:
-            print(
+            logger.info(
                 f'--> typecasting [{mismatched_field.name}] to type: [{mismatched_field.dataType.typeName()}] in [{ds.id}]')
             field_in_df = next(iter([f for f in ds.df.schema.fields if f.name == mismatched_field.name]), None)
             if field_in_df:
@@ -197,8 +199,8 @@ def type_caster(ds: DataSet):
 
 def schema_checker(ds: DataSet):
     if ds.model:
-        print(
-            f'--> schema checking for dataset [{ds.id}] with model id: [{ds.model.id}]. Data frame columns: {len(ds.df.columns)}')
+        logger.info(
+            f'-> checking schema for dataset [{ds.id}] with model id: [{ds.model.id}]. Data frame columns: {len(ds.df.columns)}')
         missing_fields = find_schema_delta(ds)
         if missing_fields:
             raise SchemaValidationException(

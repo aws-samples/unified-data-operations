@@ -1,5 +1,6 @@
 import functools
 import json
+import logging
 import os
 import yaml
 
@@ -10,6 +11,8 @@ from yaml.scanner import ScannerError
 
 from .core import ArtefactType
 
+logger = logging.getLogger(__name__)
+
 
 def run_chain(input_payload, *callables: callable):
     functions = list()
@@ -17,11 +20,11 @@ def run_chain(input_payload, *callables: callable):
     result = input_payload
     for func in functions:
         func_name = func.func.__name__ if isinstance(func, functools.partial) else func.__name__
-        print(f'Chain > executing: {func_name}')
+        logger.info(f'Chain > executing: {func_name}')
         try:
             result = func(result)
         except Exception as exc:
-            print(f'{type(exc).__name__} while executing <{func_name}> with error: {str(exc)}')
+            logger.error(f'{type(exc).__name__} while executing <{func_name}> with error: {str(exc)}')
             raise
     return result
 
@@ -42,12 +45,12 @@ def parse_dict_into_object(d: dict):
 
 
 def load_yaml(file_path: str):
-    print(f'loading file {file_path}')
+    logger.info(f'loading file {file_path}')
     try:
         with open(fr'{file_path}') as file:
             return yaml.load(file, Loader=yaml.FullLoader)
     except ScannerError as scerr:
-        print(f'Could not read [{file_path}] due to: {str(scerr)}')
+        logger.error(f'Could not read [{file_path}] due to: {str(scerr)}')
         raise scerr
 
 
@@ -67,8 +70,8 @@ def validate_schema(validable_dict: dict, artefact_type: ArtefactType):
         validate(validable_dict, schema)
     except ValidationError as verr:
         for err in sorted(Draft3Validator(schema).iter_errors(validable_dict), key=str):
-            print(f'validation error detail: {err.message}')
-        print(f"{type(verr).__name__} while checking [{artefact_type.name}]: {str(verr)}")
+            logger.error(f'validation error detail: {err.message}')
+        logger.error(f"{type(verr).__name__} while checking [{artefact_type.name}]: {str(verr)}")
         raise verr
     return validable_dict
 

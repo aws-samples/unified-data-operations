@@ -1,4 +1,6 @@
 import importlib
+import logging
+
 import sys
 
 from types import SimpleNamespace
@@ -6,6 +8,8 @@ from typing import List, Callable
 from .util import filter_list_by_id
 from .core import DataSet, DataProduct, IOType, ProcessorChainExecutionException, ValidationException, \
     resolve_data_set_id
+
+logger = logging.getLogger(__name__)
 
 data_src_handlers: dict = dict()
 pre_processors: list = list()
@@ -61,7 +65,7 @@ def run_processors(phase: str, datasets: List[DataSet], processors: List[Callabl
     try:
         processed_dfs: list[datasets] = datasets
         for processor in processors:
-            print(f'-> running processor: [{processor.__name__}]')
+            logger.info(f'-> running processor: [{processor.__name__}]')
             new_dss: list[datasets] = list()
             for ds in processed_dfs:
                 new_dss.append(processor(ds))
@@ -77,7 +81,7 @@ def run_processors(phase: str, datasets: List[DataSet], processors: List[Callabl
 
 def transform(inp_dfs: List[DataSet], product_path: str, custom_module_name, params=None) -> List[DataSet]:
     sys.path.append(product_path)
-    print('executing module: ' + custom_module_name)
+    logger.info('executing module: ' + custom_module_name)
     custom_module = importlib.import_module(custom_module_name)
     sys.modules[custom_module_name] = custom_module
     if params:
@@ -105,7 +109,7 @@ def enrich(datasets, product_id, models: List[SimpleNamespace]):
 
 
 def execute(product_id: str, task: list, models: List[SimpleNamespace], product_path: str) -> List[DataSet]:
-    print(f'Executing task > {product_id} {task.id}')
+    logger.info(f'Executing task > {product_id} {task.id}')
     input_dfs: list[DataSet] = run_processors('pre', load_inputs(product_id, task.inputs, models), pre_processors)
     task_logic_module = task.logic.module if hasattr(task, 'logic') and hasattr(task.logic,
                                                                                 'module') else 'builtin.ingest'

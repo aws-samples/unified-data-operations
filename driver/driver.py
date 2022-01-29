@@ -1,3 +1,5 @@
+import logging
+
 import sys, os
 import traceback
 
@@ -10,6 +12,7 @@ from deprecated import CatalogService
 from .util import compile_models, compile_product
 
 __SPARK__: SparkSession = None
+logger = logging.getLogger(__name__)
 
 
 def get_spark():
@@ -60,6 +63,6 @@ def process_product(args):
         execute_tasks(product.id, product.pipeline.tasks, models, abs_product_path)
     except Exception as e:
         traceback.print_exc()
-        print(f"Couldn't execute job due to >> {type(e).__name__}: {str(e)}")
+        logger.error(f"Couldn't execute job due to >> {type(e).__name__}: {str(e)}")
         sys.exit(-1)
         # raise e
