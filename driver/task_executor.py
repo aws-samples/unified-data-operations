@@ -52,7 +52,8 @@ def load_inputs(product_id: str, inputs: SimpleNamespace, models: List[SimpleNam
         setattr(inp, 'type', resolve_io_type(inp))
         dataset_id = resolve_data_set_id(inp)
         model_obj = filter_list_by_id(models, model_id)
-        input_datasets.append(DataSet(dataset_id, load_input(inp), model_obj, DataProduct(product_id)))
+        dp = DataProduct(id=product_id)
+        input_datasets.append(DataSet(dataset_id, load_input(inp), model_obj, dp))
     return input_datasets
 
 

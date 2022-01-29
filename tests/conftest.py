@@ -16,18 +16,20 @@ from pyspark.sql.types import (
 
 from driver.util import compile_product, compile_models
 
+DEFAULT_BUCKET = 's3://test-bucket'
+
+
+@fixture(scope='module')
+def fixture_asset_path():
+    cwd_path = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(cwd_path, 'assets', 'metafiles')
+
 
 @fixture(scope='module')
 def app_args() -> SimpleNamespace:
     args = SimpleNamespace()
-    setattr(args, 'default_data_lake_bucket', 's3://test-bucket')
+    setattr(args, 'default_data_lake_bucket', DEFAULT_BUCKET)
     return args
-
-
-@fixture(scope='module')
-def fixture_assets_path() -> ntpath:
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', 'fixture')
-
 
 @fixture(scope='module')
 def movie_schema() -> StructType:
@@ -114,10 +116,10 @@ def transaction_df(spark_session, transaction_schema) -> DataFrame:
 
 
 @fixture(scope='module')
-def product(app_args, fixture_assets_path):
-    return compile_product(fixture_assets_path, app_args)
+def product(app_args, fixture_asset_path):
+    return compile_product(fixture_asset_path, app_args)
 
 
 @fixture(scope='module')
-def models(app_args, fixture_assets_path, product):
-    return compile_models(fixture_assets_path, product)
+def models(app_args, fixture_asset_path, product):
+    return compile_models(fixture_asset_path, product)

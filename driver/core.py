@@ -357,7 +357,7 @@ def resolve_data_set_id(io_def: SimpleNamespace) -> str:
         else:
             return model_url
     else:
-        return xtract_domain(io_def.table)
+        return xtract_domain(io_def.model) if hasattr(io_def, 'model') else xtract_domain(io_def.table)
 
 
 def resolve_data_product_id(io_def: SimpleNamespace) -> str:

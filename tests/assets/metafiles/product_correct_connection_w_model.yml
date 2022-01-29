@@ -1,17 +1,16 @@
 schema_version: 1.rc-1
 product:
-  id: fixture
+  id: customers
   owner: jane@acme.com
   description: some description is required
   version: "1.0.0"
-  engine: glue
   pipeline:
     schedule: "0 3 * * *"
     tasks:
-      - id: process fixtures
+      - id: default_extract
         inputs:
-          - model: person
-          - model: movies
-          - model: ratings
+          - connection: connection_name
+            table: db_schema.db_table_name
+            model: person_pub
         outputs:
-          - model: transaction
+          - model: person_pub

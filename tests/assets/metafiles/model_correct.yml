@@ -3,7 +3,7 @@ models:
   - id: person_pii
     version: "1.0.0"
     name: xxxxxxx
-    description: A person, who can be a customer, including PII
+    description: straightforward model configuration
     columns:
       - id: id
         type: integer

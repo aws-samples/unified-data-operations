@@ -90,6 +90,10 @@ def enrich_models(models: SimpleNamespace, product: SimpleNamespace):
         for col in columns_with_missing_type:
             setattr(col, 'type', filter_list_by_id(extended_model.columns, col.id).type)
 
+    def check_default_storage(product):
+        return hasattr(product, 'defaults') and hasattr(product.defaults, 'storage') and hasattr(
+            product.defaults.storage, 'location')
+
     compiled_models = list()
     for model in models.models:
         if hasattr(model, 'extends'):
@@ -105,22 +109,23 @@ def enrich_models(models: SimpleNamespace, product: SimpleNamespace):
             add_back_types(model, extended_model)
         if not hasattr(model, 'storage'):
             setattr(model, 'storage', SimpleNamespace())
-        if not hasattr(model.storage, 'location') and hasattr(product.defaults.storage, 'location'):
+        if not hasattr(model.storage, 'location') and check_default_storage(product):
             setattr(model.storage, 'location', product.defaults.storage.location)
         compiled_models.append(model)
     return compiled_models
 
 
-def compile_product(product_path: str, args):
+def compile_product(product_path: str, args, prod_def_filename: str = 'product.yml'):
     part_enrich_product = functools.partial(enrich_product, args=args)
     part_validate_schema = functools.partial(validate_schema, artefact_type=ArtefactType.product)
-    product_path = os.path.join(product_path, 'product.yml')
+    product_path = os.path.join(product_path, prod_def_filename)
     product_processing_chain = [load_yaml, part_validate_schema, parse_dict_into_object, part_enrich_product]
     return run_chain(product_path, *product_processing_chain)
 
 
-def compile_models(product_path: str, product: SimpleNamespace) -> List[SimpleNamespace]:
-    model_path = os.path.join(product_path, 'model.yml')
+def compile_models(product_path: str, product: SimpleNamespace, def_file_name: str = 'model.yml') -> List[
+    SimpleNamespace]:
+    model_path = os.path.join(product_path, def_file_name)
     part_validate_schema = functools.partial(validate_schema, artefact_type=ArtefactType.models)
     part_enrich_models = functools.partial(enrich_models, product=product)
     model_processing_chain = [load_yaml, part_validate_schema, parse_dict_into_object, part_enrich_models]
