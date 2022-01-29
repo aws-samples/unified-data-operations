@@ -1,6 +1,7 @@
 import hashlib
 import re
 from datetime import datetime, timedelta
+from types import SimpleNamespace
 from typing import List
 
 from driver import common
@@ -115,12 +116,12 @@ constraint_validators = {
 
 
 def hasher(df: DataFrame, col_name: str, cfg: any = None) -> DataFrame:
-    #todo: implement salting
+    # todo: implement salting
     return df.withColumn(col_name, hash(col(col_name)))
 
 
 def encrypt(df: DataFrame, col_name: str, cfg: any = None) -> DataFrame:
-    #todo: implement key handling + kms
+    # todo: implement key handling + kms
     def encrypt_f(value: object, key: str = None):
         if key:
             return hashlib.sha256(str(value).encode() + key.encode()).hexdigest()
@@ -136,7 +137,7 @@ def skip_column(df: DataFrame, col_name: str, cfg: any = None) -> DataFrame:
 
 
 def rename_col(df: DataFrame, col_name: str, cfg: any = None) -> DataFrame:
-    #todo: update the schema for the dataset or remove this one
+    # todo: update the schema for the dataset or remove this one
     return df.withColumnRenamed(col_name, cfg.name)
 
 
@@ -166,10 +167,15 @@ built_in_transformers = {
 
 
 def find_schema_delta(ds: DataSet) -> List[StructField]:
+    def lookup(name, schema_list):
+        return next(filter(lambda rsf: rsf.name == name, schema_list))
+
     if ds.model:
         required_schema = common.remap_schema(ds)
-        data_frame_field_hashes = [x.__hash__() for x in ds.df.schema]
-        return [x for x in required_schema if x.__hash__() not in data_frame_field_hashes]
+        data_frame_fields = [{'name': x.name, 'type': x.dataType} for x in ds.df.schema]
+        required_schema_fields = [{'name': x.name, 'type': x.dataType} for x in required_schema]
+        delta_fields = [x for x in required_schema_fields if x not in data_frame_fields]
+        return [lookup(x.get('name'), required_schema) for x in delta_fields]
     else:
         return None
 
@@ -196,7 +202,9 @@ def schema_checker(ds: DataSet):
         missing_fields = find_schema_delta(ds)
         if missing_fields:
             raise SchemaValidationException(
-                f'The following fields are missing from the data set [{ds.id}]: {missing_fields}', ds)
+                f'The following fields are missing from the data set [{ds.id}]: {missing_fields}. '
+                f'Current schema: {ds.df.schema}',
+                ds)
     return ds
 
 
