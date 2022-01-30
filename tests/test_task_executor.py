@@ -7,7 +7,7 @@ from driver.core import DataSet
 from driver.processors import schema_checker, constraint_processor, transformer_processor
 
 
-def test_end_to_end(spark_session, person_df: DataFrame, fixture_asset_path):
+def test_end_to_end(spark_session, person_df: DataFrame, fixture_asset_path, app_args):
     dfs = {"some_schema.some_table": person_df}
 
     def mock_input_handler(props: SimpleNamespace):
@@ -24,5 +24,8 @@ def test_end_to_end(spark_session, person_df: DataFrame, fixture_asset_path):
     driver.register_postprocessors(schema_checker, constraint_processor, transformer_processor)
     driver.register_output_handler('default', mock_output_handler)
     driver.register_output_handler('lake', mock_output_handler)
-    args = SimpleNamespace(product_path=fixture_asset_path)
-    driver.process_product(args)
+    setattr(app_args, 'product_path', fixture_asset_path)
+    driver.process_product(app_args)
+
+def test_resolve_io_type():
+    pass

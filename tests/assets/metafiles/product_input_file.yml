@@ -10,6 +10,7 @@ product:
     tasks:
       - id: process_some_files
         inputs:
-          - file: s3://datalakebucket-588942721560/product_c_customer_insights/customer_revenue
+          - file: s3://datalakebucke/some_folder/some_file
+          - model: person
         outputs:
-          - model: transaction
+          - model: person

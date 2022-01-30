@@ -7,7 +7,7 @@ from types import SimpleNamespace
 from typing import List, Callable
 from .util import filter_list_by_id
 from .core import DataSet, DataProduct, IOType, ProcessorChainExecutionException, ValidationException, \
-    resolve_data_set_id
+    resolve_data_set_id, ResolverException
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,14 @@ def register_output_handler(output_handler_type: str, handler: callable):
 
 
 def resolve_io_type(io_definition: SimpleNamespace) -> IOType:
-    return IOType.connection if hasattr(io_definition, IOType.connection.name) else IOType.model
+    if hasattr(io_definition, IOType.connection.name):
+        return IOType.connection
+    elif hasattr(io_definition, IOType.file.name):
+        return IOType.file
+    elif hasattr(io_definition, IOType.model.name):
+        return IOType.model
+    else:
+        raise ResolverException(f'This IO type  is not supported yet: {io_definition.__repr__()}.')
 
 
 def load_inputs(product_id: str, inputs: SimpleNamespace, models: List[SimpleNamespace]) -> List[DataSet]:
@@ -103,7 +110,7 @@ def enrich(datasets, product_id, models: List[SimpleNamespace]):
         if not dataset.product_id:
             dataset.product_id = product_id
         if dataset.model is None:
-            model_obj = next(iter([m for m in models if m.id == dataset.id]), None)
+            model_obj = next(iter([m for m in models if m.id == dataset.id]), models[0])
             dataset.model = model_obj
     return datasets
 

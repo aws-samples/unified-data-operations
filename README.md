@@ -143,6 +143,7 @@ models:
     storage:
       location: '/some_data_lake/some_folder'
       type: lake
+      format: parquet
     tags:
       cost_center: 123455
       use_case: Customer 360
@@ -176,6 +177,36 @@ the value **raze**, it will remove any columns from the Data Frame that are not 
 - tags: [optional] a set of key-value pairs that are assigned to the output data-set and can help later with the
   governance (eg cost control);
 - access: provides a list of key-value tags that will govern access to the output data-sets;
+
+### Storage
+
+The storage directive defines how to store model data:
+
+```yaml
+    storage:
+      type: lake | file
+      location: 'some_bucket/some_file'
+      format: parquet | csv
+      options:
+        skip_first_row: true | false
+        partition_by:
+          - gender
+          - age
+        bucketed_at: 512M
+```
+
+- type: the default type is 'lake' as in Data Lake. This will write the dataset onto S3 and register the dataset with 
+the Glue Data Catalog;
+- location: a specific location for the model; If ommited the location set on the prouct will be taken into account.
+- format: the file format used to writing out data;
+- options: [optional] a set of options specifiend details for the write out
+- options.skip_first_row: will not write out the first row
+- options.partition_by: list of columns used for partitioning the parquet file;
+- bucketed_at: defines the file-chunk sized to be written (the more )
+
+Location resolution: the output file location is first looked up on the model's ```storage.location``` property. If not
+found, it will look on the product's ```defaults.storage``` options, and ultimately will check the ```--default_data_lake_bucket```
+command line parameter.
 
 ### Columns
 
@@ -423,15 +454,16 @@ These can be referenced in each custom aggregation task code.
 
 # How tos
 
-# Extract a few columns from a large source table
+### Extract a few columns from a large source table from RDBMS
 
-# Anonymize fields at ingest
+### Ingest CSV files
 
-# Create a derived data set from already existing model files  
+### Anonymize fields at ingest
+
+### Create a derived data set from already existing model files  
 
 # Prioritised Todos:
 
-- cleanup the models
 - cover the current feature set with unit tests
 - cover the current feature set with integration test
 - model location should be taken from the data catalog

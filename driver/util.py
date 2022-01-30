@@ -93,9 +93,17 @@ def enrich_models(models: SimpleNamespace, product: SimpleNamespace):
         for col in columns_with_missing_type:
             setattr(col, 'type', filter_list_by_id(extended_model.columns, col.id).type)
 
-    def check_default_storage(product):
-        return hasattr(product, 'defaults') and hasattr(product.defaults, 'storage') and hasattr(
-            product.defaults.storage, 'location')
+    def decorate_model_with_defaults(model):
+        if hasattr(product, 'defaults'):
+            if not hasattr(model, 'storage') and hasattr(product.defaults, 'storage'):
+                setattr(model, 'storage', product.defaults.storage)
+            if not hasattr(model.storage, 'location') and hasattr(product.defaults.storage, 'location'):
+                setattr(model.storage, 'location', product.defaults.storage.location)
+        if not hasattr(model.storage, 'type'):
+            setattr(model.storage, 'type', 'lake')
+        if not hasattr(model.storage, 'format'):
+            setattr(model.storage, 'format', 'parquet')
+        return model
 
     compiled_models = list()
     for model in models.models:
@@ -110,11 +118,7 @@ def enrich_models(models: SimpleNamespace, product: SimpleNamespace):
             inherited_columns = [filter_list_by_id(extended_model.columns, col_id) for col_id in inherited_column_ids]
             model.columns.extend(inherited_columns)
             add_back_types(model, extended_model)
-        if not hasattr(model, 'storage'):
-            setattr(model, 'storage', SimpleNamespace())
-        if not hasattr(model.storage, 'location') and check_default_storage(product):
-            setattr(model.storage, 'location', product.defaults.storage.location)
-        compiled_models.append(model)
+        compiled_models.append(decorate_model_with_defaults(model))
     return compiled_models
 
 

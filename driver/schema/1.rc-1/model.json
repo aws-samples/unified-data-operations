@@ -109,6 +109,9 @@
         "type": {
           "type": "string"
         },
+        "format": {
+          "type": "string"
+        },
         "options": {
           "type": "object",
           "additionalProperties": true

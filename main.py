@@ -7,7 +7,7 @@ import traceback
 import driver
 import driver.aws.providers
 from driver.aws.providers import connection_provider, datalake_provider
-from driver.io_handlers import connection_input_handler, lake_input_handler
+from driver.io_handlers import connection_input_handler, lake_input_handler, file_input_handler
 from driver.processors import schema_checker, constraint_processor, transformer_processor, type_caster, razor
 from driver.io_handlers import lake_output_handler, connection_input_handler
 
@@ -43,6 +43,7 @@ def init_system(args):
     driver.init(spark_config=conf)
     driver.register_data_source_handler('connection', connection_input_handler)
     driver.register_data_source_handler('model', lake_input_handler)
+    driver.register_data_source_handler('file', file_input_handler)
     driver.register_postprocessors(transformer_processor, razor, constraint_processor, type_caster, schema_checker)
     driver.register_output_handler('default', lake_output_handler)
     driver.register_output_handler('lake', lake_output_handler)

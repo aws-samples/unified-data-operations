@@ -1,0 +1,30 @@
+schema_version: 1.rc-1
+models:
+  - id: industry
+    version: "1.0"
+    columns:
+      - id: year
+        type: integer
+        constraints:
+          - type: not_null
+      - id: industry_code_ANZSIC
+        type: string
+      - id: industry_name_ANZSIC
+        type: string
+      - id: rme_size_grp
+        type: string
+      - id: variable
+        type: string
+      - id: value
+        type: string
+      - id: unit
+        type: string
+    meta:
+      contains_pii: true
+      steward: jane.doe@acme.com
+    tags:
+      cost_center: 123455
+      use_case: Customer 360
+    access:
+      domain: customer_support
+      confidentiality: private

@@ -29,20 +29,19 @@ models:
       contains_pii: true
     storage:
       type: lake
+      format: parquet
       options:
         skip_first_row: true
         partition_by:
           - gender
           - age
         bucketed_at: 512M
-        stored_as: parquet
     tags:
       cost_center: 123455
       use_case: Customer 360
     access:
       domain: customer_support
       confidentiality: private
-
   - id: person_pub
     version: "1.0.0"
     extends: person_pii

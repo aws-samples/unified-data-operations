@@ -9,7 +9,7 @@ from driver.aws import datalake_api
 from driver.task_executor import DataSet
 
 
-def resolve_paritions(ds: DataSet) -> List[ColumnTypeDef]:
+def resolve_partitions(ds: DataSet) -> List[ColumnTypeDef]:
     return [ColumnTypeDef(Name=p, Type=dict(ds.df.dtypes)[p]) for p in ds.partitions]
 
 
@@ -59,7 +59,7 @@ def resolve_storage_descriptor(ds: DataSet, override_location: str = None) -> St
     if override_location:
         path = f's3://{os.path.join(override_location, "")}'
     else:
-            path = f"s3://{ds.dataset_storage_path.lstrip('/')}"
+        path = f"s3://{ds.dataset_storage_path.lstrip('/')}"
     return StorageDescriptorTypeDef(
         Location=path,
         InputFormat=resolve_input_format(ds),
@@ -82,7 +82,7 @@ def resolve_table(ds: DataSet) -> TableTypeDef:
         DatabaseName=ds.product_id,
         Description=ds.product_description,
         Owner=ds.product_owner,
-        PartitionKeys=resolve_paritions(ds),
+        PartitionKeys=resolve_partitions(ds),
         TableType=resolve_table_type(ds),
         Parameters=resolve_table_parameters(ds),
         StorageDescriptor=resolve_storage_descriptor(ds)
@@ -92,7 +92,7 @@ def resolve_table(ds: DataSet) -> TableTypeDef:
 def resolve_table_input(ds: DataSet) -> TableInputTypeDef:
     return TableInputTypeDef(
         Name=ds.id,
-        PartitionKeys=resolve_paritions(ds),
+        PartitionKeys=resolve_partitions(ds),
         TableType='EXTERNAL_TABLE',
         Parameters=resolve_table_parameters(ds),
         StorageDescriptor=resolve_storage_descriptor(ds)

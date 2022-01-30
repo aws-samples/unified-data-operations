@@ -220,7 +220,7 @@ def schema_checker(ds: DataSet):
 
 
 def razor(ds: DataSet):
-    if hasattr(ds.model, 'xtra_columns') and ds.model.xtra_column == 'raze':
+    if hasattr(ds.model, 'xtra_columns') and ds.model.xtra_columns == 'raze':
         xtra_columns = list(set(ds.df.columns) - set([x.id for x in ds.model.columns]))
         ds.df = ds.df.drop(*xtra_columns)
     return ds

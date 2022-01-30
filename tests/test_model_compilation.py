@@ -55,7 +55,9 @@ def test_advanced_compilation_features(fixture_asset_path, app_args):
     assert len(models) == 2
     person_pii = filter_list_by_id(models, 'person_pii')
     assert person_pii.storage.location == DEFAULT_BUCKET, 'The default bucket should be set on models with no explicit location'
+    assert person_pii.storage.type == 'lake'
     person_pub = filter_list_by_id(models, 'person_pub')
+    assert person_pub.storage.type == 'lake'
     pub_full_name_col = filter_list_by_id(person_pub.columns, 'full_name')
     assert pub_full_name_col.type == 'string', 'The String type should have been inherited from the pii model'
     assert pub_full_name_col.transform[
@@ -108,3 +110,16 @@ def test_product_missing_logic(fixture_asset_path):
 
     product_def = util.load_yaml(os.path.join(fixture_asset_path, 'product_correct_missing_logic_params.yml'))
     util.validate_schema(product_def, ArtefactType.product)
+
+
+def test_connection_input_configuration(fixture_asset_path):
+    pass
+
+
+def test_model_input_configuration(fixture_asset_path):
+    pass
+
+
+def test_file_input_configuration(fixture_asset_path):
+    #product_input_file.yml
+    pass

@@ -15,7 +15,7 @@ __SPARK__: SparkSession = None
 logger = logging.getLogger(__name__)
 
 
-def get_spark():
+def get_spark() -> SparkSession:
     if __SPARK__:
         return __SPARK__
     else:
