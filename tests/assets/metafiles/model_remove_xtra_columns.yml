@@ -2,6 +2,7 @@ schema_version: 1.rc-1
 models:
   - id: movie
     version: "1.0"
+    xtra_column: raze
     validation: strict
     columns:
       - id: movieId

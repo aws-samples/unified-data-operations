@@ -1,0 +1,15 @@
+schema_version: 1.rc-1
+product:
+  id: some_data_product
+  owner: jane@acme.com
+  description: some description is required
+  version: "1.0.0"
+  engine: glue
+  pipeline:
+    schedule: "0 3 * * *"
+    tasks:
+      - id: process_some_files
+        inputs:
+          - file: s3://datalakebucket-588942721560/product_c_customer_insights/customer_revenue
+        outputs:
+          - model: transaction

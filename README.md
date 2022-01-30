@@ -132,6 +132,7 @@ models:
     description: "Person Model"
     extends: other_model
     validation: strict | lazy
+    xtra_columns: raze | ignore
     columns:
       - ...
       - ...
@@ -163,10 +164,12 @@ These are the keywords:
 - name: [optional] human readable name of the model, similar in use to the id;
 - extends: [optional] it is a directive that helps to inherit column definitions from another model, therefore it makes
   it easier to define derived models, that only override or extend one or more columns;
-- validation: [optional] the default value is lazy validatin (even if they keyword "validation" is omitted). Lazy 
+- validation: [optional] the default value is lazy validation (even if the keyword "validation" is omitted). Lazy 
 validation will only check the type of the columns that are stated in the model, but will accept extra columns (that 
 are available on the Data Frame but not defined in the model). A strict validation will raise an exception if the Data
 Frame has more columns than stated in the Model;
+- xtra_columns: [optional] if omitted, it will ignore the existence of extra columns on the Data Frame. If defined with 
+the value **raze**, it will remove any columns from the Data Frame that are not specified on the Model;
 - columns: a list of columns, stating data types, constraint validators and column transformers;
 - meta: [optional] a list of key-value pairs that are added to the data catalog as meta data;
 - storage: [optional] a definition about the location (and compression, file format, etc.) of the output dataset;
@@ -419,6 +422,12 @@ These can be referenced in each custom aggregation task code.
     --default_data_lake_bucket - a default bucket location (with s3a:// prefix)
 
 # How tos
+
+# Extract a few columns from a large source table
+
+# Anonymize fields at ingest
+
+# Create a derived data set from already existing model files  
 
 # Prioritised Todos:
 

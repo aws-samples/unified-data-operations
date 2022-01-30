@@ -215,7 +215,14 @@ def schema_checker(ds: DataSet):
             if len(ds.df.columns) != len(ds.model.columns):
                 xtra = set(ds.df.columns) - set([x.id for x in ds.model.columns])
                 raise SchemaValidationException(
-                    f'The dataset [{ds.id}] has a dataframe with more columns ({xtra}) as stated in the model', ds)
+                    f'The dataset [{ds.id}] has a dataframe with more columns ({xtra}) than stated in the model', ds)
+    return ds
+
+
+def razor(ds: DataSet):
+    if hasattr(ds.model, 'xtra_columns') and ds.model.xtra_column == 'raze':
+        xtra_columns = list(set(ds.df.columns) - set([x.id for x in ds.model.columns]))
+        ds.df = ds.df.drop(*xtra_columns)
     return ds
 
 

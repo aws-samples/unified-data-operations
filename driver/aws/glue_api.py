@@ -38,7 +38,7 @@ def update_data_catalog(ds: DataSet):
         except Exception as enf:  # EntityNotFoundException
             # table not found]
             if enf.__class__.__name__ == 'EntityNotFoundException':
-                logger.error(
+                logger.warning(
                     f'Table [{ds.id}] cannot be found in the catalog schmea [{ds.product_id}]. Table is going to be created.')
                 glue.create_table(DatabaseName=ds.product_id, TableInput=resolve_table_input(ds))
             else:
