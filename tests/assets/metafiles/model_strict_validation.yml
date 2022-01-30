@@ -1,0 +1,93 @@
+schema_version: 1.rc-1
+models:
+  - id: person
+    version: "1.0"
+    columns:
+      - id: id
+        type: integer
+        constraints:
+          - type: unique
+          - type: not_null
+      - id: first_name
+        type: string
+      - id: last_name
+        type: string
+      - id: age
+        type: integer
+      - id: city
+        type: string
+      - id: gender
+        type: string
+    meta:
+      contains_pii: true
+      steward: jane.doe@acme.com
+    tags:
+      cost_center: 123455
+      use_case: Customer 360
+    access:
+      domain: customer_support
+      confidentiality: private
+  - id: transaction
+    version: "1.0"
+    columns:
+      - id: id
+        type: integer
+        constraints:
+          - type: unique
+          - type: not_null
+      - id: sku
+        type: string
+      - id: trx_date
+        type: timestamp
+      - id: geo
+        type: string
+      - id: items
+        type: integer
+    meta:
+      contains_pii: false
+      steward: jane.doe@acme.com
+    tags:
+      cost_center: 123455
+      use_case: Customer 360
+    access:
+      domain: customer_support
+      confidentiality: private
+  - id: ratings
+    version: "1.0"
+    columns:
+      - id: userId
+        type: integer
+      - id: movieId
+        type: integer
+      - id: rating
+        type: integer
+      - id: timestamp
+        type: long
+    meta:
+      contains_pii: false
+      steward: jane.doe@acme.com
+    tags:
+      cost_center: 123455
+      use_case: Customer 360
+    access:
+      domain: customer_support
+      confidentiality: private
+  - id: movie
+    version: "1.0"
+    validation: strict
+    columns:
+      - id: movieId
+        type: integer
+      - id: title
+        type: string
+      - id: genres
+        type: string
+    meta:
+      contains_pii: false
+      steward: jane.doe@acme.com
+    tags:
+      cost_center: 123455
+      use_case: Customer 360
+    access:
+      domain: customer_support
+      confidentiality: private

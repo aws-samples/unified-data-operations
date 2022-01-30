@@ -17,6 +17,7 @@ from quinn.dataframe_validator import (
     DataFrameMissingColumnError,
     DataFrameProhibitedColumnError
 )
+
 logger = logging.getLogger(__name__)
 
 
@@ -207,6 +208,14 @@ def schema_checker(ds: DataSet):
                 f'The following fields are missing from the data set [{ds.id}]: {missing_fields}. '
                 f'Current schema: {ds.df.schema}',
                 ds)
+        if hasattr(ds, 'model') and hasattr(ds.model, 'validation') and ds.model.validation == 'strict':
+            if not hasattr(ds, 'df'):
+                raise SchemaValidationException(f'The dataset [{ds.id}] is missing a dataframe with strict validation',
+                                                ds)
+            if len(ds.df.columns) != len(ds.model.columns):
+                xtra = set(ds.df.columns) - set([x.id for x in ds.model.columns])
+                raise SchemaValidationException(
+                    f'The dataset [{ds.id}] has a dataframe with more columns ({xtra}) as stated in the model', ds)
     return ds
 
 

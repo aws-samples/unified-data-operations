@@ -43,6 +43,13 @@
           "type": "string",
           "minLength": 1
         },
+        "validation": {
+          "type": "string",
+          "enum": [
+            "strict",
+            "lazy"
+          ]
+        },
         "extends": {
           "type": "string",
           "minLength": 1
