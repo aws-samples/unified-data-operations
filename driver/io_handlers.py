@@ -4,7 +4,7 @@ from types import SimpleNamespace
 from urllib.parse import urlparse
 
 from pyspark.sql import DataFrame, DataFrameWriter
-from driver.aws import glue_api
+from driver.aws import glue_api, datalake_api
 from driver.core import Connection, resolve_data_set_id, resolve_data_product_id
 from driver.driver import get_spark
 from driver.task_executor import DataSet
@@ -90,6 +90,8 @@ def lake_output_handler(ds: DataSet):
         .option('header', 'true') \
         .save(output)
     # .saveAsTable('test_db.hoppala', path=ds.storage_location)
+
+    datalake_api.tag_files(ds.storage_bucket, ds.storage_path, ds.all_tags)
 
     # print(f'# partitions after write {ds.df.rdd.getNumPartitions()}')
     # todo: recheck coalesce value
