@@ -4,7 +4,8 @@
   "title": "Data product schema",
   "type": "object",
   "required": [
-    "models"
+    "models",
+    "schema_version"
   ],
   "additionalProperties": false,
   "properties": {
@@ -27,7 +28,6 @@
       "required": [
         "id",
         "version",
-        "description",
         "columns"
       ],
       "properties": {
@@ -42,6 +42,20 @@
         "version": {
           "type": "string",
           "minLength": 1
+        },
+        "xtra_columns": {
+          "type": "string",
+          "enum": [
+            "raze",
+            "ignore"
+          ]
+        },
+        "validation": {
+          "type": "string",
+          "enum": [
+            "strict",
+            "lazy"
+          ]
         },
         "extends": {
           "type": "string",
@@ -93,6 +107,9 @@
       "additionalProperties": false,
       "properties": {
         "type": {
+          "type": "string"
+        },
+        "format": {
           "type": "string"
         },
         "options": {

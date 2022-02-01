@@ -1,10 +1,15 @@
 import importlib
+import logging
+
 import sys
 
 from types import SimpleNamespace
 from typing import List, Callable
 from .util import filter_list_by_id
-from .core import DataSet, DataProduct, IOType, ProcessorChainExecutionException, ValidationException
+from .core import DataSet, DataProduct, IOType, ProcessorChainExecutionException, ValidationException, \
+    resolve_data_set_id, ResolverException
+
+logger = logging.getLogger(__name__)
 
 data_src_handlers: dict = dict()
 pre_processors: list = list()
@@ -34,15 +39,14 @@ def register_output_handler(output_handler_type: str, handler: callable):
 
 
 def resolve_io_type(io_definition: SimpleNamespace) -> IOType:
-    return IOType.connection if hasattr(io_definition, IOType.connection.name) else IOType.model
-
-
-def resolve_data_set_id(io_def: SimpleNamespace, io_type: IOType) -> str:
-    if io_type == IOType.model:
-        return getattr(io_def, io_type)
+    if hasattr(io_definition, IOType.connection.name):
+        return IOType.connection
+    elif hasattr(io_definition, IOType.file.name):
+        return IOType.file
+    elif hasattr(io_definition, IOType.model.name):
+        return IOType.model
     else:
-        table_name_elements = io_def.table.rsplit('.')
-        return table_name_elements[len(table_name_elements) - 1]
+        raise ResolverException(f'This IO type  is not supported yet: {io_definition.__repr__()}.')
 
 
 def load_inputs(product_id: str, inputs: SimpleNamespace, models: List[SimpleNamespace]) -> List[DataSet]:
@@ -57,9 +61,10 @@ def load_inputs(product_id: str, inputs: SimpleNamespace, models: List[SimpleNam
     for inp in inputs:
         model_id = inp.model if hasattr(inp, 'model') else None
         setattr(inp, 'type', resolve_io_type(inp))
-        dataset_id = resolve_data_set_id(inp, inp.type)
+        dataset_id = resolve_data_set_id(inp)
         model_obj = filter_list_by_id(models, model_id)
-        input_datasets.append(DataSet(dataset_id, load_input(inp), model_obj, DataProduct(product_id)))
+        dp = DataProduct(id=product_id)
+        input_datasets.append(DataSet(dataset_id, load_input(inp), model_obj, dp))
     return input_datasets
 
 
@@ -67,7 +72,7 @@ def run_processors(phase: str, datasets: List[DataSet], processors: List[Callabl
     try:
         processed_dfs: list[datasets] = datasets
         for processor in processors:
-            print(f'-> running processor: [{processor.__name__}]')
+            logger.info(f'-> running processor: [{processor.__name__}]')
             new_dss: list[datasets] = list()
             for ds in processed_dfs:
                 new_dss.append(processor(ds))
@@ -75,15 +80,15 @@ def run_processors(phase: str, datasets: List[DataSet], processors: List[Callabl
         return processed_dfs
     except ValidationException as vex:
         raise ProcessorChainExecutionException(
-            f'{type(vex).__name__} in processor [{processor.__name__}] with dataset [{vex.data_set.id}] at processor chain: [{phase}]') from vex
+            f'{type(vex).__name__} in processor [{processor.__name__}] at processor chain: [{phase}]: {str(vex)}') from vex
     except Exception as e:
         raise ProcessorChainExecutionException(
-            f'{type(e).__name__} in [{processor.__name__}] at processor chain: [{phase}]') from e
+            f'{type(e).__name__} in [{processor.__name__}] at processor chain: [{phase}]: {str(e)}') from e
 
 
 def transform(inp_dfs: List[DataSet], product_path: str, custom_module_name, params=None) -> List[DataSet]:
     sys.path.append(product_path)
-    print('executing module: ' + custom_module_name)
+    logger.info('executing module: ' + custom_module_name)
     custom_module = importlib.import_module(custom_module_name)
     sys.modules[custom_module_name] = custom_module
     if params:
@@ -105,13 +110,13 @@ def enrich(datasets, product_id, models: List[SimpleNamespace]):
         if not dataset.product_id:
             dataset.product_id = product_id
         if dataset.model is None:
-            model_obj = next(iter([m for m in models if m.id == dataset.id]), None)
+            model_obj = next(iter([m for m in models if m.id == dataset.id]), models[0])
             dataset.model = model_obj
     return datasets
 
 
 def execute(product_id: str, task: list, models: List[SimpleNamespace], product_path: str) -> List[DataSet]:
-    print(f'Executing task > {product_id} {task.id}')
+    logger.info(f'Executing task > {product_id} {task.id}')
     input_dfs: list[DataSet] = run_processors('pre', load_inputs(product_id, task.inputs, models), pre_processors)
     task_logic_module = task.logic.module if hasattr(task, 'logic') and hasattr(task.logic,
                                                                                 'module') else 'builtin.ingest'

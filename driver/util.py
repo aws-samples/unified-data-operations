@@ -1,13 +1,17 @@
 import functools
 import json
+import logging
 import os
 import yaml
 
 from types import SimpleNamespace
 from typing import List
 from jsonschema import validate, ValidationError, Draft3Validator
+from yaml.scanner import ScannerError
 
 from .core import ArtefactType
+
+logger = logging.getLogger(__name__)
 
 
 def run_chain(input_payload, *callables: callable):
@@ -15,8 +19,13 @@ def run_chain(input_payload, *callables: callable):
     functions.extend(callables)
     result = input_payload
     for func in functions:
-        print(f'Chain > executing: {func.func.__name__ if isinstance(func, functools.partial) else func.__name__}')
-        result = func(result)
+        func_name = func.func.__name__ if isinstance(func, functools.partial) else func.__name__
+        logger.info(f'Chain > executing: {func_name}')
+        try:
+            result = func(result)
+        except Exception as exc:
+            logger.error(f'{type(exc).__name__} while executing <{func_name}> with error: {str(exc)}')
+            raise
     return result
 
 
@@ -36,9 +45,13 @@ def parse_dict_into_object(d: dict):
 
 
 def load_yaml(file_path: str):
-    print(f'loading file {file_path}')
-    with open(fr'{file_path}') as file:
-        return yaml.load(file, Loader=yaml.FullLoader)
+    logger.info(f'loading file {file_path}')
+    try:
+        with open(fr'{file_path}') as file:
+            return yaml.load(file, Loader=yaml.FullLoader)
+    except ScannerError as scerr:
+        logger.error(f'Could not read [{file_path}] due to: {str(scerr)}')
+        raise scerr
 
 
 def filter_list_by_id(object_list, object_id):
@@ -57,8 +70,8 @@ def validate_schema(validable_dict: dict, artefact_type: ArtefactType):
         validate(validable_dict, schema)
     except ValidationError as verr:
         for err in sorted(Draft3Validator(schema).iter_errors(validable_dict), key=str):
-            print(f'validation error detail: {err.message}')
-        print(f"{type(verr).__name__}: {str(verr)}")
+            logger.error(f'validation error detail: {err.message}')
+        logger.error(f"{type(verr).__name__} while checking [{artefact_type.name}]: {str(verr)}")
         raise verr
     return validable_dict
 
@@ -66,7 +79,7 @@ def validate_schema(validable_dict: dict, artefact_type: ArtefactType):
 def enrich_product(product_input: SimpleNamespace, args):
     product = product_input.product
     if not hasattr(product, 'defaults'):
-        setattr(product, 'defaults', SimpleNamespace(storage=None))
+        setattr(product, 'defaults', SimpleNamespace())
     if hasattr(args, 'default_data_lake_bucket') and not hasattr(product.defaults, 'storage'):
         storage = SimpleNamespace()
         setattr(storage, 'location', args.default_data_lake_bucket)
@@ -80,10 +93,22 @@ def enrich_models(models: SimpleNamespace, product: SimpleNamespace):
         for col in columns_with_missing_type:
             setattr(col, 'type', filter_list_by_id(extended_model.columns, col.id).type)
 
+    def decorate_model_with_defaults(model):
+        if hasattr(product, 'defaults'):
+            if not hasattr(model, 'storage') and hasattr(product.defaults, 'storage'):
+                setattr(model, 'storage', product.defaults.storage)
+            if not hasattr(model.storage, 'location') and hasattr(product.defaults.storage, 'location'):
+                setattr(model.storage, 'location', product.defaults.storage.location)
+        if not hasattr(model.storage, 'type'):
+            setattr(model.storage, 'type', 'lake')
+        if not hasattr(model.storage, 'format'):
+            setattr(model.storage, 'format', 'parquet')
+        return model
+
     compiled_models = list()
     for model in models.models:
         if hasattr(model, 'extends'):
-            extended_model = filter_list_by_id(models, model.extends)
+            extended_model = filter_list_by_id(models.models, model.extends)
             if not extended_model:
                 raise Exception(
                     f'Cannot extend model {model.id} with {extended_model} because the root model is not found.')
@@ -93,22 +118,21 @@ def enrich_models(models: SimpleNamespace, product: SimpleNamespace):
             inherited_columns = [filter_list_by_id(extended_model.columns, col_id) for col_id in inherited_column_ids]
             model.columns.extend(inherited_columns)
             add_back_types(model, extended_model)
-        if not hasattr(model.storage, 'location') and hasattr(product.defaults.storage, 'location'):
-            setattr(model.storage, 'location', product.defaults.storage.location)
-        compiled_models.append(model)
+        compiled_models.append(decorate_model_with_defaults(model))
     return compiled_models
 
 
-def compile_product(product_path: str, args):
+def compile_product(product_path: str, args, prod_def_filename: str = 'product.yml'):
     part_enrich_product = functools.partial(enrich_product, args=args)
     part_validate_schema = functools.partial(validate_schema, artefact_type=ArtefactType.product)
-    product_path = os.path.join(product_path, 'product.yml')
+    product_path = os.path.join(product_path, prod_def_filename)
     product_processing_chain = [load_yaml, part_validate_schema, parse_dict_into_object, part_enrich_product]
     return run_chain(product_path, *product_processing_chain)
 
 
-def compile_models(product_path: str, product: SimpleNamespace):
-    model_path = os.path.join(product_path, 'model.yml')
+def compile_models(product_path: str, product: SimpleNamespace, def_file_name: str = 'model.yml') -> List[
+    SimpleNamespace]:
+    model_path = os.path.join(product_path, def_file_name)
     part_validate_schema = functools.partial(validate_schema, artefact_type=ArtefactType.models)
     part_enrich_models = functools.partial(enrich_models, product=product)
     model_processing_chain = [load_yaml, part_validate_schema, parse_dict_into_object, part_enrich_models]

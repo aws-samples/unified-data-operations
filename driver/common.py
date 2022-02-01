@@ -15,10 +15,10 @@ def remap_schema(ds: DataFrame) -> List[StructType]:
     for col in ds.model.columns:
         if hasattr(col, 'transform') and 'skip' in [t.type for t in col.transform]:
             continue
-        not_null = True
+        nullable = True
         if hasattr(col, 'constraints'):
-            not_null = 'not_null' in [c.type for c in col.constraints]
-        schema_fields.append({'metadata': {}, 'name': col.id, 'type': col.type, 'nullable': not_null})
+            nullable = 'not_null' not in [c.type for c in col.constraints]
+        schema_fields.append({'metadata': {}, 'name': col.id, 'type': col.type, 'nullable': nullable})
     return StructType.fromJson({'fields': schema_fields, 'type': 'struct'})
 
 

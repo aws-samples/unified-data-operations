@@ -1,10 +1,11 @@
+import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Dict
 
 from driver.aws import providers
-
+logger = logging.getLogger(__name__)
 
 class Partition:
     def __init__(self, path_key):

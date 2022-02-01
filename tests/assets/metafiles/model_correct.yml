@@ -3,7 +3,7 @@ models:
   - id: person_pii
     version: "1.0.0"
     name: xxxxxxx
-    description: A person, who can be a customer, including PII
+    description: straightforward model configuration
     columns:
       - id: id
         type: integer
@@ -22,15 +22,15 @@ models:
           - type: not_null
           - type: regexp
             options:
-              value: '^male|female$'
+              value: '[Male|Female]'
       - id: age
         type: integer
     meta:
       contains_pii: true
     storage:
       type: lake
+      location: 'glue-job-test-destination-bucket/person_pii'
       format: parquet
-#      location: 'glue-job-test-destination-bucket/person_pii'
       options:
         skip_first_row: true
         partition_by:
@@ -46,8 +46,8 @@ models:
 
   - id: person_pub
     version: "1.0.0"
-    description: public personal data
     extends: person_pii
+    description: a dataset with anonymised and pseudoanonimised columns
     columns:
       - id: full_name
         transform:
@@ -71,14 +71,14 @@ models:
       contains_pii: false
     storage:
       type: lake
-#      location: 'glue-job-test-destination-bucket/person_pub'
-      format: parquet
+      location: 'glue-job-test-destination-bucket/person_pub'
       options:
         skip_first_row: true
         partition_by:
           - gender
           - age
         bucketed_at: 512M
+        stored_as: parquet
     tags:
       cost_center: 123455
       use_case: Customer 360
