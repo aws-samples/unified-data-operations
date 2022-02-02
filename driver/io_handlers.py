@@ -91,7 +91,7 @@ def lake_output_handler(ds: DataSet):
         .save(output)
     # .saveAsTable('test_db.hoppala', path=ds.storage_location)
 
-    datalake_api.tag_files(ds.storage_bucket, ds.storage_path, ds.all_tags)
+    datalake_api.tag_files(ds.storage_location, ds.storage_path, ds.all_tags)
 
     # print(f'# partitions after write {ds.df.rdd.getNumPartitions()}')
     # todo: recheck coalesce value

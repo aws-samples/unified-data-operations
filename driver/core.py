@@ -73,12 +73,16 @@ class DataSet:
             self.model.storage.location = path
 
     @property
+    def storage_path(self) -> str:
+        return f"{self.product.id}/{self.id}"
+
+    @property
     def dataset_storage_path(self) -> str:
         if self.id is None:
             raise Exception(f'Can not construct storage location because product id is not defined.')
         if not self.storage_location:
             raise Exception(f'The data set storage location is not set for dataset id: {self.id}.')
-        return f'{self.storage_location}/{self.product.id}/{self.id}'
+        return f'{self.storage_location}/{self.storage_path}'
 
     @property
     def storage_type(self) -> str:
