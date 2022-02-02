@@ -391,9 +391,7 @@ def resolve_data_set_id(io_def: SimpleNamespace) -> str:
 
 
 def resolve_data_product_id(io_def: SimpleNamespace) -> str:
-    if not io_def.type == IOType.model:
-        raise Exception('This method can only process model IO Definitions')
-    model_url = getattr(io_def, io_def.type)
-    if '.' not in model_url:
-        raise Exception('This method requires a . notation for data product id and data set operation')
-    return model_url.rsplit('.')[0]
+    if io_def.type == IOType.model:
+        return getattr(io_def, io_def.type).rsplit('.')[0]
+    elif io_def.type == IOType.connection:
+        return getattr(io_def, 'table').rsplit('.')[0]

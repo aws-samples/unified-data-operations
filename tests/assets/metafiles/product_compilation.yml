@@ -10,8 +10,8 @@ product:
     tasks:
       - id: process fixtures
         inputs:
-          - model: person
-          - model: movies
+          - model: data_product_a.person
+          - model: data_product_b.movies
           - model: ratings
         outputs:
           - model: transaction

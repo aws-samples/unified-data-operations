@@ -7,7 +7,7 @@ from types import SimpleNamespace
 from typing import List, Callable
 from .util import filter_list_by_id
 from .core import DataSet, DataProduct, IOType, ProcessorChainExecutionException, ValidationException, \
-    resolve_data_set_id, ResolverException
+    resolve_data_set_id, ResolverException, resolve_data_product_id
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ def load_inputs(product_id: str, inputs: SimpleNamespace, models: List[SimpleNam
     for inp in inputs:
         model_id = inp.model if hasattr(inp, 'model') else None
         setattr(inp, 'type', resolve_io_type(inp))
-        dataset_id = resolve_data_set_id(inp)
+        dataset_id = f'{resolve_data_product_id(inp)}.{resolve_data_set_id(inp)}'
         model_obj = filter_list_by_id(models, model_id)
         dp = DataProduct(id=product_id)
         input_datasets.append(DataSet(dataset_id, load_input(inp), model_obj, dp))

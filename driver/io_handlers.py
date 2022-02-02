@@ -69,8 +69,8 @@ def file_input_handler(props: SimpleNamespace) -> DataFrame:
 
 def lake_input_handler(io_def: SimpleNamespace) -> DataFrame:
     prod_id = resolve_data_product_id(io_def)
-    ds_id = resolve_data_set_id(io_def)
-    data_product_table = __DATA_PRODUCT_PROVIDER__(prod_id, ds_id)
+    model_id = resolve_data_set_id(io_def)
+    data_product_table = __DATA_PRODUCT_PROVIDER__(prod_id, model_id)
     df = get_spark().read.parquet(data_product_table.storage_location_s3a)
     return df
 
