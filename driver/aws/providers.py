@@ -1,8 +1,11 @@
+import logging
+
 import boto3, botocore
 import mypy_boto3_glue
 from driver.core import Connection, ConnectionNotFoundException, DataProductTable, TableNotFoundException
 
 __SESSION__ = None
+logger = logging.getLogger(__name__)
 
 
 def init(key_id: str = None, key_material: str = None, profile: str = None, region: str = None):

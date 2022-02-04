@@ -1,0 +1,16 @@
+schema_version: 1.rc-1
+product:
+  id: some_data_product
+  owner: jane@acme.com
+  description: some description is required
+  version: "1.0.0"
+  engine: glue
+  pipeline:
+    schedule: "0 3 * * *"
+    tasks:
+      - id: process_some_files
+        inputs:
+          - file: s3://datalakebucke/some_folder/some_file
+          - model: person
+        outputs:
+          - model: person

@@ -1,14 +1,14 @@
-  schema_version: 1.rc-1
+schema_version: 1.rc-1
 product:
   id: product_a_customers
   version: "1.0.0"
-#  defaults:
-#      storage:
-#        location:
+  defaults:
+      storage:
+        location:
+      engine: glue
   owner: jane.doe@acme.com
   name: Customers
   description: All customer data
-  engine: glue
   pipeline:
     schedule: "0 */1 * * *"
     tasks:

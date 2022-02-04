@@ -1,3 +1,5 @@
+import logging
+
 import botocore
 from mypy_boto3_glue.type_defs import GetDatabasesResponseTypeDef, DatabaseTypeDef, GetTablesResponseTypeDef, \
     TableTypeDef, TableInputTypeDef, StorageDescriptorTypeDef, ColumnTypeDef, DatabaseInputTypeDef
@@ -6,9 +8,12 @@ from driver.aws import providers
 from driver.aws.resolvers import resolve_table, resolve_partition_entries, resolve_table_input, resolve_partition_inputs
 from driver.task_executor import DataSet
 
+logger = logging.getLogger(__name__)
+
 
 def update_data_catalog(ds: DataSet):
     glue = providers.get_glue()
+    logger.info(f'--> Updating the data catalog for data product [{ds.product_id}] and model [{ds.model.id}].')
 
     def upsert_database():
         try:
@@ -17,7 +22,7 @@ def update_data_catalog(ds: DataSet):
         except Exception as enf:
             if enf.__class__.__name__ == 'EntityNotFoundException':
                 # database does not exists yet
-                print(
+                logger.error(
                     f'Database {ds.product_id} does not exists in the data catalog. {str(enf)}. It is going to be created.')
                 # todo: add permissions
                 glue.create_database(
@@ -33,8 +38,8 @@ def update_data_catalog(ds: DataSet):
         except Exception as enf:  # EntityNotFoundException
             # table not found]
             if enf.__class__.__name__ == 'EntityNotFoundException':
-                print(
-                    f'Table [{ds.id}] cannot be found in the database [{ds.product_id}] in Glue Data Catalog. Table is going to be created.')
+                logger.warning(
+                    f'Table [{ds.id}] cannot be found in the catalog schmea [{ds.product_id}]. Table is going to be created.')
                 glue.create_table(DatabaseName=ds.product_id, TableInput=resolve_table_input(ds))
             else:
                 raise enf
@@ -49,12 +54,12 @@ def update_data_catalog(ds: DataSet):
         rsp = glue.batch_create_partition(DatabaseName=ds.product_id, TableName=ds.id,
                                           PartitionInputList=partition_inputs)
         if rsp.get('Errors'):
-            print(str(rsp))
+            logger.error(str(rsp))
             raise Exception(f"Couldn't update the table with the partitions.")
 
-        print(str(rsp))
-        #todo: write a proper handling here
+        logger.info(f'Partition upsert response: {str(rsp)}')
+        # todo: write a proper handling here
 
     upsert_database()
     upsert_table()
-    upsert_partitions() #todo: this is not yet an upsert (in implementation)
+    upsert_partitions()  # todo: this is not yet an upsert (in implementation)

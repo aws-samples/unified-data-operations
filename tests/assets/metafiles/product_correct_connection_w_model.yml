@@ -1,0 +1,16 @@
+schema_version: 1.rc-1
+product:
+  id: customers
+  owner: jane@acme.com
+  description: some description is required
+  version: "1.0.0"
+  pipeline:
+    schedule: "0 3 * * *"
+    tasks:
+      - id: default_extract
+        inputs:
+          - connection: connection_name
+            table: db_schema.db_table_name
+            model: person_pub
+        outputs:
+          - model: person_pub

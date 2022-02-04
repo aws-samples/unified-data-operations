@@ -111,6 +111,9 @@
               },
               {
                 "$ref": "#/$defs/io_type_model"
+              },
+              {
+                "$ref": "#/$defs/io_type_file"
               }
             ]
           }
@@ -124,6 +127,9 @@
               },
               {
                 "$ref": "#/$defs/io_type_model"
+              },
+              {
+                "$ref": "#/$defs/io_type_file"
               }
             ]
           }
@@ -179,6 +185,43 @@
         "model": {
           "type": "string",
           "mindLength": 1
+        }
+      }
+    },
+    "io_type_file": {
+      "type": "object",
+      "required": [
+        "file"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "file": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "options": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "type": "string",
+              "minLength": 3
+            },
+            "infer_schema": {
+              "type": "boolean"
+            },
+            "separator": {
+              "type": "string",
+              "minLength": 1
+            },
+            "header": {
+              "type": "boolean"
+            }
+          }
         }
       }
     }

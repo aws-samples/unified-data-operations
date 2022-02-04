@@ -1,4 +1,6 @@
 import json
+from urllib.parse import urlparse
+
 from jsonschema import validate, ValidationError
 import os
 from types import SimpleNamespace
@@ -48,14 +50,7 @@ class DataSet:
             else:
                 return [p for p in self.storage_options.partition_by]
         else:
-            return None
-
-    @property
-    def stored_as(self) -> str:
-        if self.storage_options and hasattr(self.storage_options, 'stored_as'):
-            return self.storage_options.stored_as
-        else:
-            return None
+            return list()
 
     @property
     def storage_location(self) -> str:
@@ -78,10 +73,16 @@ class DataSet:
             self.model.storage.location = path
 
     @property
+    def storage_path(self) -> str:
+        return f"{self.product.id}/{self.id}"
+
+    @property
     def dataset_storage_path(self) -> str:
         if self.id is None:
             raise Exception(f'Can not construct storage location because product id is not defined.')
-        return f'{self.storage_location}/{self.product.id}/{self.id}'
+        if not self.storage_location:
+            raise Exception(f'The data set storage location is not set for dataset id: {self.id}.')
+        return f'{self.storage_location}/{self.storage_path}'
 
     @property
     def storage_type(self) -> str:
@@ -92,9 +93,8 @@ class DataSet:
 
     @property
     def storage_format(self) -> str:
-        if self.model and hasattr(self.model, 'storage') and hasattr(self.model.storage, 'options'):
-            opts = self.model.storage.options
-            return opts.stored_as if hasattr(opts, 'stored_as') else None
+        if self.model and hasattr(self.model, 'storage'):
+            return self.model.storage.format if hasattr(self.model.storage, 'format') else None
         else:
             return None
 
@@ -143,9 +143,14 @@ class DataSet:
         return {**self.tags, **{'access_' + k: v for k, v in self.access_tags.items()}}
 
 
-class ValidationException(Exception):
+class SchemaValidationException(Exception):
     def __init__(self, message: str, data_set: DataSet):
         self.data_set = data_set
+        super().__init__(message)
+
+
+class ValidationException(Exception):
+    def __init__(self, message: str):
         super().__init__(message)
 
 
@@ -162,6 +167,10 @@ class JobExecutionException(Exception):
 
 
 class ProcessorChainExecutionException(Exception):
+    pass
+
+
+class ResolverException(Exception):
     pass
 
 
@@ -188,6 +197,7 @@ class MysqlDsn(AnyUrl):
 class IOType(str, Enum):
     model = 'model'
     connection = 'connection'
+    file = 'file'
 
 
 class ArtefactType(str, Enum):
@@ -354,3 +364,34 @@ class DataProductTable(BaseModel):
     @property
     def storage_location_s3a(self):
         return self.storage_location.replace('s3://', 's3a://')
+
+
+def resolve_data_set_id(io_def: SimpleNamespace) -> str:
+    def xtract_domain(s):
+        if '.' in s:
+            domain_elements = s.rsplit('.')
+            return domain_elements[len(domain_elements) - 1]
+        else:
+            return s
+
+    if io_def.type == IOType.model:
+        model_url = getattr(io_def, io_def.type)
+        return xtract_domain(model_url)
+    elif io_def.type == IOType.connection:
+        return xtract_domain(io_def.model) if hasattr(io_def, 'model') else xtract_domain(io_def.table)
+    elif io_def.type == IOType.file:
+        if hasattr(io_def, IOType.model.name):
+            return xtract_domain(getattr(io_def, IOType.model.name))
+        else:
+            parsed_file = urlparse(io_def.file)
+            filename = os.path.basename(parsed_file.path)
+            return filename.rsplit('.')[0]
+    else:
+        raise ConnectionNotFoundException(f'The IO Type {io_def.type} is not supported.')
+
+
+def resolve_data_product_id(io_def: SimpleNamespace) -> str:
+    if io_def.type == IOType.model:
+        return getattr(io_def, io_def.type).rsplit('.')[0]
+    elif io_def.type == IOType.connection:
+        return getattr(io_def, 'table').rsplit('.')[0]
