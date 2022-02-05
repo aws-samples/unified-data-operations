@@ -41,6 +41,7 @@ def init_system(args):
         jars = ','.join(local_jars)
         conf.set("spark.jars", jars)
     driver.init(spark_config=conf)
+    driver.install_dependencies()
     driver.register_data_source_handler('connection', connection_input_handler)
     driver.register_data_source_handler('model', lake_input_handler)
     driver.register_data_source_handler('file', file_input_handler)
@@ -50,7 +51,7 @@ def init_system(args):
     driver.process_product(args)
 
 
-if __name__ == '__main__':
+def main():
     try:
         logging.basicConfig(level=logging.INFO)
         parser = argparse.ArgumentParser(argument_default=argparse.SUPPRESS)
@@ -82,3 +83,7 @@ if __name__ == '__main__':
         logging.error(str(e))
         traceback.print_exc()
         raise e
+
+
+if __name__ == '__main__':
+    main()

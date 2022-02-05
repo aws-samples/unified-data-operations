@@ -43,4 +43,8 @@ setup(
     cmdclass={
         'clean_all': CleanCommand,
         # 'package': Package
-    })
+    },
+    entry_points={
+        'console_scripts': ['data-product-processor=main:main'],
+    },
+)
