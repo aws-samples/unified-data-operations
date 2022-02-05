@@ -8,6 +8,8 @@ models:
         constraints:
           - type: not_null
       - id: industry_code_ANZSIC
+        name: Industry Code
+        description: the code of the industry
         type: string
       - id: industry_name_ANZSIC
         type: string

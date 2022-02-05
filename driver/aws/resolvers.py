@@ -7,6 +7,7 @@ from pyspark.sql import DataFrame
 from driver.aws.datalake_api import Partition
 from driver.aws import datalake_api
 from driver.task_executor import DataSet
+from driver.util import filter_list_by_id, safe_get_property
 
 
 def resolve_partitions(ds: DataSet) -> List[ColumnTypeDef]:
@@ -73,7 +74,14 @@ def resolve_storage_descriptor(ds: DataSet, override_location: str = None) -> St
 
 
 def resolve_columns(ds: DataSet) -> List[ColumnTypeDef]:
-    return [ColumnTypeDef(Name=cn, Type=ct) for cn, ct in ds.df.dtypes if cn not in ds.partitions]
+    def lookup(column_name):
+        model_dolumn = filter_list_by_id(ds.model.columns, column_name)
+        if hasattr(model_dolumn, 'name'):
+            return f"{safe_get_property(model_dolumn, 'name')}: {safe_get_property(model_dolumn, 'description')}"
+        else:
+            return str()
+
+    return [ColumnTypeDef(Name=cn, Type=ct, Comment=lookup(cn)) for cn, ct in ds.df.dtypes if cn not in ds.partitions]
 
 
 def resolve_table(ds: DataSet) -> TableTypeDef:
