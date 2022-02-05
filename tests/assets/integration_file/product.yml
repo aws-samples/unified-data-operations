@@ -3,6 +3,10 @@ product:
   id: some_data_product
   owner: jane@acme.com
   description: some description is required
+  defaults:
+    storage:
+      options:
+        compression: gzip
   version: "1.0.0"
   engine: glue
   pipeline:

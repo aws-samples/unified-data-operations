@@ -133,6 +133,22 @@ Both IO-handler types can be used as input and output.
 - **model**: defines that this is an IO-handler of Model (data-set in a data-lake) type and provides the ID of the
   data-set in the data lake, that is stored in the Glue data-catalog;
 
+### Defaults
+
+Some default configuration options can be added to the data product. These can be used, when there's no other value 
+overriding them on the Models (read later).
+The following defaults are supported:
+
+```yaml
+  defaults:
+      storage:
+        location: some_bucket/some_folder
+        options:
+          compression: uncompressed | snappy | gzip | lzo | brotli | lz4
+          coalesce: 2
+```
+Check the meaning of the various parameters on the ```model.storage``` property down bellow;
+
 ## Model Schema
 
 The ```model.yaml``` enlists the details of all input (optional) and output (mandatory) models. The model contains
@@ -209,7 +225,9 @@ The storage directive defines how to store model data:
         partition_by:
           - gender
           - age
-        bucketed_at: 512M
+        compression: uncompressed | snappy | gzip | lzo | brotli | lz4
+        coalesce: 2
+        bucketed_at: 512M <-- not yet supported
 ```
 
 - type: the default type is 'lake' as in Data Lake. This will write the dataset onto S3 and register the dataset with 
@@ -219,6 +237,9 @@ the Glue Data Catalog;
 - options: [optional] a set of options specifiend details for the write out
 - options.skip_first_row: will not write out the first row
 - options.partition_by: list of columns used for partitioning the parquet file;
+- compression: the algorithm used by the parquet file (default is snappy);
+- coalesce: the number of file for each partition (the more you have, the more parallel reads are possible but not 
+recommended for small files). The default is 2.
 - bucketed_at: defines the file-chunk sized to be written (the more )
 
 Location resolution: the output file location is first looked up on the model's ```storage.location``` property. If not

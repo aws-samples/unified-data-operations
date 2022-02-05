@@ -58,6 +58,16 @@ def safe_get_property(object: Any, property: str):
     return getattr(object, property) if hasattr(object, property) else None
 
 
+def check_property(object, nested_property: str):
+    current_object = object
+    for element in nested_property.split('.'):
+        if hasattr(current_object, element):
+            current_object = getattr(current_object, element)
+        else:
+            return False
+    return True
+
+
 def filter_list_by_id(object_list, object_id):
     return next(iter([m for m in object_list if m.id == object_id]), None)
 
@@ -81,6 +91,7 @@ def validate_schema(validable_dict: dict, artefact_type: ArtefactType):
 
 
 def enrich_product(product_input: SimpleNamespace, args):
+    # todo: replace this with a proper object merging logic
     product = product_input.product
     if not hasattr(product, 'defaults'):
         setattr(product, 'defaults', SimpleNamespace())
@@ -88,6 +99,8 @@ def enrich_product(product_input: SimpleNamespace, args):
         storage = SimpleNamespace()
         setattr(storage, 'location', args.default_data_lake_bucket)
         setattr(product.defaults, 'storage', storage)
+    if not check_property(product, 'defaults.storage.location'):
+        setattr(product.defaults.storage, 'location', args.default_data_lake_bucket)
     return product
 
 
@@ -103,6 +116,8 @@ def enrich_models(models: SimpleNamespace, product: SimpleNamespace):
                 setattr(model, 'storage', product.defaults.storage)
             if not hasattr(model.storage, 'location') and hasattr(product.defaults.storage, 'location'):
                 setattr(model.storage, 'location', product.defaults.storage.location)
+            if not hasattr(model.storage, 'options') and hasattr(product.defaults.storage, 'options'):
+                setattr(model.storage, 'options', product.defaults.storage.options)
         if not hasattr(model.storage, 'type'):
             setattr(model.storage, 'type', 'lake')
         if not hasattr(model.storage, 'format'):

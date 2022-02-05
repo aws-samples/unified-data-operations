@@ -16,6 +16,8 @@ from pydantic import (
 from typing import Dict, List, Tuple, Any, TypeVar, Union
 from pydantic import AnyUrl
 
+from driver import util
+
 Scalar = TypeVar('Scalar', int, float, bool, str)
 
 
@@ -49,7 +51,7 @@ class DataSet:
 
     @property
     def storage_location(self) -> str:
-        if self.model and hasattr(self.model, 'storage') and hasattr(self.model.storage, 'location'):
+        if util.check_property(self, 'model.storage.location'):
             return self.model.storage.location
         else:
             return None

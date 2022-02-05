@@ -6,10 +6,10 @@ import traceback
 from typing import List
 from types import SimpleNamespace
 from pyspark.sql import SparkSession
+
+from deprecated import CatalogService
 from driver import task_executor
 from .aws import providers
-from deprecated import CatalogService
-from .core import DataProduct
 from .util import compile_models, compile_product
 
 __SPARK__: SparkSession = None
@@ -54,8 +54,6 @@ def execute_tasks(product: SimpleNamespace, tasks: list, models: List[SimpleName
 
 def process_product(args):
     try:
-        # script_folder = os.path.dirname(os.path.abspath(__file__))
-        # path = f'{config_file_path_prefix}{file_type}' if config_file_path_prefix else file_type
         rel_product_path = os.path.join(args.product_path, '') if hasattr(args, 'product_path') else os.path.join('./',
                                                                                                                   '')
         abs_product_path = os.path.join(os.path.abspath(rel_product_path), '')
@@ -66,4 +64,3 @@ def process_product(args):
         traceback.print_exc()
         logger.error(f"Couldn't execute job due to >> {type(e).__name__}: {str(e)}")
         sys.exit(-1)
-        # raise e
