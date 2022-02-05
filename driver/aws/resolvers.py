@@ -1,7 +1,7 @@
 import os
 from typing import List, Dict
 from mypy_boto3_glue.type_defs import TableTypeDef, StorageDescriptorTypeDef, ColumnTypeDef, SerDeInfoTypeDef, \
-    BatchUpdatePartitionRequestEntryTypeDef, PartitionInputTypeDef, TableInputTypeDef
+    BatchUpdatePartitionRequestEntryTypeDef, PartitionInputTypeDef, TableInputTypeDef, DatabaseInputTypeDef
 from pyspark.sql import DataFrame
 
 from driver.aws.datalake_api import Partition
@@ -156,3 +156,7 @@ def resolve_partition_entries(ds: DataSet) -> List[BatchUpdatePartitionRequestEn
             PartitionInput=resolve_partition_input(partition_location=k, partition_values=v.get('values'), ds=ds)
         ))
     return partition_defs
+
+
+def resolve_database(ds: DataSet) -> DatabaseInputTypeDef:
+    return DatabaseInputTypeDef(Name=ds.product_id, Description=ds.product.description or str())

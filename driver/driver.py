@@ -33,7 +33,7 @@ def get_or_create_session(config=None) -> SparkSession:  # pragma: no cover
     return spark
 
 
-def init(spark_session=None, spark_config=None):
+def init(spark_session: SparkSession = None, spark_config=None):
     global __SPARK__
     if not spark_session:
         __SPARK__ = get_or_create_session(spark_config)
@@ -43,15 +43,6 @@ def init(spark_session=None, spark_config=None):
     # sc.setSystemProperty("com.amazonaws.services.s3.enableV4", "true")
 
 
-def execute_tasks(product: SimpleNamespace, tasks: list, models: List[SimpleNamespace], product_path: str):
-    session = providers.get_session()
-    if session:
-        CatalogService(session).drain_database(product.id) #todo: check this implementation here if needed
-
-    for task in tasks:
-        task_executor.execute(product, task, models, product_path)
-
-
 def process_product(args):
     try:
         rel_product_path = os.path.join(args.product_path, '') if hasattr(args, 'product_path') else os.path.join('./',
@@ -59,7 +50,8 @@ def process_product(args):
         abs_product_path = os.path.join(os.path.abspath(rel_product_path), '')
         product = compile_product(abs_product_path, args)
         models = compile_models(abs_product_path, product)
-        execute_tasks(product, product.pipeline.tasks, models, abs_product_path)
+        for task in product.pipeline.tasks:
+            task_executor.execute(product, task, models, abs_product_path)
     except Exception as e:
         traceback.print_exc()
         logger.error(f"Couldn't execute job due to >> {type(e).__name__}: {str(e)}")
