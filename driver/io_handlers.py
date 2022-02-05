@@ -91,11 +91,10 @@ def lake_output_handler(ds: DataSet):
         .save(output)
     # .saveAsTable('test_db.hoppala', path=ds.storage_location)
 
-    datalake_api.tag_files(ds.storage_location, ds.storage_path, ds.all_tags)
+    datalake_api.tag_files(ds.storage_location, ds.path, ds.all_tags)
 
     # print(f'# partitions after write {ds.df.rdd.getNumPartitions()}')
     # todo: recheck coalesce value
-    # todo: detect the extra schema info that is not defined in the model but provided by transformations
     # todo: add parquet compression support / the glue catalog needs it too
     # todo: add bucket support & also to the glue catalog
     glue_api.update_data_catalog(ds)

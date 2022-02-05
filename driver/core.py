@@ -37,11 +37,6 @@ class DataSet:
     def find_by_id(cls, dataset_list, ds_id):
         return next(iter([m for m in dataset_list if m.id == ds_id]), None)
 
-    # @property
-    # def model_id(self) -> str:
-    #     if self.model:
-    #         return self.model.id
-
     @property
     def partitions(self) -> List[str]:
         if self.storage_options and hasattr(self.storage_options, 'partition_by'):
@@ -73,16 +68,16 @@ class DataSet:
             self.model.storage.location = path
 
     @property
-    def storage_path(self) -> str:
+    def path(self) -> str:
+        if self.id is None:
+            raise Exception(f'Can not construct data set path because product id is not defined.')
+        if not self.storage_location:
+            raise Exception(f'The data set storage location is not set for dataset id: {self.id}.')
         return f"{self.product.id}/{self.id}"
 
     @property
     def dataset_storage_path(self) -> str:
-        if self.id is None:
-            raise Exception(f'Can not construct storage location because product id is not defined.')
-        if not self.storage_location:
-            raise Exception(f'The data set storage location is not set for dataset id: {self.id}.')
-        return f'{self.storage_location}/{self.storage_path}'
+        return f'{self.storage_location}/{self.path}'
 
     @property
     def storage_type(self) -> str:
@@ -141,6 +136,14 @@ class DataSet:
         if self.id is None:
             raise Exception(f'Can not construct tags, id is not defined.')
         return {**self.tags, **{'access_' + k: v for k, v in self.access_tags.items()}}
+
+    @property
+    def model_name(self) -> str:
+        return self.model.name if hasattr(self, 'model') and hasattr(self.model, 'name') else self.id
+
+    @property
+    def model_description(self) -> str:
+        return self.model.description if hasattr(self, 'model') and hasattr(self.model, 'description') else str()
 
 
 class SchemaValidationException(Exception):

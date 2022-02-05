@@ -9,6 +9,7 @@ from pyspark.sql import SparkSession
 from driver import task_executor
 from .aws import providers
 from deprecated import CatalogService
+from .core import DataProduct
 from .util import compile_models, compile_product
 
 __SPARK__: SparkSession = None
@@ -42,13 +43,13 @@ def init(spark_session=None, spark_config=None):
     # sc.setSystemProperty("com.amazonaws.services.s3.enableV4", "true")
 
 
-def execute_tasks(product_id: str, tasks: list, models: List[SimpleNamespace], product_path: str):
+def execute_tasks(product: SimpleNamespace, tasks: list, models: List[SimpleNamespace], product_path: str):
     session = providers.get_session()
     if session:
-        CatalogService(session).drain_database(product_id) #todo: check this implementation here if needed
+        CatalogService(session).drain_database(product.id) #todo: check this implementation here if needed
 
     for task in tasks:
-        task_executor.execute(product_id, task, models, product_path)
+        task_executor.execute(product, task, models, product_path)
 
 
 def process_product(args):
@@ -60,7 +61,7 @@ def process_product(args):
         abs_product_path = os.path.join(os.path.abspath(rel_product_path), '')
         product = compile_product(abs_product_path, args)
         models = compile_models(abs_product_path, product)
-        execute_tasks(product.id, product.pipeline.tasks, models, abs_product_path)
+        execute_tasks(product, product.pipeline.tasks, models, abs_product_path)
     except Exception as e:
         traceback.print_exc()
         logger.error(f"Couldn't execute job due to >> {type(e).__name__}: {str(e)}")

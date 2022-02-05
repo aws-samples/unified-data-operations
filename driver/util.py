@@ -5,7 +5,7 @@ import os
 import yaml
 
 from types import SimpleNamespace
-from typing import List
+from typing import List, Any
 from jsonschema import validate, ValidationError, Draft3Validator
 from yaml.scanner import ScannerError
 
@@ -52,6 +52,10 @@ def load_yaml(file_path: str):
     except ScannerError as scerr:
         logger.error(f'Could not read [{file_path}] due to: {str(scerr)}')
         raise scerr
+
+
+def safe_get_property(object: Any, property: str):
+    return getattr(object, property) if hasattr(object, property) else None
 
 
 def filter_list_by_id(object_list, object_id):

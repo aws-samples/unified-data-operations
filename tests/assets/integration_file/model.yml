@@ -2,6 +2,8 @@ schema_version: 1.rc-1
 models:
   - id: industry
     version: "1.0"
+    name: industry report file
+    description: a random industry report file ingested from the internet
     columns:
       - id: year
         type: integer

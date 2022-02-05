@@ -5,7 +5,7 @@ from mypy_boto3_glue.type_defs import GetDatabasesResponseTypeDef, DatabaseTypeD
     TableTypeDef, TableInputTypeDef, StorageDescriptorTypeDef, ColumnTypeDef, DatabaseInputTypeDef
 from mypy_boto3_glue.client import Exceptions
 from driver.aws import providers
-from driver.aws.resolvers import resolve_table, resolve_partition_entries, resolve_table_input, resolve_partition_inputs
+from driver.aws.resolvers import resolve_table_input, resolve_partition_inputs
 from driver.task_executor import DataSet
 
 logger = logging.getLogger(__name__)

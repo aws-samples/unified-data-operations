@@ -88,6 +88,23 @@ product:
 - **task.outputs**: list of IO handlers (be it connection to a database or a dataset in the data-lake represented by a
   model);
 
+The ``logic`` keyword and all of its parameters can be omitted. In that case the ```builtin.ingest``` logic is being
+used by default. This is useful when you want to ingest tables, but you don't need to make any custom transformation 
+beyond the once provided on the model object.
+
+The builtin ```ingest``` module can also take parameters, such as create_timestamp (false by default). If this is specified
+a new column is added with the ingestion timestamp.
+
+```yaml
+    tasks:
+      - id: process_some_files
+        logic:
+          module: builtin.ingest
+          parameters:
+            create_timestamp: true
+
+```
+
 ### IO Handlers:
 
 ```yaml
@@ -436,6 +453,15 @@ class DataSet:
 ```
 
 These can be referenced in each custom aggregation task code.
+
+Your custom aggregation logic is parametrised from the ```product.yml``` file's ```tasks``` section: 
+
+```yaml
+  logic:
+    module: tasks.custom_business_logic
+    parameters:
+      create_timestamp: false
+```
 
 # Command line parameters:
 

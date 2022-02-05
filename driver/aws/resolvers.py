@@ -86,9 +86,9 @@ def resolve_columns(ds: DataSet) -> List[ColumnTypeDef]:
 
 def resolve_table(ds: DataSet) -> TableTypeDef:
     return TableTypeDef(
-        Name=ds.id,
+        Name=ds.model_name,
         DatabaseName=ds.product_id,
-        Description=ds.product_description,
+        Description=ds.model_description,
         Owner=ds.product_owner,
         PartitionKeys=resolve_partitions(ds),
         TableType=resolve_table_type(ds),
@@ -100,6 +100,8 @@ def resolve_table(ds: DataSet) -> TableTypeDef:
 def resolve_table_input(ds: DataSet) -> TableInputTypeDef:
     return TableInputTypeDef(
         Name=ds.id,
+        Description=f'{ds.model_name}: {ds.model_description}',
+        Owner=ds.product_owner or str(),
         PartitionKeys=resolve_partitions(ds),
         TableType='EXTERNAL_TABLE',
         Parameters=resolve_table_parameters(ds),

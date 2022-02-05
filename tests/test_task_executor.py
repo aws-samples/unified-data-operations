@@ -7,15 +7,15 @@ from driver.core import DataSet
 from driver.processors import schema_checker, constraint_processor, transformer_processor
 
 
-def test_end_to_end(spark_session, person_df: DataFrame, fixture_asset_path, app_args):
-    dfs = {"some_schema.some_table": person_df}
+def test_end_to_end(spark_session, transaction_df: DataFrame, fixture_asset_path, app_args):
+    dfs = {"some_schema.some_table": transaction_df}
 
     def mock_input_handler(props: SimpleNamespace):
         return dfs.get(props.table)
 
     def mock_output_handler(ds: DataSet):
-        assert ds.id == 'some_model'
-        assert ds.df.count() == person_df.count()
+        assert ds.id == 'transaction'
+        assert ds.df.count() == transaction_df.count()
         ds.df.show()
         ds.df.describe()
 
