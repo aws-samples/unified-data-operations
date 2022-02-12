@@ -11,19 +11,21 @@ from driver.task_executor import DataSet
 logger = logging.getLogger(__name__)
 
 
+def drain_data_catalog(data_catalog_id: str):
+    glue = providers.get_glue()
+    try:
+        get_tables_response: GetTablesResponseTypeDef = glue.get_tables(DatabaseName=data_catalog_id)
+        for table in get_tables_response.get('TableList'):
+            glue.delete_table(DatabaseName=data_catalog_id, Name=table.get('Name'))
+    except Exception as enf:
+        if enf.__class__.__name__ == 'EntityNotFoundException':
+            logger.warning(
+                f'Database {ds.product_id} does not exists in the data catalog. No tbales will be deleted.')
+
+
 def update_data_catalog(ds: DataSet):
     glue = providers.get_glue()
     logger.info(f'--> Updating the data catalog for data product [{ds.product_id}] and model [{ds.model.id}].')
-
-    def drain_database():
-        try:
-            get_tables_response: GetTablesResponseTypeDef = glue.get_tables(DatabaseName=ds.product_id)
-            for table in get_tables_response.get('TableList'):
-                glue.delete_table(DatabaseName=ds.product_id, Name=table.get('Name'))
-        except Exception as enf:
-            if enf.__class__.__name__ == 'EntityNotFoundException':
-                logger.warning(
-                    f'Database {ds.product_id} does not exists in the data catalog. No tbales will be deleted.')
 
     def upsert_database():
         try:
@@ -69,9 +71,8 @@ def update_data_catalog(ds: DataSet):
             raise Exception(f"Couldn't update the table with the partitions.")
 
         logger.info(f'Partition upsert response: {str(rsp)}')
-        # todo: write a proper handling here
+        # todo: write a proper error handling here
 
-    drain_database()
     upsert_database()
     upsert_table()
-    upsert_partitions()  # todo: this is not yet an upsert (in implementation)
+    upsert_partitions()  # todo: this is not yet an upsert (just in name but not in implementation)
