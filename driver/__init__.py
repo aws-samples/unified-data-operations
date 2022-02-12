@@ -1,5 +1,5 @@
 from .common import read_csv, write_csv
-from .driver import process_product, init
+from .driver import process_product, init, install_dependencies
 from .task_executor import (
     register_data_source_handler,
     register_preprocessors,

@@ -1,15 +1,10 @@
 import logging
-
 import sys, os
 import traceback
 
-from typing import List
-from types import SimpleNamespace
 from pyspark.sql import SparkSession
-
-from deprecated import CatalogService
-from driver import task_executor
-from .aws import providers
+from driver import task_executor, packager
+from .packager import ziplib
 from .util import compile_models, compile_product
 
 __SPARK__: SparkSession = None
@@ -43,15 +38,22 @@ def init(spark_session: SparkSession = None, spark_config=None):
     # sc.setSystemProperty("com.amazonaws.services.s3.enableV4", "true")
 
 
-def process_product(args):
+def install_dependencies(product_path: str):
+    new_packages = packager.install_dependencies(product_path)
+    print(f'Packaging up the following new dependencies {new_packages.keys()}')
+    for new_pack_name in new_packages.keys():
+        zipfile = ziplib(new_packages.get(new_pack_name), new_pack_name)
+        print(f'-----> installing {zipfile}')
+        get_spark().sparkContext.addPyFile(zipfile)
+    print('=> Dependencies are installed.')
+
+
+def process_product(args, product_path: str):
     try:
-        rel_product_path = os.path.join(args.product_path, '') if hasattr(args, 'product_path') else os.path.join('./',
-                                                                                                                  '')
-        abs_product_path = os.path.join(os.path.abspath(rel_product_path), '')
-        product = compile_product(abs_product_path, args)
-        models = compile_models(abs_product_path, product)
+        product = compile_product(product_path, args)
+        models = compile_models(product_path, product)
         for task in product.pipeline.tasks:
-            task_executor.execute(product, task, models, abs_product_path)
+            task_executor.execute(product, task, models, product_path)
     except Exception as e:
         traceback.print_exc()
         logger.error(f"Couldn't execute job due to >> {type(e).__name__}: {str(e)}")

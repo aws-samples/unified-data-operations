@@ -88,14 +88,15 @@ def run_processors(phase: str, datasets: List[DataSet], processors: List[Callabl
 
 
 def transform(inp_dfs: List[DataSet], product_path: str, custom_module_name, params=None) -> List[DataSet]:
+    from driver.driver import get_spark
     sys.path.append(product_path)
-    logger.info('executing module: ' + custom_module_name)
+    logger.info(f'executing custom module: {custom_module_name}')
     custom_module = importlib.import_module(custom_module_name)
     sys.modules[custom_module_name] = custom_module
     if params:
-        return custom_module.execute(inp_dfs, **params)
+        return custom_module.execute(inp_dfs, get_spark(), **params)
     else:
-        return custom_module.execute(inp_dfs)
+        return custom_module.execute(inp_dfs, get_spark())
 
 
 def sink(o_dfs: List[DataSet]):

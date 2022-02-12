@@ -88,7 +88,7 @@ Set the following parameters onto the execution context in your IDE:
 
 Alternatively you can run the whole solution from the command line:
 ```commandline
-data-product-processor --JOB_NAME "TEST" --product_path /tests/assets/integration --default_data_lake_bucket <SOME_DATA_LAKE_BUCKEY> --aws_profile <your-aws-account-profile> --aws_region <your-region> --local --jars "aws-java-sdk-bundle-1.11.375.jar,hadoop-aws-3.2.0.jar"
+data-product-processor --JOB_NAME "TEST" --product_path /tests/assets/integration --default_data_lake_bucket <SOME_DATA_LAKE_BUCKEY> --aws_profile <your-aws-account-profile> --aws_region <your-region>
 ```
 
 Optionally you might need to export Spark Home if the Spark environment is not found in your installation.
@@ -115,7 +115,15 @@ Type this:
 export PYTHONPATH="${SPARK_HOME}/python;${SPARK_HOME}/python/lib/py4j-0.10.9-src.zip;${PYTHONPATH}"
 ```
 
+# Issues
 
+## Sfl4j not found
+
+```commandline
+[NOT FOUND  ] org.slf4j#slf4j-api;1.7.5!slf4j-api.jar
+```
+**Solution**
+Remove dir in .ivy2/cache, ivy2/jars and .m2/repository
 
 ## CI/CD
 

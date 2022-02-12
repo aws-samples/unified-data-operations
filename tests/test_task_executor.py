@@ -25,7 +25,7 @@ def test_end_to_end(spark_session, transaction_df: DataFrame, fixture_asset_path
     driver.register_output_handler('default', mock_output_handler)
     driver.register_output_handler('lake', mock_output_handler)
     setattr(app_args, 'product_path', fixture_asset_path)
-    driver.process_product(app_args)
+    driver.process_product(app_args, fixture_asset_path)
 
 def test_resolve_io_type():
     pass
