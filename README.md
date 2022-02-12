@@ -448,7 +448,7 @@ DataSets, with two different models referred to in the id property, so that the 
 the dataframes, that are defined in those models.
 
 ```python
-def execute(inp_dfs: List[DataSet], create_timestamp=False):
+def execute(inp_dfs: List[DataSet], spark_session: SparkSession, create_timestamp=False):
     ds = find_dataset_by_id(inp_dfs, 'person_raw')
 
     if create_timestamp:
@@ -462,6 +462,8 @@ def execute(inp_dfs: List[DataSet], create_timestamp=False):
 
     return [ds_pub, ds_pii]
 ```
+In the example above, it is mandatory to provide the ```inp_dfs``` and the ```spark_session``` parameters, because these
+are injected by the task executor.
 
 The DataSet class provides access to the Spark Data Frame, as well to the model and the product metadata structure.
 ```python
@@ -483,6 +485,56 @@ Your custom aggregation logic is parametrised from the ```product.yml``` file's 
     parameters:
       create_timestamp: false
 ```
+
+### Using custom libraries in your custom aggregation logic
+
+Sometimes you might need some third party libraries for your aggregation logic. These can be added by creating a 
+```requirements.txt``` file in the root of your Data Product folder. 
+In the following example we show, how to use Pydeequ (a third party analyzer and quality assurance library from Amazon):
+
+```requirements.txt
+pydeequ
+```
+Pydeequ is the python binding to the Deequ Scala implementation, that needs additional non-python (Scala or Java) 
+libraries to be added to the Spark cluster. This can be added via a ```config.ini``` file (also stored in the root of 
+the data product).
+
+```properties
+[spark jars]
+spark.jars.packages=com.amazon.deequ:deequ:1.2.2-spark-3.0
+spark.jars.excludes=net.sourceforge.f2j:arpack_combined_all
+```
+
+Once the pre-requisites are there, you can start usin the new library in your custom logic:
+
+```python
+from pyspark.sql.functions import concat, col, lit
+from driver.common import find_dataset_by_id
+from driver.task_executor import DataSet
+from typing import List
+from pyspark.sql import SparkSession, Row
+from pydeequ.analyzers import *
+
+
+def execute(inp_dfs: List[DataSet], spark_session: SparkSession):
+    ds = find_dataset_by_id(inp_dfs, 'sample_product.sample_model')
+    ds.df = ds.df.withColumn('full_name', concat(col('first_name'), lit(' '), col('last_name')))
+
+    analysis_result = AnalysisRunner(spark_session) \
+        .onData(ds.df) \
+        .addAnalyzer(Size()) \
+        .addAnalyzer(Completeness("b")) \
+        .run()
+
+    analysis_result_df = AnalyzerContext.successMetricsAsDataFrame(spark_session, analysis_result)
+
+    ds_model = DataSet(id='sample_model', df=ds.df)
+    ds_analysis = DataSet(id='model_analysis', df=analysis_result_df)
+    return [ds_model, ds_analysis]
+```
+
+## Customising the execution from the Data Product
+
 
 # Command line parameters:
 

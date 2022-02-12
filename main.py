@@ -40,8 +40,9 @@ def build_spark_configuration(args, product_path: str, config: configparser.RawC
         jars = ','.join([os.path.join(deps_path, j) for j in local_jars])
         conf.set("spark.jars", jars)
     if config:
-        if 'spark' in config.sections():
-            for k, v in config.items('spark'):
+        spark_jars = 'spark jars'
+        if spark_jars in config.sections():
+            for k, v in config.items(spark_jars):
                 conf.set(k, v)
     return conf
 

@@ -83,7 +83,7 @@ mv jars/* .
 Set the following parameters onto the execution context in your IDE:
 
 ```commandline
---JOB_NAME "TEST" --product_path /tests/assets/integration --default_data_lake_bucket <SOME_DATA_LAKE_BUCKEY> --aws_profile <your-aws-account-profile> --aws_region <your-region> --local --jars "aws-java-sdk-bundle-1.11.375.jar,hadoop-aws-3.2.0.jar"
+--product_path /tests/assets/integration --default_data_lake_bucket <SOME_DATA_LAKE_BUCKEY> --aws_profile <your-aws-account-profile> --aws_region <your-region> --local
 ```
 
 Alternatively you can run the whole solution from the command line:
