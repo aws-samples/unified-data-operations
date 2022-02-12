@@ -9,7 +9,7 @@ from typing import List, Any
 from jsonschema import validate, ValidationError, Draft3Validator
 from yaml.scanner import ScannerError
 
-from .core import ArtefactType
+from driver.core import ArtefactType
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +59,11 @@ def safe_get_property(object: Any, property: str):
 
 
 def check_property(object, nested_property: str):
+    """
+    :param object: the object to analyze
+    :param nested_property: the nested properties separated by dots (.) (eg. model.storage.location)
+    :return: True if the nested property can be found on the object;
+    """
     current_object = object
     for element in nested_property.split('.'):
         if hasattr(current_object, element):
@@ -153,6 +158,6 @@ def compile_models(product_path: str, product: SimpleNamespace, def_file_name: s
     SimpleNamespace]:
     model_path = os.path.join(product_path, def_file_name)
     part_validate_schema = functools.partial(validate_schema, artefact_type=ArtefactType.models)
-    part_enrich_models = functools.partial(enrich_models, product=product)
-    model_processing_chain = [load_yaml, part_validate_schema, parse_dict_into_object, part_enrich_models]
+    part_enrich_model = functools.partial(enrich_models, product=product)
+    model_processing_chain = [load_yaml, part_validate_schema, parse_dict_into_object, part_enrich_model]
     return run_chain(model_path, *model_processing_chain)

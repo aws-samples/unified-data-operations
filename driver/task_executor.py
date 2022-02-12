@@ -5,7 +5,7 @@ import sys
 
 from types import SimpleNamespace
 from typing import List, Callable
-from .util import filter_list_by_id
+from .util import filter_list_by_id, enrich_models
 from .core import DataSet, DataProduct, IOType, ProcessorChainExecutionException, ValidationException, \
     resolve_data_set_id, ResolverException, resolve_data_product_id
 
@@ -114,7 +114,8 @@ def enrich(datasets: List[DataSet], product: SimpleNamespace, models: List[Simpl
         if not dataset.product_owner:
             dataset.product.owner = getattr(product, 'owner', None)
         if dataset.model is None:
-            model_obj = next(iter([m for m in models if m.id == dataset.id]), models[0])
+            default_model = enrich_models(SimpleNamespace(models=[SimpleNamespace(id=dataset.id)]), product=product)[0]
+            model_obj = next(iter([m for m in models if m.id == dataset.id]), default_model)
             dataset.model = model_obj
     return datasets
 

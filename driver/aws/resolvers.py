@@ -75,6 +75,8 @@ def resolve_storage_descriptor(ds: DataSet, override_location: str = None) -> St
 
 def resolve_columns(ds: DataSet) -> List[ColumnTypeDef]:
     def lookup(column_name):
+        if not hasattr(ds.model, 'columns'):
+            return str()
         model_dolumn = filter_list_by_id(ds.model.columns, column_name)
         if hasattr(model_dolumn, 'name'):
             return f"{safe_get_property(model_dolumn, 'name')}: {safe_get_property(model_dolumn, 'description')}"

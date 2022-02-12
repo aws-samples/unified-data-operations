@@ -15,7 +15,6 @@ from pydantic import (
     validator, root_validator, parse_obj_as, ValidationError, error_wrappers, Field)
 from typing import Dict, List, Tuple, Any, TypeVar, Union
 from pydantic import AnyUrl
-
 from driver import util
 
 Scalar = TypeVar('Scalar', int, float, bool, str)
@@ -123,12 +122,16 @@ class DataSet:
 
     @property
     def tags(self) -> dict:
+        if not hasattr(self, 'model') or not hasattr(self.model, 'tags'):
+            return dict()
         if self.id is None:
             raise Exception(f'Can not construct tags, id is not defined.')
         return self.model.tags.__dict__
 
     @property
     def access_tags(self) -> dict:
+        if not hasattr(self, 'model') or not hasattr(self.model, 'access'):
+            return dict()
         if self.id is None:
             raise Exception(f'Can not construct tags, id is not defined.')
         return self.model.access.__dict__
