@@ -135,14 +135,22 @@ def reshuffle_partitions(prefix: str, partitions: List[Partition]) -> dict:
     return partition_dict
 
 
-def resolve_partition_inputs(ds: DataSet) -> List[PartitionInputTypeDef]:
-    partition_defs = list()
+def resolve_partition_inputs(ds: DataSet, format_for_update: bool = False) -> List[PartitionInputTypeDef]:
     bucket = ds.storage_location.lstrip('/').split('/')[0]
     folder = '/'.join(ds.dataset_storage_path.lstrip('/').split('/')[1:])
     ps: List[Partition] = datalake_api.read_partitions(bucket=bucket, container_folder=folder)
     pdict = reshuffle_partitions(os.path.join(bucket, folder), ps)
+    partition_defs = list()
     for k, v in pdict.items():
-        partition_defs.append(resolve_partition_input(partition_location=k, partition_values=v.get('values'), ds=ds))
+        partition_values = v.get('values')
+        if format_for_update:
+            entry = {'PartitionValueList': v.get('values'),
+                     'PartitionInput': resolve_partition_input(partition_location=k, partition_values=partition_values,
+                                                               ds=ds)}
+            partition_defs.append(entry)
+        else:
+            partition_defs.append(
+                resolve_partition_input(partition_location=k, partition_values=partition_values, ds=ds))
     return partition_defs
 
 

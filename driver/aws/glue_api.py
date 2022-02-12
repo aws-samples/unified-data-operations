@@ -35,10 +35,10 @@ def update_data_catalog(ds: DataSet):
             if enf.__class__.__name__ == 'EntityNotFoundException':
                 # database does not exists yet
                 logger.warning(
-                    f'Database {ds.product_id} does not exists in the data catalog. {str(enf)}. It is going to be created.')
+                    f'Database {ds.product_id} does not exists in the data catalog ({str(enf)}). It is going to be created.')
                 # todo: add permissions
                 glue.create_database(
-                    DatabaseInput=resolve_database())
+                    DatabaseInput=resolve_database(ds))
             else:
                 raise enf
 
@@ -46,7 +46,9 @@ def update_data_catalog(ds: DataSet):
         try:
             rsp: GetTablesResponseTypeDef = glue.get_table(DatabaseName=ds.product_id, Name=ds.id)
             # todo: update table
-            glue.update_table(DatabaseName=ds.product_id, TableInput=resolve_table_input(ds))
+            glue.delete_table(DatabaseName=ds.product_id, Name=ds.id)
+            glue.create_table(DatabaseName=ds.product_id, TableInput=resolve_table_input(ds))
+            # glue.update_table(DatabaseName=ds.product_id, TableInput=resolve_table_input(ds))
         except Exception as enf:  # EntityNotFoundException
             # table not found
             if enf.__class__.__name__ == 'EntityNotFoundException':
@@ -63,14 +65,16 @@ def update_data_catalog(ds: DataSet):
         # entries = resolve_partition_entries(ds)
         # rsp = glue.batch_update_partition(DatabaseName=ds.product_id, TableName=ds.model_id, Entries=entries)
         partition_inputs = resolve_partition_inputs(ds)
+        if not partition_inputs:
+            return
         rsp = glue.batch_create_partition(DatabaseName=ds.product_id, TableName=ds.id,
                                           PartitionInputList=partition_inputs)
-        # rsp = glue.batch_update_partition(DatabaseName=ds.product_id)
+        # rsp = glue.batch_update_partition(DatabaseName=ds.product_id, TableName=ds.id,
+        #                                   Entries=partition_inputs)
         if rsp.get('Errors'):
-            logger.error(str(rsp))
-            raise Exception(f"Couldn't update the table with the partitions.")
-
-        logger.info(f'Partition upsert response: {str(rsp)}')
+            raise Exception(f"Couldn't update the table [{ds.id}] with the partitions.")
+        status_code = rsp.get('ResponseMetadata').get('HTTPStatusCode')
+        logger.info(f'Partition upsert response with HTTP Status Code: {str(status_code)}')
         # todo: write a proper error handling here
 
     upsert_database()
