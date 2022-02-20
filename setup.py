@@ -30,7 +30,7 @@ class CleanCommand(Command):
 setup(
     name='data-product-processor',
     version='1.0.0',
-    description='Interprets Glue job definitions in the YAML format.',
+    description='An abstracion layer around Spark for the most frequent non-functional data transformation requirements.',
     long_description=long_description,
     author='Michael Lewkowski, Fabian Fuelling, Csaba Tamas, Stephen Said',
     author_email='mlewk@amazon.de, fafuell@amazon.de, csatam@amazon.de, saidst@amazon.de',

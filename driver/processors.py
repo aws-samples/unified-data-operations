@@ -2,7 +2,6 @@ import hashlib
 import logging
 import re
 from datetime import datetime, timedelta
-from types import SimpleNamespace
 from typing import List
 
 from driver import common
@@ -12,11 +11,6 @@ from pyspark.sql.types import StringType, StructField, TimestampType
 from pyspark.ml.feature import Bucketizer
 from driver.core import ValidationException, SchemaValidationException
 from driver.task_executor import DataSet
-from quinn.dataframe_validator import (
-    DataFrameMissingStructFieldError,
-    DataFrameMissingColumnError,
-    DataFrameProhibitedColumnError
-)
 
 from driver.util import check_property
 
@@ -103,10 +97,12 @@ def freshness_validator(df: DataFrame, col_name: str, cfg: any = None):
 
 
 def min_validator(df: DataFrame, col_name: str, cfg: any = None):
+    # todo: implement min validator
     pass
 
 
 def max_validator(df: DataFrame, col_name: str, cfg: any = None):
+    # todo: implement max validator
     pass
 
 

@@ -89,11 +89,11 @@ product:
   model);
 
 The ``logic`` keyword and all of its parameters can be omitted. In that case the ```builtin.ingest``` logic is being
-used by default. This is useful when you want to ingest tables, but you don't need to make any custom transformation 
+used by default. This is useful when you want to ingest tables, but you don't need to make any custom transformation
 beyond the once provided on the model object.
 
-The builtin ```ingest``` module can also take parameters, such as create_timestamp (false by default). If this is specified
-a new column is added with the ingestion timestamp.
+The builtin ```ingest``` module can also take parameters, such as create_timestamp (false by default). If this is
+specified a new column is added with the ingestion timestamp.
 
 ```yaml
     tasks:
@@ -135,18 +135,18 @@ Both IO-handler types can be used as input and output.
 
 ### Defaults
 
-Some default configuration options can be added to the data product. These can be used, when there's no other value 
-overriding them on the Models (read later).
-The following defaults are supported:
+Some default configuration options can be added to the data product. These can be used, when there's no other value
+overriding them on the Models (read later). The following defaults are supported:
 
 ```yaml
   defaults:
-      storage:
-        location: some_bucket/some_folder
-        options:
-          compression: uncompressed | snappy | gzip | lzo | brotli | lz4
-          coalesce: 2
+    storage:
+      location: some_bucket/some_folder
+      options:
+        compression: uncompressed | snappy | gzip | lzo | brotli | lz4
+        coalesce: 2
 ```
+
 Check the meaning of the various parameters on the ```model.storage``` property down bellow;
 
 ## Model Schema
@@ -198,12 +198,12 @@ These are the keywords:
 - name: [optional] human readable name of the model, similar in use to the id;
 - extends: [optional] it is a directive that helps to inherit column definitions from another model, therefore it makes
   it easier to define derived models, that only override or extend one or more columns;
-- validation: [optional] the default value is lazy validation (even if the keyword "validation" is omitted). Lazy 
-validation will only check the type of the columns that are stated in the model, but will accept extra columns (that 
-are available on the Data Frame but not defined in the model). A strict validation will raise an exception if the Data
-Frame has more columns than stated in the Model;
-- xtra_columns: [optional] if omitted, it will ignore the existence of extra columns on the Data Frame. If defined with 
-the value **raze**, it will remove any columns from the Data Frame that are not specified on the Model;
+- validation: [optional] the default value is lazy validation (even if the keyword "validation" is omitted). Lazy
+  validation will only check the type of the columns that are stated in the model, but will accept extra columns (that
+  are available on the Data Frame but not defined in the model). A strict validation will raise an exception if the Data
+  Frame has more columns than stated in the Model;
+- xtra_columns: [optional] if omitted, it will ignore the existence of extra columns on the Data Frame. If defined with
+  the value **raze**, it will remove any columns from the Data Frame that are not specified on the Model;
 - columns: a list of columns, stating data types, constraint validators and column transformers;
 - meta: [optional] a list of key-value pairs that are added to the data catalog as meta data;
 - storage: [optional] a definition about the location (and compression, file format, etc.) of the output dataset;
@@ -230,20 +230,21 @@ The storage directive defines how to store model data:
         bucketed_at: 512M <-- not yet supported
 ```
 
-- type: the default type is 'lake' as in Data Lake. This will write the dataset onto S3 and register the dataset with 
-the Glue Data Catalog;
+- type: the default type is 'lake' as in Data Lake. This will write the dataset onto S3 and register the dataset with
+  the Glue Data Catalog;
 - location: a specific location for the model; If ommited the location set on the prouct will be taken into account.
 - format: the file format used to writing out data;
 - options: [optional] a set of options specifiend details for the write out
 - options.skip_first_row: will not write out the first row
 - options.partition_by: list of columns used for partitioning the parquet file;
 - compression: the algorithm used by the parquet file (default is snappy);
-- coalesce: the number of file for each partition (the more you have, the more parallel reads are possible but not 
-recommended for small files). The default is 2.
+- coalesce: the number of file for each partition (the more you have, the more parallel reads are possible but not
+  recommended for small files). The default is 2.
 - bucketed_at: defines the file-chunk sized to be written (the more )
 
 Location resolution: the output file location is first looked up on the model's ```storage.location``` property. If not
-found, it will look on the product's ```defaults.storage``` options, and ultimately will check the ```--default_data_lake_bucket```
+found, it will look on the product's ```defaults.storage``` options, and ultimately will check
+the ```--default_data_lake_bucket```
 command line parameter.
 
 ### Columns
@@ -419,6 +420,7 @@ Will simply cause the removal of the column where it is applied. Example:
 It is part of the anonymisation toolkit and it is used to restructure values in buckets.
 
 Example:
+
 ```yaml
 - id: age
   type: integer
@@ -430,6 +432,7 @@ Example:
           20: 20-39
           40: 40+
 ```
+
 Here the exact age of a person (which can be considered as PII data) is replaced with age ranges (age buckets), which
 will allow the further segmentation of customers, but will remove from the PII nature of the data.
 
@@ -462,10 +465,12 @@ def execute(inp_dfs: List[DataSet], spark_session: SparkSession, create_timestam
 
     return [ds_pub, ds_pii]
 ```
+
 In the example above, it is mandatory to provide the ```inp_dfs``` and the ```spark_session``` parameters, because these
 are injected by the task executor.
 
 The DataSet class provides access to the Spark Data Frame, as well to the model and the product metadata structure.
+
 ```python
 @dataclass
 class DataSet:
@@ -477,7 +482,7 @@ class DataSet:
 
 These can be referenced in each custom aggregation task code.
 
-Your custom aggregation logic is parametrised from the ```product.yml``` file's ```tasks``` section: 
+Your custom aggregation logic is parametrised from the ```product.yml``` file's ```tasks``` section:
 
 ```yaml
   logic:
@@ -488,15 +493,16 @@ Your custom aggregation logic is parametrised from the ```product.yml``` file's 
 
 ### Using custom libraries in your custom aggregation logic
 
-Sometimes you might need some third party libraries for your aggregation logic. These can be added by creating a 
-```requirements.txt``` file in the root of your Data Product folder. 
-In the following example we show, how to use Pydeequ (a third party analyzer and quality assurance library from Amazon):
+Sometimes you might need some third party libraries for your aggregation logic. These can be added by creating a
+```requirements.txt``` file in the root of your Data Product folder. In the following example we show, how to use
+Pydeequ (a third party analyzer and quality assurance library from Amazon):
 
 ```requirements.txt
 pydeequ
 ```
-Pydeequ is the python binding to the Deequ Scala implementation, that needs additional non-python (Scala or Java) 
-libraries to be added to the Spark cluster. This can be added via a ```config.ini``` file (also stored in the root of 
+
+Pydeequ is the python binding to the Deequ Scala implementation, that needs additional non-python (Scala or Java)
+libraries to be added to the Spark cluster. This can be added via a ```config.ini``` file (also stored in the root of
 the data product).
 
 ```properties
@@ -520,21 +526,100 @@ def execute(inp_dfs: List[DataSet], spark_session: SparkSession):
     ds = find_dataset_by_id(inp_dfs, 'sample_product.sample_model')
     ds.df = ds.df.withColumn('full_name', concat(col('first_name'), lit(' '), col('last_name')))
 
-    analysis_result = AnalysisRunner(spark_session) \
-        .onData(ds.df) \
-        .addAnalyzer(Size()) \
-        .addAnalyzer(Completeness("b")) \
-        .run()
+    analysis_result = AnalysisRunner(spark_session)
+    .onData(ds.df)
+    .addAnalyzer(Size())
+    .addAnalyzer(Completeness("b"))
+    .run()
 
-    analysis_result_df = AnalyzerContext.successMetricsAsDataFrame(spark_session, analysis_result)
 
-    ds_model = DataSet(id='sample_model', df=ds.df)
-    ds_analysis = DataSet(id='model_analysis', df=analysis_result_df)
-    return [ds_model, ds_analysis]
+analysis_result_df = AnalyzerContext.successMetricsAsDataFrame(spark_session, analysis_result)
+
+ds_model = DataSet(id='sample_model', df=ds.df)
+ds_analysis = DataSet(id='model_analysis', df=analysis_result_df)
+return [ds_model, ds_analysis]
+```
+
+Additionally you can create a custom initialisation file, called ```init_hook.py``` in the root folder of the data
+product. This file will give you control over the Spark environment and the data product processor envrioenment as well.
+
+```python
+from typing import List, Dict
+from pyspark import SparkConf
+from driver.task_executor import DataSet
+
+
+def enrich_spark_conf(conf: SparkConf) -> SparkConf:
+    conf.set("spark.sql.warehouse.dir", "some warehouse location")
+    return conf
+
+
+def add_pre_processors() -> List[callable]:
+    def my_custom_pre_processor(data_set: DataSet) -> DataSet:
+        return data_set.df.filter(...)
+
+    return [my_custom_pre_processor]
+
+
+def add_post_processors() -> List[callable]:
+    def my_custom_post_processor(data_set: DataSet) -> DataSet:
+        return data_set.df.filter(...)
+
+    return [my_custom_post_processor]
+```
+
+**Please note:** all of the above methods are optional. The Spark configuration can also be influenced by the use of the
+ini file.
+
+## How to write unit tests for your custom aggregation
+
+Start by creating a virtual environment in your data product root folder:
+```commandline
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+Install the data product processor: 
+
+from Pypi
+```commandline
+pip install data-product-processor
+```
+**please note**: the above one is not yet possible, since the library is not released yet.
+
+from source: 
+```commandline
+pip install -e ../data-product-processor/.
+```
+
+Create a file in the data product root, called ```requirements-test.txt``` and copy the following:
+```text
+pyspark
+pyspark-stubs
+pytest-spark
+pytest-mock
+pytest-helpers-namespace
+pytest-env
+pytest-cov
+pytest
+numpy
+```
+
+Install the development requirements:
+```commandline
+pip install -r requirements-test.txt
+```
+In case you have some custom requirements, don't forget to install those either:
+```commandline
+pip install -r requirements.txt
+```
+
+Next: create a ```tests``` folder in your data product folder:
+```commandline
+mkdir tests
 ```
 
 ## Customising the execution from the Data Product
-
 
 # Command line parameters:
 
@@ -551,35 +636,47 @@ def execute(inp_dfs: List[DataSet], spark_session: SparkSession):
     --additional-python-modules - this parameter is injected by Glue, currently it is not in use
     --default_data_lake_bucket - a default bucket location (with s3a:// prefix)
 
-
 ## Access Management
+
 The access management concept is based on two separate mechanisms:
 
 1. Tagging all produced data to control which groups should have access to data
     - This is controlled by the data producers, via the model YAML files
-    - The data producers know their data best and can control which groups should have access (does it contain PII? Is it intended to be public or private, etc.)
+    - The data producers know their data best and can control which groups should have access (does it contain PII? Is
+      it intended to be public or private, etc.)
     - the platform takes over this process and tags all produced data files based on the configuration in the YAML files
 2. Managing groups of people (or services) who are allows to join those groups to gain access to the data.
-    - IAM policies, which provide access to S3 data files which have been tagged as mentioned before have to be created manually (as of now)
-      - please see `access/policy_template.json` as an example for providing access to files which have specific tags defined.
-    - those policies can be attached to IAM groups to provide access to one or multiple combinations of access control tags
-    - IAM users then can join and leave groups to gain access to the data, matching the policies assigned to those groups
+    - IAM policies, which provide access to S3 data files which have been tagged as mentioned before have to be created
+      manually (as of now)
+        - please see `access/policy_template.json` as an example for providing access to files which have specific tags
+          defined.
+    - those policies can be attached to IAM groups to provide access to one or multiple combinations of access control
+      tags
+    - IAM users then can join and leave groups to gain access to the data, matching the policies assigned to those
+      groups
 
 ### Technical Implementation
-The S3 writer automatically applies the following tags to all data files written out to S3:
-- tags defined in the `model.yml` under `models.<model>.tags` are added to all output data files in the dataset's S3 folder as is, using the tag's name and value without modification.
-- tags defined in the `model.yml` under `models.<model>.access` are added to all output data files in the dataset's S3 folder as well, but the tag names are prefixed with `access_`, to have a clear distinction between access control tags and custom tags, every data producer can define without limitation.
-  - Example: the access tag `confidentiality` with value `private` will be assigned as S3 tag `access_confidentiality` with value `private`. 
 
+The S3 writer automatically applies the following tags to all data files written out to S3:
+
+- tags defined in the `model.yml` under `models.<model>.tags` are added to all output data files in the dataset's S3
+  folder as is, using the tag's name and value without modification.
+- tags defined in the `model.yml` under `models.<model>.access` are added to all output data files in the dataset's S3
+  folder as well, but the tag names are prefixed with `access_`, to have a clear distinction between access control tags
+  and custom tags, every data producer can define without limitation.
+    - Example: the access tag `confidentiality` with value `private` will be assigned as S3 tag `access_confidentiality`
+      with value `private`.
 
 ### Limitations
-Based on the metadata defined in the model's YAML files, the processor will set S3 tags to all files written out to 
-Amazon S3, found in the data dataset's "folder" (meaning all files, with the prefix `<data product id>/<output dataset id>/`)
 
-Currently, only files written to S3 are supported to be tagged automatically. 
+Based on the metadata defined in the model's YAML files, the processor will set S3 tags to all files written out to
+Amazon S3, found in the data dataset's "folder" (meaning all files, with the
+prefix `<data product id>/<output dataset id>/`)
 
-Access policies and group have to be created by the user manually and IAM users have to be assigned to IAM groups manually to actually manage access to the data.  
+Currently, only files written to S3 are supported to be tagged automatically.
 
+Access policies and group have to be created by the user manually and IAM users have to be assigned to IAM groups
+manually to actually manage access to the data.
 
 # How tos
 
@@ -589,7 +686,7 @@ Access policies and group have to be created by the user manually and IAM users 
 
 ### Anonymize fields at ingest
 
-### Create a derived data set from already existing model files  
+### Create a derived data set from already existing model files
 
 # Prioritised Todos:
 

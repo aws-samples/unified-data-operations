@@ -8,3 +8,6 @@ from .task_executor import (
     register_transformer,
     add_transformers
 )
+from .core import (
+    DataSet
+)

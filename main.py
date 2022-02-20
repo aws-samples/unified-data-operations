@@ -91,8 +91,9 @@ def init_system(args):
             driver.register_postprocessors(*custom_hook.add_post_processors())
         if hasattr(custom_hook, 'add_pre_processors'):
             driver.register_preprocessors(*custom_hook.add_pre_processors())
-        if hasattr(custom_hook, 'add_transformers'):
-            driver.add_transformers(custom_hook.add_transformers())
+        # if hasattr(custom_hook, 'add_transformers'):
+        #     driver.add_transformers(custom_hook.add_transformers())
+        # todo: the transformer dict is not used, the processor built-in transformers are the only ones looked up now
     driver.process_product(args, product_path)
 
 
