@@ -1,7 +1,9 @@
 import configparser
+import importlib
 import logging
 import os
 import argparse
+import sys
 
 from pyspark import SparkConf
 import traceback
@@ -25,13 +27,12 @@ def init_aws(args):
     driver.aws.providers.init(profile=profile, region=region)
 
 
-def build_spark_configuration(args, product_path: str, config: configparser.RawConfigParser):
+def build_spark_configuration(args, config: configparser.RawConfigParser, custom_hook: callable = None):
     conf = SparkConf()
     if hasattr(args, 'aws_profile'):
         logger.info(f'Setting aws profile: {args.aws_profile}')
         os.environ["AWS_PROFILE"] = args.aws_profile
         conf.set("fs.s3a.aws.credentials.provider", "com.amazonaws.auth.profile.ProfileCredentialsProvider")
-    # conf.set("spark.sql.warehouse.dir", warehouse_location)
     if hasattr(args, 'local') and args.local:
         deps_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'spark_deps')
         local_jars = [file for file in os.listdir(deps_path) if file.endswith('.jar')]
@@ -44,7 +45,7 @@ def build_spark_configuration(args, product_path: str, config: configparser.RawC
         if spark_jars in config.sections():
             for k, v in config.items(spark_jars):
                 conf.set(k, v)
-    return conf
+    return custom_hook.enrich_spark_conf(conf) if custom_hook and hasattr(custom_hook, 'enrich_spark_conf') else conf
 
 
 def read_config(product_path: str) -> configparser.RawConfigParser:
@@ -57,12 +58,27 @@ def read_config(product_path: str) -> configparser.RawConfigParser:
         return None
 
 
+def get_custom_hook(product_path: str) -> callable:
+    hook_module_name = 'init_hook'
+    hook_file = f'{hook_module_name}.py'
+    hook_file_name = os.path.join(product_path, hook_file)
+    if os.path.exists(hook_file_name):
+        sys.path.append(product_path)
+        logger.info(f'executing custom hooks: {hook_file_name}')
+        module = importlib.import_module(hook_module_name)
+        sys.modules[hook_module_name] = module
+        return module
+    else:
+        return None
+
+
 def init_system(args):
     driver.io_handlers.init(connection_provider, datalake_provider)
     rel_product_path = os.path.join(args.product_path, '') if hasattr(args, 'product_path') else os.path.join('./', '')
     product_path = os.path.join(os.path.abspath(rel_product_path), '')
     config = read_config(product_path)
-    driver.init(spark_config=build_spark_configuration(args, product_path, config))
+    custom_hook = get_custom_hook(product_path)
+    driver.init(spark_config=build_spark_configuration(args, config, custom_hook))
     driver.install_dependencies(product_path)
     driver.register_data_source_handler('connection', connection_input_handler)
     driver.register_data_source_handler('model', lake_input_handler)
@@ -70,6 +86,13 @@ def init_system(args):
     driver.register_postprocessors(transformer_processor, razor, constraint_processor, type_caster, schema_checker)
     driver.register_output_handler('default', lake_output_handler)
     driver.register_output_handler('lake', lake_output_handler)
+    if custom_hook:
+        if hasattr(custom_hook, 'add_post_processors'):
+            driver.register_postprocessors(*custom_hook.add_post_processors())
+        if hasattr(custom_hook, 'add_pre_processors'):
+            driver.register_preprocessors(*custom_hook.add_pre_processors())
+        if hasattr(custom_hook, 'add_transformers'):
+            driver.add_transformers(custom_hook.add_transformers())
     driver.process_product(args, product_path)
 
 

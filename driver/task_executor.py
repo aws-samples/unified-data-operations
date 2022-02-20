@@ -4,7 +4,7 @@ import logging
 import sys
 
 from types import SimpleNamespace
-from typing import List, Callable
+from typing import List, Callable, Dict
 from .util import filter_list_by_id, enrich_models
 from .core import DataSet, DataProduct, IOType, ProcessorChainExecutionException, ValidationException, \
     resolve_data_set_id, ResolverException, resolve_data_product_id
@@ -32,6 +32,10 @@ def register_postprocessors(*handlers: callable):
 
 def register_transformer(transformer_id: str, handler: callable):
     transformers.update({transformer_id: handler})
+
+
+def add_transformers(additional_transformers: Dict[str, callable]):
+    transformers.update(additional_transformers)
 
 
 def register_output_handler(output_handler_type: str, handler: callable):

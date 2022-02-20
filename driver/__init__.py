@@ -5,5 +5,6 @@ from .task_executor import (
     register_preprocessors,
     register_postprocessors,
     register_output_handler,
-    register_transformer
+    register_transformer,
+    add_transformers
 )
