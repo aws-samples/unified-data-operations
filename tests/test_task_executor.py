@@ -1,9 +1,7 @@
-import json
-from types import SimpleNamespace
-import os
-from pyspark.sql import DataFrame
 import driver
-from driver.core import DataSet
+from types import SimpleNamespace
+from pyspark.sql import DataFrame
+from driver import DataSet
 from driver.processors import schema_checker, constraint_processor, transformer_processor
 
 

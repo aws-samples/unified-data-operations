@@ -1,15 +1,11 @@
-import os
+import pytest
 from time import time
 from datetime import datetime
-from types import SimpleNamespace
-
-import pytest
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, unix_timestamp, lit
-
 from driver.core import DataSet, DataProduct, SchemaValidationException
 from driver.processors import schema_checker, razor
-from driver.util import compile_product, compile_models, filter_list_by_id
+from driver.util import compile_models, filter_list_by_id
 
 
 def test_df_schema_validator(movies_df: DataFrame, product, models):
