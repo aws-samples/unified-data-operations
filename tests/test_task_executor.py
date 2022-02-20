@@ -19,7 +19,7 @@ def test_end_to_end(spark_session, transaction_df: DataFrame, fixture_asset_path
 
     driver.init(spark_session)
     driver.register_data_source_handler('connection', mock_input_handler)
-    driver.register_postprocessors(schema_checker, constraint_processor, transformer_processor)
+    driver.register_postprocessors(transformer_processor, schema_checker, constraint_processor)
     driver.register_output_handler('default', mock_output_handler)
     driver.register_output_handler('lake', mock_output_handler)
     setattr(app_args, 'product_path', fixture_asset_path)
