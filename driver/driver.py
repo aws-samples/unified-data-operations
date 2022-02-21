@@ -41,12 +41,12 @@ def init(spark_session: SparkSession = None, spark_config=None):
 def install_dependencies(product_path: str):
     new_packages = packager.install_dependencies(product_path)
     if new_packages:
-        print(f'Packaging up the following new dependencies {new_packages.keys()}')
+        logger.info(f'Packaging up the following new dependencies {new_packages.keys()}')
         for new_pack_name in new_packages.keys():
             zipfile = ziplib(new_packages.get(new_pack_name), new_pack_name)
-            print(f'-----> installing {zipfile}')
+            logger.info(f'-----> installing {zipfile}')
             get_spark().sparkContext.addPyFile(zipfile)
-        print('=> Dependencies are installed.')
+        logger.debug('=> Dependencies are installed.')
 
 
 def process_product(args, product_path: str):

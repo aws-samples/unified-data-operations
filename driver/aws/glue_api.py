@@ -20,7 +20,7 @@ def drain_data_catalog(data_catalog_id: str):
     except Exception as enf:
         if enf.__class__.__name__ == 'EntityNotFoundException':
             logger.warning(
-                f'Database {ds.product_id} does not exists in the data catalog. No tbales will be deleted.')
+                f'Database {data_catalog_id} does not exists in the data catalog. No tables will be deleted.')
 
 
 def update_data_catalog(ds: DataSet):
