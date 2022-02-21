@@ -83,6 +83,7 @@ def file_output_handler(ds: DataSet, options: SimpleNamespace):
 
 
 def resolve_compression(ds: DataSet):
+    # todo: parse this into an enum
     # none, uncompressed, snappy, gzip, lzo, brotli, lz4,
     if check_property(ds, 'model.storage.options.compression'):
         return ds.model.storage.options.compression

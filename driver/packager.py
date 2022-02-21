@@ -32,6 +32,8 @@ def install_dependencies(product_path: str) -> Dict:
         eks = ws.entry_keys
         return next(iter([path for path in eks.keys() if package_name in eks.get(path)]), None)
 
+        #todo: review and remove the one below
+
         # def collect_deps(package_name: str):
         #     def merge_reqs(package: pkg_resources.DistInfoDistribution):
         #         return_set = set({package.project_name})
@@ -40,10 +42,9 @@ def install_dependencies(product_path: str) -> Dict:
         #         for rpack in required_pnames:
         #             return_set.update(merge_reqs(rpack))
         #         return return_set
-
-        ws = pkg_resources.WorkingSet(pkg_resources.working_set.entries)
-        package: pkg_resources.DistInfoDistribution = ws.by_key[package_name]
-        return merge_reqs(package)
+        # ws = pkg_resources.WorkingSet(pkg_resources.working_set.entries)
+        # package: pkg_resources.DistInfoDistribution = ws.by_key[package_name]
+        # return merge_reqs(package)
 
     requirements = os.path.join(product_path, 'requirements.txt')
     if os.path.isfile(requirements):
@@ -57,4 +58,3 @@ def install_dependencies(product_path: str) -> Dict:
         for delta_pack in delta_packages:
             return_packs[delta_pack] = find_path_for_package(delta_pack)
         return return_packs
-
