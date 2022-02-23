@@ -491,7 +491,161 @@ Your custom aggregation logic is parametrised from the ```product.yml``` file's 
       create_timestamp: false
 ```
 
-### Using custom libraries in your custom aggregation logic
+### Writing unit tests for the custom aggregation logic
+
+We recommend using the ```pytest``` framework for writing unit tests for your custom logic.
+
+#### Installing test dependencies
+
+Create a ```requirements-test.txt``` file in the root folder of the data product with the following context:
+
+```text
+pyspark
+pyspark-stubs
+pytest-spark
+pytest-mock
+pytest-helpers-namespace
+pytest-env
+pytest-cov
+pytest
+```
+
+Create a new virtual environment in your data product root folder:
+
+```commandline
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+Install the data product processor:
+
+from Pypi
+
+```commandline
+pip install data-product-processor
+```
+
+**Please note**: as of now, the above one is not yet possible, since the library is not released yet.
+
+from source:
+
+```commandline
+pip install -e ../data-product-processor/.
+```
+
+Install the development requirements:
+
+```commandline
+pip install -r requirements-test.txt
+```
+
+In case you have some custom requirements, don't forget to install those either:
+
+```commandline
+pip install -r requirements.txt
+```
+
+Next: create a ```tests``` folder in your data product folder:
+
+```commandline
+mkdir tests
+touch tests/__init__.py
+```
+
+Create a test configuration file called ```test_config.py```
+with [fixtures](https://docs.pytest.org/en/6.2.x/fixture.html) (reusable, support functionality injected into your tests
+by the pytest framework).
+
+```python
+
+from types import SimpleNamespace
+from pyspark.sql import DataFrame
+from pytest import fixture
+from pyspark.sql.types import (
+    StringType,
+    StructField,
+    StructType,
+    IntegerType
+)
+
+DEFAULT_BUCKET = 's3://test-bucket'
+
+
+@fixture
+def app_args() -> SimpleNamespace:
+    args = SimpleNamespace()
+    setattr(args, 'default_data_lake_bucket', DEFAULT_BUCKET)
+    return args
+
+
+@fixture(scope='module')
+def person_schema() -> StructType:
+    return StructType([
+        StructField('id', IntegerType(), False),
+        StructField('first_name', StringType(), True),
+        StructField('last_name', StringType(), True),
+        StructField('age', IntegerType(), True),
+        StructField('city', StringType(), True),
+        StructField('gender', StringType(), True),
+    ])
+
+
+@fixture(scope='module')
+def person_df(spark_session, person_schema) -> DataFrame:
+    return spark_session.createDataFrame([(1, "John", "Doe", 25, "Berlin", "male"),
+                                          (2, "Jane", "Doe", 41, "Berlin", "female"),
+                                          (3, "Maxx", "Mustermann", 30, "Berlin", "male")
+                                          ], person_schema)
+```
+
+Next write your test function for your custom business logic in the ```test_custom_business_logic.py``` file:
+
+```python
+from pyspark.sql import DataFrame
+
+
+def test_custom_logic(spark_session, person_df: DataFrame):
+    data_source = DataSet(id='some_schema.some_table', df=person_df)
+    results: List[DataSet] = tasks.custom_business_logic.execute([data_source], spark_session)
+    for dataset in results:
+        assert dataset.id == 'transformed_data_set'
+        assert dataset.df.count() == person_df.count()
+        dataset.df.show()
+        dataset.df.describe()
+```
+
+You might want to run an end-to-end test, by wiring together the minimal structure of the data product processor:
+
+```python
+from types import SimpleNamespace
+from driver import DataSet
+from driver.processors import schema_checker, constraint_processor, transformer_processor
+
+
+def test_end_to_end(spark_session, spark_context, person_df: DataFrame, app_args):
+    product_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
+
+    def mock_input_handler(input_definition: SimpleNamespace):
+        dfs = {"source_id": person_df}
+        return dfs.get(input_definition.table)
+
+    def mock_output_handler(dataset: DataSet):
+        assert dataset.id == 'transformed_data_set'
+        assert dataset.df.count() == person_df.count()
+        dataset.df.show()
+        dataset.df.describe()
+
+    driver.init(spark_session)
+    driver.register_data_source_handler('connection', mock_input_handler)
+    driver.register_postprocessors(transformer_processor, schema_checker, constraint_processor)
+    driver.register_output_handler('default', mock_output_handler)
+    driver.register_output_handler('lake', mock_output_handler)
+    driver.process_product(app_args, product_folder)
+```
+
+You can run your tests from your favourite editor (eg. Pycharm) or using the ```pytest``` command line.
+
+### Writing custom logic with custom third party libraries
 
 Sometimes you might need some third party libraries for your aggregation logic. These can be added by creating a
 ```requirements.txt``` file in the root of your Data Product folder. In the following example we show, how to use
@@ -501,7 +655,8 @@ Pydeequ (a third party analyzer and quality assurance library from Amazon):
 pydeequ
 ```
 
-Pydeequ is the python binding to the Deequ Scala implementation, that needs additional non-python (Scala or Java)
+Pydeequ (in this example) is the python binding to the Deequ Scala implementation, that needs additional non-python (
+Scala or Java)
 libraries to be added to the Spark cluster. This can be added via a ```config.ini``` file (also stored in the root of
 the data product).
 
@@ -571,57 +726,42 @@ def add_post_processors() -> List[callable]:
 **Please note:** all of the above methods are optional. The Spark configuration can also be influenced by the use of the
 ini file.
 
-## How to write unit tests for your custom aggregation
+#### Preparing your unit test to work with Pyspark custom configurations
 
-Start by creating a virtual environment in your data product root folder:
+Create a file ```pytest.ini``` and add Spark options:
+
+```properties
+[pytest]
+spark_options=
+spark.jars.packages:com.amazon.deequ:deequ:1.2.2-spark-3.0
+spark.jars.excludes:net.sourceforge.f2j:arpack_combined_all
+```
+
+# Running the data product processor
+
+You can run the following command from the root folder of your data product:
+
 ```commandline
-python3 -m venv .venv
-source .venv/bin/activate
+data-product-processor --default_data_lake_bucket some-datalake-bucket --aws_profile some-profile --aws_region eu-central-1 --local
 ```
 
-Install the data product processor: 
+This command will run Spark locally (due to the --local switch) and store the output on an S3 bucket (authenticated with
+the AWS profile used in the parameter).
 
-from Pypi
+Alternatively you can process data products found in different other folders:
+
 ```commandline
-pip install data-product-processor
-```
-**please note**: the above one is not yet possible, since the library is not released yet.
 
-from source: 
+data-product-processor --product_path ../path-to-some-data-product --default_data_lake_bucket some-datalake-bucket --aws_profile some-profile --aws_region eu-central-1 --local
+```
+
+## Command line parameters:
+
+To find out more about the support command line options, run:
+
 ```commandline
-pip install -e ../data-product-processor/.
+data-product-processor --help
 ```
-
-Create a file in the data product root, called ```requirements-test.txt``` and copy the following:
-```text
-pyspark
-pyspark-stubs
-pytest-spark
-pytest-mock
-pytest-helpers-namespace
-pytest-env
-pytest-cov
-pytest
-numpy
-```
-
-Install the development requirements:
-```commandline
-pip install -r requirements-test.txt
-```
-In case you have some custom requirements, don't forget to install those either:
-```commandline
-pip install -r requirements.txt
-```
-
-Next: create a ```tests``` folder in your data product folder:
-```commandline
-mkdir tests
-```
-
-## Customising the execution from the Data Product
-
-# Command line parameters:
 
     --JOB_ID - the unique id of this Glue/EMR job
     --JOB_RUN_ID - the unique id of this Glue job run
