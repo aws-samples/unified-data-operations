@@ -1,12 +1,13 @@
 import os
 from typing import List, Dict
 from mypy_boto3_glue.type_defs import TableTypeDef, StorageDescriptorTypeDef, ColumnTypeDef, SerDeInfoTypeDef, \
-    BatchUpdatePartitionRequestEntryTypeDef, PartitionInputTypeDef, TableInputTypeDef
+    BatchUpdatePartitionRequestEntryTypeDef, PartitionInputTypeDef, TableInputTypeDef, DatabaseInputTypeDef
 from pyspark.sql import DataFrame
 
 from driver.aws.datalake_api import Partition
 from driver.aws import datalake_api
 from driver.task_executor import DataSet
+from driver.util import filter_list_by_id, safe_get_property
 
 
 def resolve_partitions(ds: DataSet) -> List[ColumnTypeDef]:
@@ -73,14 +74,23 @@ def resolve_storage_descriptor(ds: DataSet, override_location: str = None) -> St
 
 
 def resolve_columns(ds: DataSet) -> List[ColumnTypeDef]:
-    return [ColumnTypeDef(Name=cn, Type=ct) for cn, ct in ds.df.dtypes if cn not in ds.partitions]
+    def lookup(column_name):
+        if not hasattr(ds.model, 'columns'):
+            return str()
+        model_column = filter_list_by_id(ds.model.columns, column_name)
+        if hasattr(model_column, 'name'):
+            return f"{safe_get_property(model_column, 'name')}: {safe_get_property(model_column, 'description')}"
+        else:
+            return str()
+
+    return [ColumnTypeDef(Name=cn, Type=ct, Comment=lookup(cn)) for cn, ct in ds.df.dtypes if cn not in ds.partitions]
 
 
 def resolve_table(ds: DataSet) -> TableTypeDef:
     return TableTypeDef(
-        Name=ds.id,
+        Name=ds.model_name,
         DatabaseName=ds.product_id,
-        Description=ds.product_description,
+        Description=ds.model_description,
         Owner=ds.product_owner,
         PartitionKeys=resolve_partitions(ds),
         TableType=resolve_table_type(ds),
@@ -92,6 +102,8 @@ def resolve_table(ds: DataSet) -> TableTypeDef:
 def resolve_table_input(ds: DataSet) -> TableInputTypeDef:
     return TableInputTypeDef(
         Name=ds.id,
+        Description=f'{ds.model_name}: {ds.model_description}',
+        Owner=ds.product_owner or str(),
         PartitionKeys=resolve_partitions(ds),
         TableType='EXTERNAL_TABLE',
         Parameters=resolve_table_parameters(ds),
@@ -123,14 +135,22 @@ def reshuffle_partitions(prefix: str, partitions: List[Partition]) -> dict:
     return partition_dict
 
 
-def resolve_partition_inputs(ds: DataSet) -> List[PartitionInputTypeDef]:
-    partition_defs = list()
+def resolve_partition_inputs(ds: DataSet, format_for_update: bool = False) -> List[PartitionInputTypeDef]:
     bucket = ds.storage_location.lstrip('/').split('/')[0]
     folder = '/'.join(ds.dataset_storage_path.lstrip('/').split('/')[1:])
     ps: List[Partition] = datalake_api.read_partitions(bucket=bucket, container_folder=folder)
     pdict = reshuffle_partitions(os.path.join(bucket, folder), ps)
+    partition_defs = list()
     for k, v in pdict.items():
-        partition_defs.append(resolve_partition_input(partition_location=k, partition_values=v.get('values'), ds=ds))
+        partition_values = v.get('values')
+        if format_for_update:
+            entry = {'PartitionValueList': v.get('values'),
+                     'PartitionInput': resolve_partition_input(partition_location=k, partition_values=partition_values,
+                                                               ds=ds)}
+            partition_defs.append(entry)
+        else:
+            partition_defs.append(
+                resolve_partition_input(partition_location=k, partition_values=partition_values, ds=ds))
     return partition_defs
 
 
@@ -146,3 +166,7 @@ def resolve_partition_entries(ds: DataSet) -> List[BatchUpdatePartitionRequestEn
             PartitionInput=resolve_partition_input(partition_location=k, partition_values=v.get('values'), ds=ds)
         ))
     return partition_defs
+
+
+def resolve_database(ds: DataSet) -> DatabaseInputTypeDef:
+    return DatabaseInputTypeDef(Name=ds.product_id, Description=ds.product.description or str())

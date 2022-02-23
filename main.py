@@ -1,6 +1,9 @@
+import configparser
+import importlib
 import logging
 import os
 import argparse
+import sys
 
 from pyspark import SparkConf
 import traceback
@@ -24,33 +27,77 @@ def init_aws(args):
     driver.aws.providers.init(profile=profile, region=region)
 
 
-def init_system(args):
-    driver.io_handlers.init(connection_provider, datalake_provider)
+def build_spark_configuration(args, config: configparser.RawConfigParser, custom_hook: callable = None):
     conf = SparkConf()
     if hasattr(args, 'aws_profile'):
         logger.info(f'Setting aws profile: {args.aws_profile}')
         os.environ["AWS_PROFILE"] = args.aws_profile
         conf.set("fs.s3a.aws.credentials.provider", "com.amazonaws.auth.profile.ProfileCredentialsProvider")
-    # conf.set("spark.sql.warehouse.dir", warehouse_location)
     if hasattr(args, 'local') and args.local:
-        deps_path = f'{os.path.dirname(os.path.abspath(__file__))}/spark_deps'
-        pgres_driver_jars = f'{deps_path}/postgresql-42.2.23.jar'
-        local_jars = [pgres_driver_jars]
-        if args.jars:
+        deps_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'spark_deps')
+        local_jars = [file for file in os.listdir(deps_path) if file.endswith('.jar')]
+        if hasattr(args, 'jars'):
             local_jars.extend([f'{deps_path}/{j}' for j in args.jars.strip().split(',')])
-        jars = ','.join(local_jars)
+        jars = ','.join([os.path.join(deps_path, j) for j in local_jars])
         conf.set("spark.jars", jars)
-    driver.init(spark_config=conf)
+    if config:
+        spark_jars = 'spark jars'
+        if spark_jars in config.sections():
+            for k, v in config.items(spark_jars):
+                conf.set(k, v)
+    return custom_hook.enrich_spark_conf(conf) if custom_hook and hasattr(custom_hook, 'enrich_spark_conf') else conf
+
+
+def read_config(product_path: str) -> configparser.RawConfigParser:
+    config_path = os.path.join(product_path, 'config.ini')
+    if os.path.isfile(config_path):
+        config = configparser.ConfigParser()
+        config.read(config_path)
+        return config
+    else:
+        return None
+
+
+def get_custom_hook(product_path: str) -> callable:
+    hook_module_name = 'init_hook'
+    hook_file = f'{hook_module_name}.py'
+    hook_file_name = os.path.join(product_path, hook_file)
+    if os.path.exists(hook_file_name):
+        sys.path.append(product_path)
+        logger.info(f'executing custom hooks: {hook_file_name}')
+        module = importlib.import_module(hook_module_name)
+        sys.modules[hook_module_name] = module
+        return module
+    else:
+        return None
+
+
+def init_system(args):
+    driver.io_handlers.init(connection_provider, datalake_provider)
+    rel_product_path = os.path.join(args.product_path, '') if hasattr(args, 'product_path') else os.path.join('./', '')
+    product_path = os.path.join(os.path.abspath(rel_product_path), '')
+    config = read_config(product_path)
+    custom_hook = get_custom_hook(product_path)
+    driver.init(spark_config=build_spark_configuration(args, config, custom_hook))
+    driver.install_dependencies(product_path)
     driver.register_data_source_handler('connection', connection_input_handler)
     driver.register_data_source_handler('model', lake_input_handler)
     driver.register_data_source_handler('file', file_input_handler)
     driver.register_postprocessors(transformer_processor, razor, constraint_processor, type_caster, schema_checker)
     driver.register_output_handler('default', lake_output_handler)
     driver.register_output_handler('lake', lake_output_handler)
-    driver.process_product(args)
+    if custom_hook:
+        if hasattr(custom_hook, 'add_post_processors'):
+            driver.register_postprocessors(*custom_hook.add_post_processors())
+        if hasattr(custom_hook, 'add_pre_processors'):
+            driver.register_preprocessors(*custom_hook.add_pre_processors())
+        # if hasattr(custom_hook, 'add_transformers'):
+        #     driver.add_transformers(custom_hook.add_transformers())
+        # todo: the transformer dict is not used, the processor built-in transformers are the only ones looked up now
+    driver.process_product(args, product_path)
 
 
-if __name__ == '__main__':
+def main():
     try:
         logging.basicConfig(level=logging.INFO)
         parser = argparse.ArgumentParser(argument_default=argparse.SUPPRESS)
@@ -82,3 +129,7 @@ if __name__ == '__main__':
         logging.error(str(e))
         traceback.print_exc()
         raise e
+
+
+if __name__ == '__main__':
+    main()

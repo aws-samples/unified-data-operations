@@ -2,7 +2,6 @@ import hashlib
 import logging
 import re
 from datetime import datetime, timedelta
-from types import SimpleNamespace
 from typing import List
 
 from driver import common
@@ -12,11 +11,8 @@ from pyspark.sql.types import StringType, StructField, TimestampType
 from pyspark.ml.feature import Bucketizer
 from driver.core import ValidationException, SchemaValidationException
 from driver.task_executor import DataSet
-from quinn.dataframe_validator import (
-    DataFrameMissingStructFieldError,
-    DataFrameMissingColumnError,
-    DataFrameProhibitedColumnError
-)
+
+from driver.util import check_property
 
 logger = logging.getLogger(__name__)
 
@@ -101,10 +97,12 @@ def freshness_validator(df: DataFrame, col_name: str, cfg: any = None):
 
 
 def min_validator(df: DataFrame, col_name: str, cfg: any = None):
+    # todo: implement min validator
     pass
 
 
 def max_validator(df: DataFrame, col_name: str, cfg: any = None):
+    # todo: implement max validator
     pass
 
 
@@ -173,7 +171,7 @@ def find_schema_delta(ds: DataSet) -> List[StructField]:
     def lookup(name, schema_list):
         return next(filter(lambda rsf: rsf.name == name, schema_list))
 
-    if ds.model:
+    if check_property(ds, 'model.columns'):
         required_schema = common.remap_schema(ds)
         data_frame_fields = [{'name': x.name, 'type': x.dataType} for x in ds.df.schema]
         required_schema_fields = [{'name': x.name, 'type': x.dataType} for x in required_schema]
@@ -195,11 +193,11 @@ def type_caster(ds: DataSet):
                                          col(mismatched_field.name).cast(mismatched_field.dataType.typeName()))
         return ds
     except Exception as e:
-        raise
+        raise e
 
 
 def schema_checker(ds: DataSet):
-    if ds.model:
+    if check_property(ds, 'model.columns'):
         logger.info(
             f'-> checking schema for dataset [{ds.id}] with model id: [{ds.model.id}]. Data frame columns: {len(ds.df.columns)}')
         missing_fields = find_schema_delta(ds)
@@ -227,7 +225,7 @@ def razor(ds: DataSet):
 
 
 def constraint_processor(ds: DataSet):
-    if not hasattr(ds, 'model') or ds.model is None:
+    if not check_property(ds, 'model.columns'):
         return ds
 
     for col in ds.model.columns:
@@ -249,7 +247,7 @@ def transformer_processor(data_set: DataSet):
     :param data_set: the data set that contains the data frame;
     :return: the data set with the processed data frame
     """
-    if not hasattr(data_set, 'model') or data_set.model is None:
+    if not check_property(data_set, 'model.columns'):
         return data_set
     for col in data_set.model.columns:
         if not hasattr(col, 'transform'):

@@ -17,5 +17,5 @@ def execute(inp_datasets: List[DataSet], create_timestamp=False):
     if create_timestamp:
         timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
         for ds in inp_datasets:
-            ds.df = ds.df.withColumn('time', unix_timestamp(lit(timestamp), 'yyyy-MM-dd HH:mm:ss').cast("timestamp"))
+            ds.df = ds.df.withColumn('ingest_date', unix_timestamp(lit(timestamp), 'yyyy-MM-dd HH:mm:ss').cast("timestamp"))
     return [DataSet(id=resolve_data_set_id(ds), df=ds.df) for ds in inp_datasets]

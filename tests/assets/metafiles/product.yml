@@ -12,6 +12,6 @@ product:
         inputs:
           - connection: test_connection
             table: some_schema.some_table
-            model: some_model
+            model: transaction
         outputs:
           - model: transaction

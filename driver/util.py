@@ -5,11 +5,11 @@ import os
 import yaml
 
 from types import SimpleNamespace
-from typing import List
+from typing import List, Any
 from jsonschema import validate, ValidationError, Draft3Validator
 from yaml.scanner import ScannerError
 
-from .core import ArtefactType
+from driver.core import ArtefactType
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +54,25 @@ def load_yaml(file_path: str):
         raise scerr
 
 
+def safe_get_property(object: Any, property: str):
+    return getattr(object, property) if hasattr(object, property) else None
+
+
+def check_property(object, nested_property: str):
+    """
+    :param object: the object to analyze
+    :param nested_property: the nested properties separated by dots (.) (eg. model.storage.location)
+    :return: True if the nested property can be found on the object;
+    """
+    current_object = object
+    for element in nested_property.split('.'):
+        if hasattr(current_object, element):
+            current_object = getattr(current_object, element)
+        else:
+            return False
+    return True
+
+
 def filter_list_by_id(object_list, object_id):
     return next(iter([m for m in object_list if m.id == object_id]), None)
 
@@ -77,6 +96,7 @@ def validate_schema(validable_dict: dict, artefact_type: ArtefactType):
 
 
 def enrich_product(product_input: SimpleNamespace, args):
+    # todo: replace this with a proper object merging logic
     product = product_input.product
     if not hasattr(product, 'defaults'):
         setattr(product, 'defaults', SimpleNamespace())
@@ -84,6 +104,8 @@ def enrich_product(product_input: SimpleNamespace, args):
         storage = SimpleNamespace()
         setattr(storage, 'location', args.default_data_lake_bucket)
         setattr(product.defaults, 'storage', storage)
+    if not check_property(product, 'defaults.storage.location'):
+        setattr(product.defaults.storage, 'location', args.default_data_lake_bucket)
     return product
 
 
@@ -99,6 +121,8 @@ def enrich_models(models: SimpleNamespace, product: SimpleNamespace):
                 setattr(model, 'storage', product.defaults.storage)
             if not hasattr(model.storage, 'location') and hasattr(product.defaults.storage, 'location'):
                 setattr(model.storage, 'location', product.defaults.storage.location)
+            if not hasattr(model.storage, 'options') and hasattr(product.defaults.storage, 'options'):
+                setattr(model.storage, 'options', product.defaults.storage.options)
         if not hasattr(model.storage, 'type'):
             setattr(model.storage, 'type', 'lake')
         if not hasattr(model.storage, 'format'):
@@ -134,6 +158,6 @@ def compile_models(product_path: str, product: SimpleNamespace, def_file_name: s
     SimpleNamespace]:
     model_path = os.path.join(product_path, def_file_name)
     part_validate_schema = functools.partial(validate_schema, artefact_type=ArtefactType.models)
-    part_enrich_models = functools.partial(enrich_models, product=product)
-    model_processing_chain = [load_yaml, part_validate_schema, parse_dict_into_object, part_enrich_models]
+    part_enrich_model = functools.partial(enrich_models, product=product)
+    model_processing_chain = [load_yaml, part_validate_schema, parse_dict_into_object, part_enrich_model]
     return run_chain(model_path, *model_processing_chain)

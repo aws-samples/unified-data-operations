@@ -1,14 +1,10 @@
 import logging
-
 import sys, os
 import traceback
 
-from typing import List
-from types import SimpleNamespace
 from pyspark.sql import SparkSession
-from driver import task_executor
-from .aws import providers
-from deprecated import CatalogService
+from driver import task_executor, packager
+from .packager import ziplib
 from .util import compile_models, compile_product
 
 __SPARK__: SparkSession = None
@@ -32,7 +28,7 @@ def get_or_create_session(config=None) -> SparkSession:  # pragma: no cover
     return spark
 
 
-def init(spark_session=None, spark_config=None):
+def init(spark_session: SparkSession = None, spark_config=None):
     global __SPARK__
     if not spark_session:
         __SPARK__ = get_or_create_session(spark_config)
@@ -42,27 +38,24 @@ def init(spark_session=None, spark_config=None):
     # sc.setSystemProperty("com.amazonaws.services.s3.enableV4", "true")
 
 
-def execute_tasks(product_id: str, tasks: list, models: List[SimpleNamespace], product_path: str):
-    session = providers.get_session()
-    if session:
-        CatalogService(session).drain_database(product_id) #todo: check this implementation here if needed
+def install_dependencies(product_path: str):
+    new_packages = packager.install_dependencies(product_path)
+    if new_packages:
+        logger.info(f'Packaging up the following new dependencies {new_packages.keys()}')
+        for new_pack_name in new_packages.keys():
+            zipfile = ziplib(new_packages.get(new_pack_name), new_pack_name)
+            logger.info(f'-----> installing {zipfile}')
+            get_spark().sparkContext.addPyFile(zipfile)
+        logger.debug('=> Dependencies are installed.')
 
-    for task in tasks:
-        task_executor.execute(product_id, task, models, product_path)
 
-
-def process_product(args):
+def process_product(args, product_path: str):
     try:
-        # script_folder = os.path.dirname(os.path.abspath(__file__))
-        # path = f'{config_file_path_prefix}{file_type}' if config_file_path_prefix else file_type
-        rel_product_path = os.path.join(args.product_path, '') if hasattr(args, 'product_path') else os.path.join('./',
-                                                                                                                  '')
-        abs_product_path = os.path.join(os.path.abspath(rel_product_path), '')
-        product = compile_product(abs_product_path, args)
-        models = compile_models(abs_product_path, product)
-        execute_tasks(product.id, product.pipeline.tasks, models, abs_product_path)
+        product = compile_product(product_path, args)
+        models = compile_models(product_path, product)
+        for task in product.pipeline.tasks:
+            task_executor.execute(product, task, models, product_path)
     except Exception as e:
         traceback.print_exc()
         logger.error(f"Couldn't execute job due to >> {type(e).__name__}: {str(e)}")
         sys.exit(-1)
-        # raise e

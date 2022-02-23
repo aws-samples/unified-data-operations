@@ -11,6 +11,9 @@ from driver.task_executor import DataSet
 
 __CONN_PROVIDER__ = None
 __DATA_PRODUCT_PROVIDER__ = None
+
+from driver.util import check_property
+
 logger = logging.getLogger(__name__)
 
 
@@ -79,23 +82,44 @@ def file_output_handler(ds: DataSet, options: SimpleNamespace):
     pass
 
 
+def resolve_compression(ds: DataSet):
+    # todo: parse this into an enum
+    # none, uncompressed, snappy, gzip, lzo, brotli, lz4,
+    if check_property(ds, 'model.storage.options.compression'):
+        return ds.model.storage.options.compression
+    else:
+        return 'snappy'
+
+
+def resolve_coalesce(ds: DataSet):
+    if check_property(ds, 'model.storage.options.coalesce'):
+        return ds.model.storage.options.coalesce
+    else:
+        return 2
+
+
+def resolve_header(ds: DataSet):
+    if check_property(ds, 'model.storage.options.skip_first_row'):
+        return ds.model.storage.options.skip_first_row
+    else:
+        return 'true'
+
+
 def lake_output_handler(ds: DataSet):
     output = f"{'s3a://'}{ds.dataset_storage_path.lstrip('/')}"
-    # ds.storage_location = f"{'s3://'}{ds.storage_location.lstrip('/')}"
     logging.info(f'-> [Lake Output Handler]: writing data product to: {output}')
-    ds.df.coalesce(2).write \
+    ds.df.coalesce(resolve_coalesce(ds)).write \
         .partitionBy(*ds.partitions or []) \
         .format(ds.storage_format) \
         .mode('overwrite') \
-        .option('header', 'true') \
+        .option('header', resolve_header(ds)) \
+        .option('compression', resolve_compression(ds)) \
         .save(output)
-    # .saveAsTable('test_db.hoppala', path=ds.storage_location)
 
-    datalake_api.tag_files(ds.storage_location, ds.storage_path, ds.all_tags)
+    datalake_api.tag_files(ds.storage_location, ds.path, ds.all_tags)
 
     # print(f'# partitions after write {ds.df.rdd.getNumPartitions()}')
     # todo: recheck coalesce value
-    # todo: detect the extra schema info that is not defined in the model but provided by transformations
     # todo: add parquet compression support / the glue catalog needs it too
     # todo: add bucket support & also to the glue catalog
     glue_api.update_data_catalog(ds)

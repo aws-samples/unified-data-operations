@@ -1,5 +1,4 @@
 import datetime
-import ntpath
 import os
 from types import SimpleNamespace
 

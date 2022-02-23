@@ -1,5 +1,4 @@
 import os
-from types import SimpleNamespace
 
 import pytest
 from jsonschema import ValidationError

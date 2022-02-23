@@ -5,10 +5,22 @@ from mypy_boto3_glue.type_defs import GetDatabasesResponseTypeDef, DatabaseTypeD
     TableTypeDef, TableInputTypeDef, StorageDescriptorTypeDef, ColumnTypeDef, DatabaseInputTypeDef
 from mypy_boto3_glue.client import Exceptions
 from driver.aws import providers
-from driver.aws.resolvers import resolve_table, resolve_partition_entries, resolve_table_input, resolve_partition_inputs
+from driver.aws.resolvers import resolve_table_input, resolve_partition_inputs, resolve_database
 from driver.task_executor import DataSet
 
 logger = logging.getLogger(__name__)
+
+
+def drain_data_catalog(data_catalog_id: str):
+    glue = providers.get_glue()
+    try:
+        get_tables_response: GetTablesResponseTypeDef = glue.get_tables(DatabaseName=data_catalog_id)
+        for table in get_tables_response.get('TableList'):
+            glue.delete_table(DatabaseName=data_catalog_id, Name=table.get('Name'))
+    except Exception as enf:
+        if enf.__class__.__name__ == 'EntityNotFoundException':
+            logger.warning(
+                f'Database {data_catalog_id} does not exists in the data catalog. No tables will be deleted.')
 
 
 def update_data_catalog(ds: DataSet):
@@ -22,11 +34,11 @@ def update_data_catalog(ds: DataSet):
         except Exception as enf:
             if enf.__class__.__name__ == 'EntityNotFoundException':
                 # database does not exists yet
-                logger.error(
-                    f'Database {ds.product_id} does not exists in the data catalog. {str(enf)}. It is going to be created.')
+                logger.warning(
+                    f'Database {ds.product_id} does not exists in the data catalog ({str(enf)}). It is going to be created.')
                 # todo: add permissions
                 glue.create_database(
-                    DatabaseInput=DatabaseInputTypeDef(Name=ds.product_id))
+                    DatabaseInput=resolve_database(ds))
             else:
                 raise enf
 
@@ -34,16 +46,18 @@ def update_data_catalog(ds: DataSet):
         try:
             rsp: GetTablesResponseTypeDef = glue.get_table(DatabaseName=ds.product_id, Name=ds.id)
             # todo: update table
-            glue.update_table(DatabaseName=ds.product_id, TableInput=resolve_table_input(ds))
+            glue.delete_table(DatabaseName=ds.product_id, Name=ds.id)
+            glue.create_table(DatabaseName=ds.product_id, TableInput=resolve_table_input(ds))
+            # glue.update_table(DatabaseName=ds.product_id, TableInput=resolve_table_input(ds))
         except Exception as enf:  # EntityNotFoundException
-            # table not found]
+            # table not found
             if enf.__class__.__name__ == 'EntityNotFoundException':
                 logger.warning(
                     f'Table [{ds.id}] cannot be found in the catalog schmea [{ds.product_id}]. Table is going to be created.')
                 glue.create_table(DatabaseName=ds.product_id, TableInput=resolve_table_input(ds))
             else:
                 raise enf
-        rsp: GetTablesResponseTypeDef = glue.get_table(DatabaseName=ds.product_id, Name=ds.id)
+        # rsp: GetTablesResponseTypeDef = glue.get_table(DatabaseName=ds.product_id, Name=ds.id)
         # todo: update partitions
         # todo: register with lakeformation
 
@@ -51,15 +65,18 @@ def update_data_catalog(ds: DataSet):
         # entries = resolve_partition_entries(ds)
         # rsp = glue.batch_update_partition(DatabaseName=ds.product_id, TableName=ds.model_id, Entries=entries)
         partition_inputs = resolve_partition_inputs(ds)
+        if not partition_inputs:
+            return
         rsp = glue.batch_create_partition(DatabaseName=ds.product_id, TableName=ds.id,
                                           PartitionInputList=partition_inputs)
+        # rsp = glue.batch_update_partition(DatabaseName=ds.product_id, TableName=ds.id,
+        #                                   Entries=partition_inputs)
         if rsp.get('Errors'):
-            logger.error(str(rsp))
-            raise Exception(f"Couldn't update the table with the partitions.")
-
-        logger.info(f'Partition upsert response: {str(rsp)}')
-        # todo: write a proper handling here
+            raise Exception(f"Couldn't update the table [{ds.id}] with the partitions.")
+        status_code = rsp.get('ResponseMetadata').get('HTTPStatusCode')
+        logger.info(f'Partition upsert response with HTTP Status Code: {str(status_code)}')
+        # todo: write a proper error handling here
 
     upsert_database()
     upsert_table()
-    upsert_partitions()  # todo: this is not yet an upsert (in implementation)
+    upsert_partitions()  # todo: this is not yet an upsert (just in name but not in implementation)
