@@ -65,8 +65,16 @@ def load_inputs(product: SimpleNamespace, inputs: SimpleNamespace, models: List[
     for inp in inputs:
         model_id = inp.model if hasattr(inp, 'model') else None
         setattr(inp, 'type', resolve_io_type(inp))
-        dataset_id = f'{resolve_data_product_id(inp)}.{resolve_data_set_id(inp)}'
+        
+        # dataset_id is build as follows
+        # file:         <assigned model id OR filename without filetype>
+        # model:        <data product id>.<model id>
+        # connection:   <connection id>.<table name>
+        data_product_id = resolve_data_product_id(inp)
+        dataset_id = f'{data_product_id}.{resolve_data_set_id(inp)}' if data_product_id else resolve_data_set_id(inp)
+        
         model_obj = filter_list_by_id(models, model_id)
+        
         dp = DataProduct(id=product.id, description=getattr(product, 'description', None),
                          owner=getattr(product, 'owner', None))
         input_datasets.append(DataSet(dataset_id, load_input(inp), model_obj, dp))
