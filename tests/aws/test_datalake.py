@@ -1,3 +1,6 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 import json
 from driver.aws.datalake_api import Partition
 from driver.aws.resolvers import reshuffle_partitions

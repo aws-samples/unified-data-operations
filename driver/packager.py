@@ -1,3 +1,6 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 import os, sys, zipfile, itertools
 from typing import List, Dict
 from pip._vendor import pkg_resources

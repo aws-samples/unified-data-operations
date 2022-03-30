@@ -1,3 +1,6 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 from os import path, system
 from setuptools import setup, Command, find_packages
 # from package import Package

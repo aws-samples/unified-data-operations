@@ -1,3 +1,6 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 from boto3.session import Session
 from pyspark.sql import DataFrame
 from pytest import fixture
