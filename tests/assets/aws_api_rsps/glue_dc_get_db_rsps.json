@@ -1,0 +1,63 @@
+{
+  "DatabaseList": [
+    {
+      "CatalogId": "588942721560",
+      "CreateTableDefaultPermissions": [
+        {
+          "Permissions": [
+            "ALL"
+          ],
+          "Principal": {
+            "DataLakePrincipalIdentifier": "IAM_ALLOWED_PRINCIPALS"
+          }
+        }
+      ],
+      "CreateTime": "2021-09-03 12:27:22+02:00",
+      "Name": "customers"
+    },
+    {
+      "CatalogId": "588942721560",
+      "CreateTableDefaultPermissions": [
+        {
+          "Permissions": [
+            "ALL"
+          ],
+          "Principal": {
+            "DataLakePrincipalIdentifier": "IAM_ALLOWED_PRINCIPALS"
+          }
+        }
+      ],
+      "CreateTime": "2021-08-27 09:29:58+02:00",
+      "Name": "sportstickets"
+    },
+    {
+      "CatalogId": "588942721560",
+      "CreateTableDefaultPermissions": [
+        {
+          "Permissions": [
+            "ALL"
+          ],
+          "Principal": {
+            "DataLakePrincipalIdentifier": "IAM_ALLOWED_PRINCIPALS"
+          }
+        }
+      ],
+      "CreateTime": "2021-08-11 15:43:31+02:00",
+      "Description": "The Main Glue Database for the data Mesh",
+      "Name": "test_db",
+      "Parameters": {}
+    }
+  ],
+  "ResponseMetadata": {
+    "HTTPHeaders": {
+      "connection": "keep-alive",
+      "content-length": "795",
+      "content-type": "application/x-amz-json-1.1",
+      "date": "Fri, 03 Sep 2021 15:59:23 GMT",
+      "x-amzn-requestid": "7e2ba307-a94f-49e9-8c64-c5c283eae938"
+    },
+    "HTTPStatusCode": 200,
+    "RequestId": "7e2ba307-a94f-49e9-8c64-c5c283eae938",
+    "RetryAttempts": 0
+  }
+}

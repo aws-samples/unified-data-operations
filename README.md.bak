@@ -1,0 +1,97 @@
+[![pipeline status](https://gitlab.aws.dev/aws-sa-dach/teams/dnb/data-mesh-task-interpreter/badges/master/pipeline.svg)](https://gitlab.aws.dev/aws-sa-dach/teams/dnb/data-mesh-task-interpreter/-/commits/master)
+[![coverage report](https://gitlab.aws.dev/aws-sa-dach/teams/dnb/data-mesh-task-interpreter/badges/master/coverage.svg)](https://gitlab.aws.dev/aws-sa-dach/teams/dnb/data-mesh-task-interpreter/-/commits/master)
+
+# Data Mesh Task Interpreter
+
+Interprets YAML based task definition of the [data mesh](https://gitlab.aws.dev/aws-sa-dach/teams/dnb/data-mesh-solution) as AWS Glue job.
+
+## Format
+
+See [model.yml](tests/retired/interpreters/model.yml) and [product.yml](tests/retired/interpreters/product.yml)
+test examples.
+
+# Setup real-local development environment
+
+## Install environment on OSX
+
+Everything will be installed in virtual environment in your local project folder.
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -U -e .
+pip install -r requirements-test.txt
+```
+Don't forget to switch the new virtual environment in your IDE too.
+
+Also: make sure Java is installed. On OSX:
+```
+brew tap homebrew/cask-versions
+brew update
+brew tap  homebrew/cask
+brew tap adoptopenjdk/openjdk
+brew install --cask adoptopenjdk11
+brew install maven
+```
+We also need a local Glue deployment:
+
+```
+export SPARK_HOME=${$(.venv/bin/find_spark_home.py)}
+pyver=$(echo $(python --version)|tr A-Z a-z|tr -d ' '|cut -f1-2 -d".")
+GLUE_HOME="${$(echo "$(pwd)/$line")}.venv/lib/${pyver}/site-packages/glue"
+mkdir -p $GLUE_HOME
+cd $GLUE_HOME
+git clone https://github.com/awslabs/aws-glue-libs.git -b glue-1.0 .
+zip -r PyGlue.zip awsglue
+mvn --batch-mode -f ./pom.xml -DoutputDirectory=./jars dependency:copy-dependencies
+cd -
+# find spark and glue dependencies, without versioning
+find $SPARK_HOME/jars -type f -exec basename {} \; |sed -e 's/[0-9]*\.\([0-9]*\.\)\{0,2\}/*/g' > spark.deps
+find $GLUE_HOME/jars -type f -exec basename {} \; |sed -e 's/[0-9]*\.\([0-9]*\.\)\{0,2\}/*/g' > glue.deps
+#sort spark.deps glue.deps | awk 'dup[$0]++ == 1' |sed 's/$/*/' > dupped.deps
+# find duplicated dependencies
+comm -12 <(sort spark.deps) <(sort glue.deps) > dupped.deps
+cat dupped.deps | while read line; do eval "rm ${GLUE_HOME}/jars/$line"; done
+rm spark.deps dupped.deps glue.deps
+
+mkdir $SPARK_HOME/conf/
+echo "spark.driver.extraClassPath $GLUE_HOME/jars/*" >> $SPARK_HOME/conf/spark-defaults.conf
+echo "spark.executor.extraClassPath $GLUE_HOME/jars/*" >> $SPARK_HOME/conf/spark-defaults.conf
+rm -rf ~/.m2/repository/* 
+```
+ALTERNATIVE:
+```
+export SPARK_HOME=$(pwd)/.venv/lib/spark
+mkdir $SPARK_HOME
+cd $SPARK_HOME
+wget https://aws-glue-etl-artifacts.s3.amazonaws.com/glue-2.0/spark-2.4.3-bin-hadoop2.8.tgz --no-check-certificate
+cd -
+mkdir $SPARK_HOME/conf/
+echo "spark.driver.extraClassPath $GLUE_HOME/jars/*" >> $SPARK_HOME/conf/spark-defaults.conf
+echo "spark.executor.extraClassPath $GLUE_HOME/jars/*" >> $SPARK_HOME/conf/spark-defaults.conf
+
+```
+
+Add the output of these two commands in your PyCharm (or IDE of preference) environment.
+Pycharm -> Run -> Edit Configurations -> main -> Environment Variables.
+as GLUE_HOME
+```
+echo $(pwd)/$GLUE_HOME
+```
+as SPARK_HOME
+```
+echo $(pwd)/$SPARK_HOME
+```
+
+# Install Docker Environment
+## Build
+
+    docker-compose build
+
+## Test
+
+    docker-compose run test
+
+## CI/CD
+
+See [gitlab-ci.yml](.gitlab-ci.yml).

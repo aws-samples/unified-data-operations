@@ -1,0 +1,22 @@
+models:
+  - id: person
+    columns:
+      - id: id
+        type: int
+      - id: first_name
+        type: string
+        transform:
+          - type: encrypt
+      - id: last_name
+        type: string
+        transform:
+          - type: skip
+      - id: age
+        type: int
+        transform:
+          - type: bucket
+            options:
+              bins: [20, 40, 60]
+          - type: rename
+            options:
+              id: age_bins

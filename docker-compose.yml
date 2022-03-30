@@ -1,0 +1,13 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+version: "2.3"
+services:
+  test:
+    image: job-interpreter-env:dev
+    build:
+      context: .
+    volumes:
+      - ./deprecated:/app/deprecated
+      - ./main.py:/app/main.py
+    command: ["pytest", "-s", "-m", "not integration"]

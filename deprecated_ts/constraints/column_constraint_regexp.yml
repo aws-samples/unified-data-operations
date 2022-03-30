@@ -1,0 +1,5 @@
+type: string
+constraints:
+  - type: regexp
+    options:
+      regex: .*

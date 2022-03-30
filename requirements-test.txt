@@ -1,0 +1,14 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+-r requirements.txt
+
+pyspark
+pyspark-stubs
+pytest-spark
+pytest-mock
+pytest-helpers-namespace
+pytest-env
+pytest-cov
+pytest
+numpy
