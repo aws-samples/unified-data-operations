@@ -14,8 +14,6 @@ permissions:
 jobs:
   bump-version:
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.bump2version.outputs.VERSION }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -44,7 +42,6 @@ jobs:
           . ./version.sh
           echo $VERSION
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
       - name: create pull request
         uses: peter-evans/create-pull-request@v4
         with:
