@@ -46,13 +46,7 @@ jobs:
           echo $VERSION
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-      - uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: Commit from CI [skip actions]
-          tagging_message: ${{ env.VERSION }}
-          branch: release-${{ env.VERSION }}
-          create_branch: true
-      - name: create PR
+      - name: create pull request
         uses: peter-evans/create-pull-request@v4
         with:
           title: "release version: ${{ env.VERSION }}"
