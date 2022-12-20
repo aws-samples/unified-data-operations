@@ -24,7 +24,7 @@ jobs:
         run: |
           pip install bump2version
           . ./version.sh
-          echo "latest release: ${$VERSION}"
+          echo "latest release: ${VERSION}"
           head=$(git rev-parse --short HEAD)
           commits_since_tag=$(git rev-list ${VERSION}..HEAD --count)
           echo "new snapshot: ${VERSION}+${commits_since_tag}.${head}"
