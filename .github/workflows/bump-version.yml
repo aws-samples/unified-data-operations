@@ -57,6 +57,6 @@ jobs:
         with:
           title: "release version: ${{ env.VERSION }}"
           delete-branch: true
-          branch: main
+          base: main
           labels: |
             release
