@@ -1,0 +1,187 @@
+dpac-data-product-processor
+Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
+**********************
+THIRD PARTY COMPONENTS
+**********************
+
+Package: attrs
+License: MIT
+Requires: n/a
+Author: Hynek Schlawack <hs@ox.cx>
+Home page: https://www.attrs.org/
+
+----------------------------------------
+
+Package: boto3
+License: Apache-2.0
+Requires: botocore, jmespath, s3transfer
+Author: Amazon Web Services
+Home page: https://github.com/boto/boto3
+
+----------------------------------------
+
+Package: botocore
+License: Apache-2.0
+Requires: jmespath, python-dateutil, urllib3
+Author: Amazon Web Services
+Home page: https://github.com/boto/botocore
+
+----------------------------------------
+
+Package: jmespath
+License: MIT
+Requires: n/a
+Author: James Saryerwinnie <js@jamesls.com>
+Home page: https://github.com/jmespath/jmespath.py
+
+----------------------------------------
+
+Package: jsonschema
+License: MIT
+Requires: attrs, pyrsistent, setuptools, six
+Author: Julian Berman <Julian@GrayVines.com>
+Home page: https://github.com/Julian/jsonschema
+
+----------------------------------------
+
+Package: mypy-boto3-glue
+License: MIT
+Requires: n/a
+Author: Vlad Emelianov <vlad.emelianov.nz@gmail.com>
+Home page: https://github.com/vemel/mypy_boto3_builder
+
+----------------------------------------
+
+Package: pydantic
+License: MIT
+Requires: typing-extensions
+Author: Samuel Colvin <s@muelcolvin.com>
+Home page: https://github.com/samuelcolvin/pydantic
+
+The MIT License (MIT)
+
+----------------------------------------
+
+Package: pyrsistent
+License: MIT
+Requires: n/a
+Author: Tobias Gustafsson <tobias.l.gustafsson@gmail.com>
+Home page: http://github.com/tobgu/pyrsistent/
+
+----------------------------------------
+
+Package: python-dateutil
+License: Apache-2.0
+Requires: six
+Author: Gustavo Niemeyer <gustavo@niemeyer.net>
+Home page: https://github.com/dateutil/dateutil
+
+--------------------------------------------------------------------------------
+dateutil - Extensions to the standard Python datetime module.
+
+Copyright (c) 2003-2011 - Gustavo Niemeyer <gustavo@niemeyer.net>
+Copyright (c) 2012-2014 - Tomi Pieviläinen <tomi.pievilainen@iki.fi>
+Copyright (c) 2014-2016 - Yaron de Leeuw <me@jarondl.net>
+Copyright (c) 2015-     - Paul Ganssle <paul@ganssle.io>
+Copyright (c) 2015-     - dateutil contributors (see AUTHORS file)
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+    * Neither the name of the copyright holder nor the names of its
+      contributors may be used to endorse or promote products derived from
+      this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+The above BSD License Applies to all code, even that also covered by Apache 2.0.
+
+----------------------------------------
+
+Package: quinn
+License: Apache-2.0
+Requires: n/a
+Author: MrPowers <matthewkevinpowers@gmail.com>
+Home page: https://github.com/MrPowers/quinn/
+
+----------------------------------------
+
+Package: s3transfer
+License: Apache-2.0
+Requires: botocore
+Author: Amazon Web Services <kyknapp1@gmail.com>
+Home page: https://github.com/boto/s3transfer
+
+----------------------------------------
+
+Package: setuptools
+License: MIT
+Requires: n/a
+Author: Python Packaging Authority <distutils-sig@python.org>
+Home page: https://github.com/pypa/setuptools
+
+----------------------------------------
+
+Package: six
+License: MIT
+Requires: n/a
+Author: Benjamin Peterson <benjamin@python.org>
+Home page: https://github.com/benjaminp/six
+
+----------------------------------------
+
+Package: urllib3
+License: MIT
+Requires: n/a
+Author: Andrey Petrov <andrey.petrov@shazow.net>
+Home page: https://urllib3.readthedocs.io/
+
+MIT License
+
+Copyright (c) 2008-2020 Andrey Petrov and contributors (see CONTRIBUTORS.txt)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+----------------------------------------
+
+Package: wheel
+License: MIT
+Requires: n/a
+Author: Daniel Holth <dholth@fastmail.fm>
+Home page: https://github.com/pypa/wheel
+
+----------------------------------------

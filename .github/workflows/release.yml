@@ -1,0 +1,50 @@
+name: release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.getversion.outputs.VERSION }}
+    steps:
+      - uses: actions/checkout@v3
+      - id: getversion
+        name: get version
+        run: |
+          . ./version.sh
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+      - name: build wheel
+        run: |
+          python -m pip install --upgrade pip
+          pip install -U -e  .
+          pip install -r requirements-test.txt
+          python setup.py build -vf && python setup.py bdist_wheel
+      - name: archive artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: data-product-processor-${{ env.VERSION }}
+          retention-days: 30
+          path: |
+            ./dist/*
+            ./main.py
+  publish-test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: data-product-processor-${{ needs.build.outputs.version }}
+      - name: publish
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/
+          print_hash: true
