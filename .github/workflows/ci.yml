@@ -22,6 +22,8 @@ jobs:
       - id: bump2version
         name: bump data product processor version to pre-release
         run: |
+          git config --global user.email "CI"
+          git config --global user.name "CI@users.noreply.github.com"
           pip install bump2version
           . ./version.sh
           echo "latest release: ${VERSION}"
