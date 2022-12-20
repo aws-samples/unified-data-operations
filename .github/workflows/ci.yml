@@ -28,7 +28,7 @@ jobs:
           echo $VERSION
           head=$(git rev-parse --short HEAD)
           commits_since_tag=$(git rev-list ${VERSION}..HEAD --count)
-          bump2version --new-version ${VERSION}+${commits_since_tag}-${head} pre
+          bump2version --new-version ${VERSION}+${commits_since_tag}.${head} pre
       - name: build wheel
         run: |
           python setup.py build -vf && python setup.py bdist_wheel
