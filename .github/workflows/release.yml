@@ -50,6 +50,7 @@ jobs:
         with:
           commit_message: Commit from CI [skip actions]
           tagging_message: ${{ env.VERSION }}
+          branch: main
 
   build:
     needs: bump-version
