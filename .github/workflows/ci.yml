@@ -20,6 +20,15 @@ jobs:
           pip install -U -e  .
           pip install -r requirements-test.txt
           pytest --cov=deprecated -s -m 'not integration'
+      - id: bump2version
+        name: bump data product processor version to pre-release
+        run: |
+          pip install bump2version
+          . ./version.sh
+          echo $VERSION
+          head=$(git rev-parse --short HEAD)
+          commits_since_tag=$(git rev-list ${VERSION}..HEAD --count)
+          bump2version --new-version ${VERSION}+${commits_since_tag}-${head} pre
       - name: build wheel
         run: |
           python setup.py build -vf && python setup.py bdist_wheel
