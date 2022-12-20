@@ -37,11 +37,13 @@ jobs:
           pip install bump2version
           . ./version.sh
           echo $VERSION
-          bump2version --current-version $VERSION ${RELEASE_TYPE}
+          bump2version --current-version $VERSION --tag-name '{new_version}' --tag ${RELEASE_TYPE}
           # load new version in environment
           . ./version.sh
           echo $VERSION
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+          # push tag
+          git push origin refs/tags/${VERSION}
       - name: create pull request
         uses: peter-evans/create-pull-request@v4
         with:
