@@ -20,7 +20,7 @@ jobs:
           pip install -U -e  .
           pip install -r requirements-test.txt
           pytest --cov=deprecated -s -m 'not integration'
-      - name: build whl
+      - name: build wheel
         run: |
           python setup.py build -vf && python setup.py bdist_wheel
       - name: archive dist
