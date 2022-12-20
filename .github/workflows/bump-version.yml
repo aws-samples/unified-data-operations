@@ -1,0 +1,58 @@
+name: bump-version
+
+on:
+  push:
+    tags:
+      - major-*
+      - minor-*
+      - patch-*   
+    
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+      - name: set to major release
+        if: github.ref_type == 'tag' && startsWith(github.ref_name, 'major-')
+        run: |
+          echo "RELEASE_TYPE=major" >> $GITHUB_ENV
+      - name: set to minor release
+        if: github.ref_type == 'tag' && startsWith(github.ref_name, 'minor-')
+        run: |
+          echo "RELEASE_TYPE=minor" >> $GITHUB_ENV
+      - name: set to patch release
+        if: github.ref_type == 'tag' && startsWith(github.ref_name, 'patch-')
+        run: |
+          echo "RELEASE_TYPE=patch" >> $GITHUB_ENV
+      - id: bump2version
+        name: bump data product processor version
+        run: |
+          git config --global user.email "CI"
+          git config --global user.name "CI@users.noreply.github.com"
+          
+          pip install bump2version
+          . ./version.sh
+          echo $VERSION
+          bump2version --current-version $VERSION --tag-name '{new_version}' --tag ${RELEASE_TYPE}
+          # load new version in environment
+          . ./version.sh
+          echo $VERSION
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          # push tag
+          git push origin refs/tags/${VERSION}
+      - name: create pull request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          title: "release version: ${{ env.VERSION }}"
+          branch: release-${{ env.VERSION }}
+          delete-branch: true
+          base: main
+          labels: |
+            release

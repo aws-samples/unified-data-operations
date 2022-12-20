@@ -1,0 +1,24 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+schema_version: 1.rc-1
+models:
+  - id: movie
+    version: "1.0"
+    validation: strict
+    columns:
+      - id: movieId
+        type: integer
+      - id: title
+        type: string
+      - id: genres
+        type: string
+    meta:
+      contains_pii: false
+      steward: jane.doe@acme.com
+    tags:
+      cost_center: 123455
+      use_case: Customer 360
+    access:
+      domain: customer_support
+      confidentiality: private

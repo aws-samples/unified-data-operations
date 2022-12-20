@@ -1,0 +1,12 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+boto3==1.18.34
+botocore
+wheel==0.37.0
+pyyaml==5.4.1
+pydantic
+quinn
+boto3-stubs[glue]==1.18.34
+mypy-boto3-glue==1.18.34
+jsonschema==3.0.2

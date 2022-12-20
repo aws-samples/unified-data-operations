@@ -1,0 +1,29 @@
+{
+  "Database": {
+    "CatalogId": "588942721560",
+    "CreateTableDefaultPermissions": [
+      {
+        "Permissions": [
+          "ALL"
+        ],
+        "Principal": {
+          "DataLakePrincipalIdentifier": "IAM_ALLOWED_PRINCIPALS"
+        }
+      }
+    ],
+    "CreateTime": "2021-09-03 12:27:22+02:00",
+    "Name": "customers"
+  },
+  "ResponseMetadata": {
+    "HTTPHeaders": {
+      "connection": "keep-alive",
+      "content-length": "246",
+      "content-type": "application/x-amz-json-1.1",
+      "date": "Fri, 03 Sep 2021 15:57:29 GMT",
+      "x-amzn-requestid": "7f953ee9-9221-4953-8a0e-4dc3917cdfe2"
+    },
+    "HTTPStatusCode": 200,
+    "RequestId": "7f953ee9-9221-4953-8a0e-4dc3917cdfe2",
+    "RetryAttempts": 0
+  }
+}

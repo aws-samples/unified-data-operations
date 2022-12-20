@@ -1,0 +1,87 @@
+{
+    "Table": {
+        "Name": "person",
+        "DatabaseName": "test_db",
+        "Owner": "owner",
+        "CreateTime": "2021-09-04 23:22:51+02:00",
+        "UpdateTime": "2021-09-05 13:19:54+02:00",
+        "LastAccessTime": "2021-09-05 13:19:54+02:00",
+        "Retention": 0,
+        "StorageDescriptor": {
+            "Columns": [
+                {
+                    "Name": "id",
+                    "Type": "double"
+                },
+                {
+                    "Name": "full_name",
+                    "Type": "string"
+                }
+            ],
+            "Location": "s3://glue-job-test-destination-bucket/person/",
+            "InputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat",
+            "OutputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat",
+            "Compressed": false,
+            "NumberOfBuckets": -1,
+            "SerdeInfo": {
+                "SerializationLibrary": "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe",
+                "Parameters": {
+                    "serialization.format": "1"
+                }
+            },
+            "BucketColumns": [],
+            "SortColumns": [],
+            "Parameters": {
+                "CrawlerSchemaDeserializerVersion": "1.0",
+                "CrawlerSchemaSerializerVersion": "1.0",
+                "UPDATED_BY_CRAWLER": "customer_person",
+                "averageRecordSize": "89",
+                "classification": "parquet",
+                "compressionType": "none",
+                "objectCount": "7",
+                "recordCount": "100",
+                "sizeKey": "12647",
+                "typeOfData": "file"
+            },
+            "StoredAsSubDirectories": false
+        },
+        "PartitionKeys": [
+            {
+                "Name": "gender",
+                "Type": "string"
+            },
+            {
+                "Name": "age",
+                "Type": "string"
+            }
+        ],
+        "TableType": "EXTERNAL_TABLE",
+        "Parameters": {
+            "CrawlerSchemaDeserializerVersion": "1.0",
+            "CrawlerSchemaSerializerVersion": "1.0",
+            "UPDATED_BY_CRAWLER": "customer_person",
+            "averageRecordSize": "89",
+            "classification": "parquet",
+            "compressionType": "none",
+            "objectCount": "7",
+            "recordCount": "100",
+            "sizeKey": "12647",
+            "typeOfData": "file"
+        },
+        "CreatedBy": "arn:aws:sts::588942721560:assumed-role/AWSGlueServiceRole-crawler/AWS-Crawler",
+        "IsRegisteredWithLakeFormation": false,
+        "CatalogId": "588942721560"
+    },
+    "ResponseMetadata": {
+        "RequestId": "84d46abf-4cf0-4b08-91b4-42c855ffeac6",
+        "HTTPStatusCode": 200,
+        "HTTPHeaders": {
+            "date": "Sun, 05 Sep 2021 15:16:50 GMT",
+            "content-type": "application/x-amz-json-1.1",
+            "content-length": "1606",
+            "connection": "keep-alive",
+            "x-amzn-requestid": "84d46abf-4cf0-4b08-91b4-42c855ffeac6"
+        },
+        "RetryAttempts": 0
+    }
+}
