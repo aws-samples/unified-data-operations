@@ -56,6 +56,7 @@ jobs:
         uses: peter-evans/create-pull-request@v4
         with:
           title: "release version: ${{ env.VERSION }}"
+          branch: release-${{ env.VERSION }}
           delete-branch: true
           base: main
           labels: |
