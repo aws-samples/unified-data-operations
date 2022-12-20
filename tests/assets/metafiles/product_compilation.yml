@@ -1,0 +1,20 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+schema_version: 1.rc-1
+product:
+  id: fixture
+  owner: jane@acme.com
+  description: some description is required
+  version: "1.0.0"
+  engine: glue
+  pipeline:
+    schedule: "0 3 * * *"
+    tasks:
+      - id: process fixtures
+        inputs:
+          - model: data_product_a.person
+          - model: data_product_b.movies
+          - model: ratings
+        outputs:
+          - model: transaction

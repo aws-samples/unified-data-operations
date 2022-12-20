@@ -1,0 +1,37 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+product:
+  id: sport_events
+  version: "1.0.0"
+  description: Sporting Events
+  pipeline:
+    schedule: "0 3 * * *"
+    tasks:
+      - id: extract_sport_events
+        logic:
+          module: builtin.ingest
+        input:
+          - id: events
+            type: connection
+            connection_id: test_db_connection
+            table: dms_sample.sporting_event
+            model: event
+      - id: extract_locations
+        logic:
+          module: builtin.ingest
+        input:
+          - id: locations
+            type: connection
+            connection_id: test_db_connection
+            table: dms_sample.sport_location_int
+            model: location
+      - id: extract_teams
+        logic:
+          module: builtin.ingest
+        input:
+          - id: teams
+            type: connection
+            connection_id: test_db_connection
+            table: dms_sample.sport_team_int
+            model: team

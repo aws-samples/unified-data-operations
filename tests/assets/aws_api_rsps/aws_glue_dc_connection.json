@@ -1,0 +1,34 @@
+{
+  "Connection": {
+    "ConnectionProperties": {
+      "JDBC_CONNECTION_URL": "jdbc:postgresql://deng-pub-immersion-day.cofepwz7osto.eu-west-1.rds.amazonaws.com:5432/sportstickets",
+      "JDBC_ENFORCE_SSL": "false",
+      "PASSWORD": "some_pass",
+      "USERNAME": "some_username"
+    },
+    "ConnectionType": "JDBC",
+    "CreationTime": "2021-08-11 15:44:08.285000+02:00",
+    "Description": "The connection to the test database",
+    "LastUpdatedTime": "2021-08-11 15:44:08.285000+02:00",
+    "Name": "test_db_connection",
+    "PhysicalConnectionRequirements": {
+      "AvailabilityZone": "eu-central-1a",
+      "SecurityGroupIdList": [
+        "sg-00d42f53e8f8b1963"
+      ],
+      "SubnetId": "subnet-0cbf5810a184046ce"
+    }
+  },
+  "ResponseMetadata": {
+    "HTTPHeaders": {
+      "connection": "keep-alive",
+      "content-length": "566",
+      "content-type": "application/x-amz-json-1.1",
+      "date": "Mon, 30 Aug 2021 12:36:13 GMT",
+      "x-amzn-requestid": "8f3e12d5-9626-4407-b217-62ce80b8c460"
+    },
+    "HTTPStatusCode": 200,
+    "RequestId": "8f3e12d5-9626-4407-b217-62ce80b8c460",
+    "RetryAttempts": 0
+  }
+}

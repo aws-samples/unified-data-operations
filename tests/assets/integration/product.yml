@@ -1,0 +1,33 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+schema_version: 1.rc-1
+product:
+  id: product_a_customers
+  version: "1.0.0"
+  defaults:
+      storage:
+        location:
+      engine: glue
+  owner: jane.doe@acme.com
+  name: Customers
+  description: All customer data
+  pipeline:
+    schedule: "0 */1 * * *"
+    tasks:
+      - id: extract customer data
+        logic:
+          module: tasks.custom_business_logic
+          parameters:
+            create_timestamp: true
+        inputs:
+          - connection: test_db_connection
+            table: dms_sample.person_relevant
+        outputs:
+          - model: person_pii
+          - model: person_pub
+#      - id: save anonymized version of customers
+#        inputs:
+#          - model:
+#        outputs:
+#          - model: person_pub
