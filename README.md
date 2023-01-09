@@ -16,6 +16,8 @@ pip install data-product-processor
 
 ## Getting started
 ### Declare a basic data product
+Please see [Data product specification](docs/data-product-specification.md) for an overview on the files required to declare a data product.
+
 ### Process the data product
 From folder in which the previously created file are stored, run the data-product-processor as follows:
 
