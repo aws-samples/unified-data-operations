@@ -37,7 +37,7 @@ def build_spark_configuration(args, config: configparser.RawConfigParser, custom
         os.environ["AWS_PROFILE"] = args.aws_profile
         conf.set("fs.s3a.aws.credentials.provider", "com.amazonaws.auth.profile.ProfileCredentialsProvider")
     if hasattr(args, 'local') and args.local:
-        deps_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'spark_deps')
+        deps_path = os.path.join(os.getcwd(), 'spark_deps')
         local_jars = [file for file in os.listdir(deps_path) if file.endswith('.jar')]
         if hasattr(args, 'jars'):
             local_jars.extend([f'{deps_path}/{j}' for j in args.jars.strip().split(',')])
