@@ -14,7 +14,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="data-product-processor",
-    version="1.0.0",
+    version="1.0.1",
     description="The data product processor (dpp) is a library for dynamically creating and executing Apache Spark Jobs based on a declarative description of a data product.",
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -27,6 +27,9 @@ setup(
             "tests",
         )
     ),
+    py_modules=[
+        'main',
+    ],
     install_requires=requirements,
     include_package_data=True,
     platforms="any",
