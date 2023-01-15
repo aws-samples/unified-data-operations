@@ -145,14 +145,18 @@ def filter_output_models(task_outputs: List[SimpleNamespace], models: List[Simpl
 def execute(product: SimpleNamespace, task: SimpleNamespace, models: List[SimpleNamespace], product_path: str) \
         -> List[DataSet]:
     logger.info(f'Executing tasks > [{task.id}] for data product [{product.id}].')
+
     output_models = filter_output_models(task.outputs, models)
     input_dfs: list[DataSet] = run_processors('pre', load_inputs(product, task.inputs, models), pre_processors)
     input_dfs = enrich(input_dfs, product, output_models)
+
     task_logic_module = task.logic.module if hasattr(task, 'logic') and hasattr(task.logic,
                                                                                 'module') else 'builtin.ingest'
     task_logic_params = task.logic.parameters.__dict__ if hasattr(task, 'logic') and hasattr(task.logic,
                                                                                              'parameters') else {}
     output_dfs: list[DataSet] = transform(input_dfs, product_path, task_logic_module, task_logic_params)
     output_dfs = enrich(output_dfs, product, output_models)
+
     sink(run_processors('post', output_dfs, post_processors))
+    
     return output_dfs
