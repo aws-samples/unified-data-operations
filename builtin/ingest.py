@@ -7,14 +7,22 @@ import time
 import datetime
 from driver.task_executor import DataSet
 from pyspark.sql.functions import lit, unix_timestamp
+from pyspark.sql import SparkSession
 
 logger = logging.getLogger(__name__)
 
 
-def execute(inp_datasets: List[DataSet], create_timestamp=False):
+def execute(inp_datasets: List[DataSet], spark_session: SparkSession, create_timestamp=False):
     def resolve_data_set_id(ds: DataSet):
-        ds_id_full = ds.id.split('.')
-        return ds.model.id if ds.model else ds_id_full[len(ds_id_full)-1]
+        model_id_raw = None
+        if ds.model:
+            model_id_raw = ds.model.id
+        else:
+            model_id_raw = ds.id      
+        
+        id_tokens = model_id_raw.split('.')
+
+        return id_tokens[len(id_tokens)-1] 
 
     logger.info(f'create timestamp: {create_timestamp}')
     if create_timestamp:
