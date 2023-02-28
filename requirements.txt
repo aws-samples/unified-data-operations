@@ -11,4 +11,4 @@ boto3-stubs[glue]==1.18.34
 mypy-boto3-glue==1.18.34
 jsonschema==3.0.2
 pyspark==3.2.0
-numpy==1.22.1
+numpy>=1.19.5
