@@ -1,0 +1,28 @@
+schema_version: 1.rc-1
+product:
+  id: some_data_product
+  owner: jane@acme.com
+  description: some description is required
+  defaults:
+    storage:
+      options:
+        compression: gzip
+  version: "1.0.0"
+  engine: glue
+  pipeline:
+    schedule: "0 3 * * *"
+    tasks:
+      - id: process_some_files
+        logic:
+          module: builtin.ingest
+          parameters:
+            create_timestamp: true
+        inputs:
+          - file: s3://datalakebucket-588942721560/csvs/annual-enterprise-survey-2020-financial-year-provisional-size-bands-csv.csv
+            options:
+              type: csv
+              infer_schema: true
+              separator: ','
+              header: true
+        outputs:
+          - model: industry

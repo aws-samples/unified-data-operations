@@ -4,13 +4,27 @@
 from pathlib import Path
 from setuptools import setup, find_packages
 
-from pip._internal.req import parse_requirements
-requirements = [
-    str(ir.requirement) for ir in parse_requirements("requirements.txt", session=False)
-]
+with open(path.join(here, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
 
-this_directory = Path(__file__).parent
-long_description = (this_directory / "README.md").read_text()
+requirements = [str(ir.requirement) for ir in parse_requirements(
+    'requirements.txt', session=False)]
+
+
+class CleanCommand(Command):
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        system(
+            'rm -vrf ./build ./dist ./*.pyc ./*.tgz ./*.egg-info ./htmlcov '
+            './spark-warehouse ./driver/spark-warehouse ./metastore_db ./coverage_html ./.pytest_cache ./derby.log ./tests/local_results ./tasks/__pycache__')
+
 
 setup(
     name="data-product-processor",
@@ -35,6 +49,10 @@ setup(
     platforms="any",
     license="Apache License 2.0",
     zip_safe=False,
+    cmdclass={
+        'clean_all': CleanCommand,
+        # 'package': Package
+    },
     entry_points={
         "console_scripts": ["data-product-processor=main:main"],
     },

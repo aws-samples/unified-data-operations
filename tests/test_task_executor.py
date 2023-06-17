@@ -15,8 +15,8 @@ def test_end_to_end(spark_session, transaction_df: DataFrame, fixture_asset_path
         return dfs.get(props.table)
 
     def mock_output_handler(ds: DataSet):
-        if not (ds.id == 'transaction'): raise AssertionError
-        if not (ds.df.count() == transaction_df.count()): raise AssertionError
+        assert ds.id == 'transaction'
+        assert ds.df.count() == transaction_df.count()
         ds.df.show()
         ds.df.describe()
 

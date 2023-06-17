@@ -1,0 +1,18 @@
+schema_version: 1.rc-1
+product:
+  id: calendar
+  version: "1.0.0"
+  owner: jane.doe@acme.com
+  name: Customers
+  description: All customer data
+  pipeline:
+    schedule: "0 3 * * *"
+    tasks:
+      - id: aggregate_events
+        engine: glue
+        logic:
+          module: tasks.custom_aggregate_events
+        inputs:
+          - model: events
+          - model: teams
+          - model: locations

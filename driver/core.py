@@ -22,12 +22,26 @@ from driver import util
 
 Scalar = TypeVar('Scalar', int, float, bool, str)
 
+class ConfigContainer(SimpleNamespace):
+    def __init__(self, dictionary, **kwargs):
+        super().__init__(**kwargs)
+        for key, value in dictionary.items():
+            if isinstance(value, dict):
+                self.__setattr__(key, ConfigContainer(value))
+            else:
+                self.__setattr__(key, value)
+
+    def __getattribute__(self, value):
+        try:
+            return super().__getattribute__(value)
+        except AttributeError:
+            return None
 
 @dataclass
 class DataProduct:
     id: str
-    description: str = None
-    owner: str = None
+    description: str
+    owner: str
 
 
 @dataclass
@@ -52,7 +66,7 @@ class DataSet:
             return list()
 
     @property
-    def storage_location(self) -> str:
+    def storage_location(self) -> (str | None):
         if util.check_property(self, 'model.storage.location'):
             return self.model.storage.location
         else:
@@ -91,21 +105,21 @@ class DataSet:
             return 'default'
 
     @property
-    def storage_format(self) -> str:
+    def storage_format(self) -> (str | None):
         if self.model and hasattr(self.model, 'storage'):
             return self.model.storage.format if hasattr(self.model.storage, 'format') else None
         else:
             return None
 
     @property
-    def storage_options(self) -> SimpleNamespace:
+    def storage_options(self) -> (SimpleNamespace | None):
         if self.model and hasattr(self.model, 'storage') and hasattr(self.model.storage, 'options'):
             return self.model.storage.options
         else:
             return None
 
     @property
-    def product_id(self) -> str:
+    def product_id(self) -> (str | None):
         return self.product.id if self.product else None
 
     @product_id.setter
