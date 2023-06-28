@@ -1,7 +1,6 @@
 from boto3.session import Session
 from pyspark.sql import DataFrame
 from pytest import fixture
-from deprecated import CatalogService
 from pyspark.sql.types import (
     StringType,
     StructField,
@@ -9,7 +8,7 @@ from pyspark.sql.types import (
     IntegerType,
 )
 from driver.task_executor import DataSet
-from types import SimpleNamespace
+from driver import ConfigContainer
 from unittest import skip
 
 
@@ -42,9 +41,9 @@ def test_update(person_frame: DataFrame):
         df=person_frame,
         product_id='customers',
         model_id='person',
-        model=SimpleNamespace(
-            storage=SimpleNamespace(
-                options=SimpleNamespace(
+        model=ConfigContainer(
+            storage=ConfigContainer(
+                options=ConfigContainer(
                     location='s3://job-interpreter/data/customers'
                 )
             )

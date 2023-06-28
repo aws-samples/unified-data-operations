@@ -1,8 +1,10 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
+from os import path
+from pip._internal.req import parse_requirements
+from setuptools import setup, find_packages, Command
 
-from pathlib import Path
-from setuptools import setup, find_packages
+here = path.abspath(path.dirname(__file__))
 
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()

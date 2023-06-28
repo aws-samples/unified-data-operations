@@ -3,7 +3,7 @@
 
 import logging
 import os
-from types import SimpleNamespace
+from .core import ConfigContainer
 from urllib.parse import urlparse
 
 from pyspark.sql import DataFrame, DataFrameWriter
@@ -32,9 +32,9 @@ jdbc_drivers = {
 }
 
 
-def connection_input_handler(props: SimpleNamespace) -> DataFrame:
+def connection_input_handler(props: ConfigContainer) -> DataFrame:
     connection: Connection = __CONN_PROVIDER__(props.connection)
-    logger.info(connection.get_jdbc_connection_url(generate_creds=False))
+    logger.info(f'using input conection: {connection.get_jdbc_connection_url(generate_creds=False)}')
     jdbcDF = (
         get_spark()
         .read.format("jdbc")
@@ -50,7 +50,7 @@ def connection_input_handler(props: SimpleNamespace) -> DataFrame:
     return jdbcDF
 
 
-def file_input_handler(props: SimpleNamespace) -> DataFrame:
+def file_input_handler(props: ConfigContainer) -> DataFrame:
     def get_type():
         return props.options.type or 'parquet'
 
@@ -78,7 +78,7 @@ def file_input_handler(props: SimpleNamespace) -> DataFrame:
     return df
 
 
-def lake_input_handler(io_def: SimpleNamespace) -> DataFrame:
+def lake_input_handler(io_def: ConfigContainer) -> DataFrame:
     prod_id = resolve_data_product_id(io_def)
     model_id = resolve_data_set_id(io_def)
     data_product_table = __DATA_PRODUCT_PROVIDER__(prod_id, model_id)
@@ -86,7 +86,7 @@ def lake_input_handler(io_def: SimpleNamespace) -> DataFrame:
     return df
 
 
-def file_output_handler(ds: DataSet, options: SimpleNamespace):
+def file_output_handler(ds: DataSet, options: ConfigContainer):
     pass
 
 

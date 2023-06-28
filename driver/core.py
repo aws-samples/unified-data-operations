@@ -23,32 +23,33 @@ from driver import util
 Scalar = TypeVar('Scalar', int, float, bool, str)
 
 class ConfigContainer(SimpleNamespace):
-    def __init__(self, dictionary, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        for key, value in dictionary.items():
-            if isinstance(value, dict):
-                self.__setattr__(key, ConfigContainer(value))
-            else:
-                self.__setattr__(key, value)
+        #  for key, value in dictionary.items():
+            #  if isinstance(value, dict):
+                #  self.__setattr__(key, ConfigContainer(value))
+            #  else:
+                #  self.__setattr__(key, value)
 
     def __getattribute__(self, value):
         try:
             return super().__getattribute__(value)
         except AttributeError:
-            return None
+            #  super().__setattr__(value, SimpleNamespace())
+            return super().__getattribute__(value)
 
 @dataclass
 class DataProduct:
     id: str
-    description: str
-    owner: str
+    description: str = None
+    owner: str = None
 
 
 @dataclass
 class DataSet:
     id: str
     df: DataFrame
-    model: SimpleNamespace = None
+    model: ConfigContainer = None
     product: DataProduct = None
 
     @classmethod
@@ -77,7 +78,7 @@ class DataSet:
         if not self.model:
             raise Exception("There's no model on the dataset, so location cannot be set yet.")
         elif not hasattr(self.model, 'storage'):
-            storage = SimpleNamespace()
+            storage = ConfigContainer()
             setattr(storage, 'location', path)
             setattr(self.model, 'storage', storage)
         elif not hasattr(self.model.storage, 'location'):
@@ -112,7 +113,7 @@ class DataSet:
             return None
 
     @property
-    def storage_options(self) -> (SimpleNamespace | None):
+    def storage_options(self) -> (ConfigContainer | None):
         if self.model and hasattr(self.model, 'storage') and hasattr(self.model.storage, 'options'):
             return self.model.storage.options
         else:
@@ -226,7 +227,7 @@ class IOType(str, Enum):
 
 
 class ArtefactType(str, Enum):
-    models = 'model'
+    model = 'model'
     product = 'product'
 
 
@@ -391,7 +392,7 @@ class DataProductTable(BaseModel):
         return self.storage_location.replace('s3://', 's3a://')
 
 
-def resolve_data_set_id(io_def: SimpleNamespace) -> str:
+def resolve_data_set_id(io_def: ConfigContainer) -> str:
     def xtract_domain(s):
         if '.' in s:
             domain_elements = s.rsplit('.')
@@ -415,7 +416,7 @@ def resolve_data_set_id(io_def: SimpleNamespace) -> str:
         raise ConnectionNotFoundException(f'The IO Type {io_def.type} is not supported.')
 
 
-def resolve_data_product_id(io_def: SimpleNamespace) -> str:
+def resolve_data_product_id(io_def: ConfigContainer) -> str:
     if io_def.type == IOType.model:
         return getattr(io_def, io_def.type).rsplit('.')[0]
     elif io_def.type == IOType.connection:

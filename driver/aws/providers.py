@@ -101,7 +101,7 @@ def connection_provider(connection_id: str) -> Connection:
         return connection
     except Exception as e:
         raise ConnectionNotFoundException(
-            f"Connection [{connection_id}] could not be found. {str(e)}"
+            f"Connection [{connection_id}] could not be found. {str(e)}. Make sure you have the right region defined."
         )
 
 

@@ -3,7 +3,7 @@
 
 import datetime
 import os
-from types import SimpleNamespace
+from driver import ConfigContainer
 
 from pyspark.sql import DataFrame
 from pytest import fixture
@@ -28,8 +28,8 @@ def fixture_asset_path():
 
 
 @fixture(scope='module')
-def app_args() -> SimpleNamespace:
-    args = SimpleNamespace()
+def app_args() -> ConfigContainer:
+    args = ConfigContainer()
     setattr(args, 'default_data_lake_bucket', DEFAULT_BUCKET)
     return args
 

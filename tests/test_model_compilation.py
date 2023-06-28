@@ -40,7 +40,7 @@ def test_basic_model_compilation(fixture_asset_path, app_args):
 
 
 # def test_connection_with_model(metadata_path):
-#     args = SimpleNamespace()
+#     args = ConfigContainer()
 #     product = compile_product(metadata_path, args, prod_def_filename='product_correct_connection_w_model.yml')
 #     models = compile_models(metadata_path, product, def_file_name='model_correct.yml')
 #     assert len(models) == 2
@@ -73,14 +73,14 @@ def test_advanced_compilation_features(fixture_asset_path, app_args):
 
 # def test_mode_extend_compilation_non_specified_field():
 #     abs_product_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets')
-#     args = SimpleNamespace()
+#     args = ConfigContainer()
 #     product = compile_product(abs_product_path, args)
 #     models = compile_models(abs_product_path, product)
 
 
 def test_model_schema_correct(fixture_asset_path):
     product_def = util.load_yaml(os.path.join(fixture_asset_path, 'model_correct.yml'))
-    util.validate_schema(product_def, ArtefactType.models)
+    util.validate_schema(product_def, ArtefactType.model)
 
 
 def test_product_schema_correct(fixture_asset_path):

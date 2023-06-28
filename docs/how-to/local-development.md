@@ -68,13 +68,9 @@ mv jars/* .
 
 > **Note:** Don't forget to switch the new virtual environment in your IDE too.
 
-### Package creation
-
-Test whether the python package (wheel) can be build through which the data-product-processor is distributed.
-
+Install in the local environment
 ```commandline
-pip install -U pip wheel setuptools
-python3 setup.py bdist_wheel
+pip install -e .
 ```
 
 ### Local invocation of data-product-processor
@@ -103,6 +99,16 @@ Run the tests from command line (while the virtual environment is activated):
 ```commandline
 pytest
 ```
+
+### Package creation
+
+Test whether the python package (wheel) can be build through which the data-product-processor is distributed.
+
+```commandline
+pip install -U pip wheel setuptools
+python3 setup.py bdist_wheel
+```
+
 
 # Troubleshooting / common errors
 

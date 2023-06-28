@@ -31,7 +31,7 @@ Building the wheel package:
 pip install -U pip wheel setuptools
 python3 setup.py bdist_wheel
 ```
-As a result you should see 
+As a result you should see
 
 Also: make sure Java is installed. On OSX:
 
@@ -162,7 +162,7 @@ from pyspark.sql.types import (
     DoubleType
 )
 
-os.environ["AWS_PROFILE"] = 'finn'
+os.environ["AWS_PROFILE"] = '<your AWS profile name>'
 conf = SparkConf()
 conf.set("fs.s3a.aws.credentials.provider", "com.amazonaws.auth.profile.ProfileCredentialsProvider")
 conf.set("spark.jars", './spark_deps/postgresql-42.2.23.jar')
