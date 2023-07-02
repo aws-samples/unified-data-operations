@@ -86,6 +86,6 @@ Create a file ```pytest.ini``` and add Spark options:
 ```properties
 [pytest]
 spark_options=
-spark.jars.packages:com.amazon.deequ:deequ:1.2.2-spark-3.0
-spark.jars.excludes:net.sourceforge.f2j:arpack_combined_all
+spark.jars.packages=com.amazon.deequ:deequ:1.2.2-spark-3.0
+spark.jars.excludes=net.sourceforge.f2j:arpack_combined_all
 ```

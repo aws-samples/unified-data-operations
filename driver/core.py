@@ -1,9 +1,8 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-import json
 from urllib.parse import urlparse
-
+from botocore.client import logger
 from jsonschema import validate, ValidationError
 import os
 from types import SimpleNamespace

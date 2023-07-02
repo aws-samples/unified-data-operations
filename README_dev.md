@@ -140,7 +140,7 @@ pip install ptpython
 ptpython
 ```
 
-Type the following in the ptpython console:
+Type the following in the ptpython console:fs.s3a.aws.credentials.provider
 
 [optional] only if you encounter errors with the larger snippet bellow:
 ```python
@@ -184,7 +184,7 @@ df = spark.createDataFrame([(1, 'Jumanji(1995)', 'Adventure | Children | Fantasy
 Get catalog information:
 ```python
 import boto3, json
-session = boto3.Session(profile_name='finn', region_name='eu-central-1')
+session = boto3.Session(profile_name='<your profile>', region_name='eu-central-1')
 glue = session.client('glue')
 s = json.dumps(glue.get_table(DatabaseName='test_db', Name='person'), indent=4, default=str)
 print(s)

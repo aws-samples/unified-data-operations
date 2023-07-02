@@ -84,8 +84,8 @@ def init_system(args):
     config = read_config(product_path)
     custom_hook = get_custom_hook(product_path)
     driver.init(spark_config=build_spark_configuration(args, config, custom_hook))
-    logger.info(f'using Spark configuration: {get_spark().sparkContext.getConf().getAll()}')
-    logger.info(f'the following jar packages are deployed: {get_spark().sparkContext._jsc.sc().listJars()}')
+    logger.debug(f'using Spark configuration: {get_spark().sparkContext.getConf().getAll()}')
+    logger.debug(f'the following jar packages are deployed: {get_spark().sparkContext._jsc.sc().listJars()}')
     driver.install_dependencies(product_path)
     driver.register_data_source_handler('connection', connection_input_handler)
     driver.register_data_source_handler('model', lake_input_handler)
@@ -106,7 +106,6 @@ def init_system(args):
 
 def main():
     try:
-        logging.basicConfig(level=logging.INFO)
         parser = argparse.ArgumentParser(argument_default=argparse.SUPPRESS)
         parser.add_argument('--JOB_ID', help='the unique id of this Glue job')
         parser.add_argument('--JOB_RUN_ID', help='the unique id of this Glue job run')
@@ -120,7 +119,12 @@ def main():
         parser.add_argument('--jars', help='extra jars to be added to the Spark context')
         parser.add_argument('--additional-python-modules', help='this is used by Glue, ignored by this code')
         parser.add_argument('--default_data_lake_bucket', help='Data Mesh output S3 bucket name', default=None)
+        parser.add_argument('--log_level', choices=['debug', 'info', 'warning'], help='Set the desired log level', default='info')
         args, unknown = parser.parse_known_args()
+        logging.basicConfig()
+        log_level = logging.getLevelName(args.log_level.upper())
+        logger.setLevel(log_level)
+        logging.getLogger('driver').setLevel(log_level)
         logger.info(f"KNOWN_ARGS: {args}")
         logger.info(f"UNKNOWN_ARGS: {unknown}")
         logger.info(f'PATH: {os.environ["PATH"]}')
