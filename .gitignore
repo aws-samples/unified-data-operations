@@ -7,7 +7,7 @@ __pycache__/
 .DS_Store
 *.py[cod]
 *$py.class
-.accelero
+pyrightconfig.json
 # C extensions
 *.so
 .vscode
