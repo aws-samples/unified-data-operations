@@ -1,21 +1,19 @@
-# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 import os
-from .core import ConfigContainer
 from urllib.parse import urlparse
-
 from pyspark.sql import DataFrame, DataFrameWriter
-from driver.aws import glue_api, datalake_api
-from driver.core import Connection, resolve_data_set_id, resolve_data_product_id
+from driver.aws import datalake_api, glue_api
+from driver.core import Connection, resolve_data_product_id, resolve_data_set_id
 from driver.driver import get_spark
 from driver.task_executor import DataSet
+from driver.util import check_property
+from .core import ConfigContainer
 
 __CONN_PROVIDER__ = None
 __DATA_PRODUCT_PROVIDER__ = None
 
-from driver.util import check_property
+
 
 logger = logging.getLogger(__name__)
 

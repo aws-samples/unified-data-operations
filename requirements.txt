@@ -12,3 +12,6 @@ mypy-boto3-glue==1.18.34
 jsonschema==3.0.2
 pyspark==3.4.0
 numpy>=1.19.5
+click
+prompt_toolkit
+

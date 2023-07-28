@@ -19,6 +19,8 @@ dist/
 downloads/
 eggs/
 .eggs/
+package.json
+package-lock.json
 lib/
 lib64/
 parts/

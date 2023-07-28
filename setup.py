@@ -56,6 +56,8 @@ setup(
         # 'package': Package
     },
     entry_points={
-        "console_scripts": ["data-product-processor=main:main"],
+        "console_scripts": [
+            "data-product-processor=main:main",
+            "udo=cli.main:main"],
     },
 )
