@@ -11,7 +11,7 @@ from typing import Iterable
 from .bindings import kb
 import driver.aws.providers
 import click
-from cli.common import non_empty_prompt, style, aws, collect_bool, collect_key_value_pair
+from cli.common import collect_key_value_pairs, non_empty_prompt, style, aws, collect_bool, collect_key_value_pairs
 from prompt_toolkit import HTML, print_formatted_text
 #  from prompt_toolkit.application import get_app
 #  from prompt_toolkit.document import Document
@@ -113,21 +113,13 @@ def get_schema():
 
 
 def get_pipeline():
-    def get_logic():
+    def get_logic(default_task_id: str):
         if not collect_bool('Do you want to add a custom logic? '):
             return None
-        module_name = non_empty_prompt('Gimme stuff: ', default='tasks.')
-        params = dict()
-        if collect_bool('Do you want to add params?'):
-            while True:
-                kvs = collect_key_value_pair('Parameter')
-                params[kvs[0]] = kvs[1]
-                if not collect_bool('Add another parameter? '):
-                    break
         return {
                 'logic': {
-                    'module': module_name,
-                    'parameters': params
+                    'module': non_empty_prompt('Provide module name: ', default=f'tasks.{default_task_id}'),
+                    'parameters': collect_key_value_pairs(question='Do you want to add params?', key_name='parameter')
                     }
                 }
     def get_ios(prefix: str):
@@ -141,7 +133,7 @@ def get_pipeline():
         task_id = non_empty_prompt('Task ID: ')
         return {
             'id': task_id,
-            'logic': get_logic(),
+            'logic': get_logic(task_id),
             'inputs': get_ios('Input: '),
             'outputs': get_ios('Output: ')
             }
@@ -151,36 +143,44 @@ def get_pipeline():
         tasks.append(get_task())
         if not collect_bool('Add another one task? '):
             break
+    #todo: add cron job validation and add upstream dependency
     return {
             'schedule': trigger,
             'tasks': tasks
             }
 
+def collect_data_product_definition(name: str):
+        return {
+                'schema': get_schema(),
+                'product': {
+                    'id': non_empty_prompt("Unique data product ID: ", default=name),
+                    'version': non_empty_prompt('Version: ', default='1.0.0'),
+                    'name': non_empty_prompt('Product name: '),
+                    'description': non_empty_prompt('Description: '),
+                    'owner': non_empty_prompt('Owner e-mail: '),
+                    'pipeline': get_pipeline(),
+                    }
+                }
+
+def collect_model_definition():
+    return {}
+
 @click.command(name="create")
-@click.option("-n", "--name", required=True, type=str)
+@click.option("-n", "--name", required=True, type=str, help='Name of the data product')
 @aws
 def create_data_product(name):
     try:
-        dp_id = non_empty_prompt("Unique data product ID: ", default=name)
-        schema = get_schema()
-        description = non_empty_prompt('Description: ')
-        owner = non_empty_prompt('Owner e-mail: ')
-        pipeline = get_pipeline()
-        #  schedule = prompt('Schedule: ')
-        #  task_id = prompt('Task id: ')
-        #  ds_output = prompt('Outputs: ')
-        #  def prompt_autocomplete():
         #      app = get_app()
         #      b = app.current_buffer
-        #      print(b.complete_state)
         #      if b.complete_state:
         #          b.complete_next()
         #      else:
         #          b.start_completion(select_first=False)
-
            #  b.insert_text(" ")
+        dp_definition = collect_data_product_definition(name=name)
+        dp = dp_definition.get('product')
         print_formatted_text(
-            HTML(f"Product name: <green>{name}</green> and ID:  <green>{dp_id}</green>"),
+            HTML(f"Product name: <green>{dp.get('name')}</green> and ID:  <green>{dp.get('id')}</green>"),
             style=style
         )
         #  print_formatted_text(HTML(f"Input: <green>{ds_input}</green>"), style=style)
