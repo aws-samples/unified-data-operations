@@ -14,4 +14,5 @@ pyspark==3.4.0
 numpy>=1.19.5
 click
 prompt_toolkit
+Jinja2
 

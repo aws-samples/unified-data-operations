@@ -1,0 +1,42 @@
+import os
+import driver
+import tasks.custom_business_logic
+from typing import List
+from types import SimpleNamespace
+from pyspark.sql import DataFrame
+from driver import DataSet
+from driver.processors import schema_checker, constraint_processor, transformer_processor
+
+
+def test_{{ tasks_name }}(spark_session, {{ input }}: DataFrame):
+    data_source = DataSet(id='dms_sample.person_relevant', df=person_df)
+    results: List[DataSet] = tasks.custom_business_logic.execute([data_source], spark_session)
+    for dataset in results:
+        assert dataset.id in ['person_pub', 'person_pii', 'person_pub_analysis']
+        if dataset.id in ['person_pub', 'person_pii']:
+            assert dataset.df.count() == person_df.count()
+        dataset.df.show()
+        dataset.df.describe()
+
+
+def test_end_to_end(spark_session, spark_context, person_df: DataFrame, app_args):
+    current_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
+    print(f'{current_folder}')
+
+    def mock_input_handler(input_definition: SimpleNamespace):
+        dfs = {"dms_sample.person_relevant": person_df}
+        return dfs.get(input_definition.table)
+
+    def mock_output_handler(dataset: DataSet):
+        assert dataset.id in ['person_pub', 'person_pii', 'person_pub_analysis']
+        if dataset.id in ['person_pub', 'person_pii']:
+    assert dataset.df.count() == person_df.count()
+        dataset.df.show()
+        dataset.df.describe()
+
+    driver.init(spark_session)
+    driver.register_data_source_handler('connection', mock_input_handler)
+    driver.register_postprocessors(transformer_processor, schema_checker, constraint_processor)
+    driver.register_output_handler('default', mock_output_handler)
+    driver.register_output_handler('lake', mock_output_handler)
+    driver.process_product(app_args, current_folder)

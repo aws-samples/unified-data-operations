@@ -29,9 +29,9 @@ class CleanCommand(Command):
 
 
 setup(
-    name="data-product-processor",
-    version="1.0.4",
-    description="The data product processor (dpp) is a library for dynamically creating and executing Apache Spark Jobs based on a declarative description of a data product.",
+    name="unified-data-platform",
+    version="1.0.5",
+    description="Data Operations Automation for executing vanilla Spark and SQL.",
     long_description=long_description,
     long_description_content_type='text/markdown',
     author="Amazon Web Services",

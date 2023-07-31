@@ -1,17 +1,23 @@
+import io
+from pydoc import resolve
 import traceback
 import re
+import os
+import click
+import yaml
+import driver
+from driver.core import ConfigContainer, resolve_data_set_id
+from driver.util import parse_dict_into_object
+from jinja2 import Environment, FileSystemLoader, environment
 from pathlib import Path
 from prompt_toolkit import prompt
-import prompt_toolkit
 from prompt_toolkit.completion import Completer, WordCompleter, Completion, CompleteEvent
 from prompt_toolkit.document import Document
 from prompt_toolkit.shortcuts import CompleteStyle
 from prompt_toolkit.validation import Validator
 from typing import Iterable
 from .bindings import kb
-import driver.aws.providers
-import click
-from cli.common import collect_key_value_pairs, non_empty_prompt, style, aws, collect_bool, collect_key_value_pairs
+from cli.common import collect_key_value_pairs, non_empty_prompt, style, aws, collect_bool, collect_key_value_pairs, validated_prompt
 from prompt_toolkit import HTML, print_formatted_text
 #  from prompt_toolkit.application import get_app
 #  from prompt_toolkit.document import Document
@@ -21,6 +27,7 @@ from prompt_toolkit import HTML, print_formatted_text
 #  from cli.data_product import get_io_type
 
 io_types = ['connection', 'model', 'file']
+jinja_environment = Environment(loader=FileSystemLoader(os.path.join(Path(__file__).parent, 'templates')))
 
 class IOCompleter(Completer):
     def __init__(self)-> None:
@@ -90,18 +97,30 @@ def get_io_type(prompt_text: str):
             return len(text.split(':',1)[1].split('.'))>=2
         elif tokens[0] == 'file':
             return True
+    def parse_url(io_url):
+        fragments = io_url.split(':',1)
+        if fragments[0] == 'connection':
+            connection_parts = fragments[1].split('.')
+            return {
+                    'connection': connection_parts[0].strip("' "),
+                    'table': connection_parts[1]
+                    }
+        elif fragments[0] == 'model':
+            return {'model': fragments[1].strip("' ")}
+        elif fragments[0] == 'file':
+            return {'file': fragments[1].strip("' '")}
+        else: return io_url
 
     io_validator = Validator.from_callable(validate_io, error_message = 'Required pattern: type: [connection].schema.table', move_cursor_to_end=True)
-    return prompt(prompt_text, completer=IOCompleter(),
+    return parse_url(prompt(prompt_text, completer=IOCompleter(),
                       key_bindings=kb,
                       validator=io_validator,
                       complete_style=CompleteStyle.COLUMN,
-                      complete_while_typing=True)
+                      complete_while_typing=True))
 
 def get_schema():
     container_folder = Path(__file__).parent.parent
-    schema_folder = Path(f'{container_folder}/driver/schema')
-    #  current_dir = Path('.').parent()
+    schema_folder = Path(os.path.join(container_folder, 'driver','schema'))
     supported_schemas = [x.name for x in schema_folder.iterdir() if x.is_dir()]
     supported_schemas.sort()
     completer = WordCompleter(words=supported_schemas)
@@ -117,10 +136,8 @@ def get_pipeline():
         if not collect_bool('Do you want to add a custom logic? '):
             return None
         return {
-                'logic': {
-                    'module': non_empty_prompt('Provide module name: ', default=f'tasks.{default_task_id}'),
-                    'parameters': collect_key_value_pairs(question='Do you want to add params?', key_name='parameter')
-                    }
+                'module': non_empty_prompt('Provide module name: ', default=f'tasks.{default_task_id}'),
+                'parameters': collect_key_value_pairs(question='Do you want to add params?', key_name='parameter')
                 }
     def get_ios(prefix: str):
         ios = list()
@@ -131,12 +148,15 @@ def get_pipeline():
         return ios
     def get_task():
         task_id = non_empty_prompt('Task ID: ')
-        return {
+        task_dict = {
             'id': task_id,
-            'logic': get_logic(task_id),
             'inputs': get_ios('Input: '),
             'outputs': get_ios('Output: ')
             }
+        logic = get_logic(task_id)
+        if logic:
+            task_dict.update(logic = logic)
+        return task_dict
     trigger = non_empty_prompt('Trigger: ')
     tasks = list()
     while True:
@@ -150,12 +170,13 @@ def get_pipeline():
             }
 
 def collect_data_product_definition(name: str):
+        product_name = non_empty_prompt('Product name: ', default=name)
         return {
                 'schema': get_schema(),
                 'product': {
-                    'id': non_empty_prompt("Unique data product ID: ", default=name),
+                    'id': non_empty_prompt("Unique data product ID: ", default=product_name.replace(' ', '_')),
                     'version': non_empty_prompt('Version: ', default='1.0.0'),
-                    'name': non_empty_prompt('Product name: '),
+                    'name': product_name,
                     'description': non_empty_prompt('Description: '),
                     'owner': non_empty_prompt('Owner e-mail: '),
                     'pipeline': get_pipeline(),
@@ -164,6 +185,43 @@ def collect_data_product_definition(name: str):
 
 def collect_model_definition():
     return {}
+
+def generate_task_logic(
+                        inputs: list[ConfigContainer]|None = None,
+                        outputs: list[ConfigContainer]|None = None,
+                        params: list[ConfigContainer]|None = None):
+    task_template = jinja_environment.get_template('task_logic.py.j2')
+    def xtract_io_name(io_entry: ConfigContainer):
+        io_type: str = list(set(dir(io_entry)) & set(io_types))[0]
+        extractors = {
+                'connection': lambda ioe: ioe.table.split('.')[-1],
+                'model': lambda ioe: ioe.model.split('.')[-1],
+                'file': lambda ioe: ioe.file.split('/')[-1]
+                }
+        return extractors.get(io_type)(io_entry)
+    input_ids = [xtract_io_name(io) for io in inputs]
+    output_ids = [xtract_io_name(io) for io in outputs]
+    if params is not None:
+        params = params.__dict__.keys()
+    return task_template.render(inputs=input_ids, outputs=output_ids, params=params)
+
+def generate_product(product_dict: dict, models_dict: dict):
+    product = parse_dict_into_object(product_dict).product
+    models = parse_dict_into_object(models_dict)
+    product_folder = os.path.join(os.getcwd(), product.id.replace(' ', '_'))
+    os.makedirs(os.path.join(product_folder, 'tasks'))
+    os.makedirs(os.path.join(product_folder, 'tests'))
+    with open(os.path.join(product_folder, 'product.yml'), 'w') as outfile:
+        yaml.dump(product_dict, outfile, sort_keys=False, default_flow_style=False)
+    for task in product.pipeline.tasks:
+        if task.logic is not None:
+            print(task)
+            content = generate_task_logic(inputs=task.inputs,
+                                          outputs=task.outputs,
+                                          params=task.logic.parameters)
+            module_file_name = f"{task.logic.module.split('.')[-1]}.py"
+            with open(os.path.join(product_folder, 'tasks', module_file_name), 'w') as outfile:
+                outfile.write(content)
 
 @click.command(name="create")
 @click.option("-n", "--name", required=True, type=str, help='Name of the data product')
@@ -178,11 +236,13 @@ def create_data_product(name):
         #          b.start_completion(select_first=False)
            #  b.insert_text(" ")
         dp_definition = collect_data_product_definition(name=name)
+        models_definition = collect_model_definition()
         dp = dp_definition.get('product')
         print_formatted_text(
             HTML(f"Product name: <green>{dp.get('name')}</green> and ID:  <green>{dp.get('id')}</green>"),
             style=style
         )
+        generate_product(dp_definition, models_definition)
         #  print_formatted_text(HTML(f"Input: <green>{ds_input}</green>"), style=style)
     except Exception as ex:
         traceback.print_exc()

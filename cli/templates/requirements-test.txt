@@ -1,0 +1,9 @@
+pyspark
+pyspark-stubs
+pytest-spark
+pytest-mock
+pytest-helpers-namespace
+pytest-env
+pytest-cov
+pytest
+numpy

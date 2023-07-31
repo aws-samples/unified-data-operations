@@ -1,0 +1,24 @@
+{# templates/task_logic.py #}
+
+import time
+import datetime
+from typing import List
+from pyspark.sql.functions import concat, col, lit, unix_timestamp
+from driver.common import find_dataset_by_id
+from driver.task_executor import DataSet
+from pyspark.sql import SparkSession, Row
+
+
+def execute(inp_dfs: List[DataSet], spark_session: SparkSession, {% if params is defined and params %} {% for param in params %} {{ param| join(', ') }} {% endfor %} {% endif %}):
+    {% for input in inputs %}
+    {{ input.split('.')| last }}_ds = find_dataset_by_id(inp_dfs, '{{ input }}')
+    {% endfor %}
+    # example of custom logic, adding a new timestamp column to the processed data
+    timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+    {{ inputs[0].split('.') | last }}_ds.df = ds.df.withColumn('time', unix_timestamp(lit(timestamp), 'yyyy-MM-dd HH:mm:ss').cast("timestamp"))
+
+    {% for output in outputs %}
+    {{ output }}_ds = DataSet(id='{{ output }}', df={{ inputs[0].split('.') | last }}.df)
+    {% endfor %}
+    return [{{ outputs| join('_ds, ') }}]
+

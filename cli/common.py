@@ -1,16 +1,14 @@
-from operator import contains
-import boto3
 import click
+import boto3
 import functools
-
-import prompt_toolkit
-from pyspark.sql.functions import lower
 import driver
 import driver.aws.providers
+from typing import Optional, Callable
 from prompt_toolkit.styles import Style
 from prompt_toolkit import HTML, print_formatted_text
 from prompt_toolkit.validation import Validator
 from prompt_toolkit import prompt
+from cli.core import ChainValidator
 
 boto_session = None
 style = Style.from_dict(
@@ -44,9 +42,15 @@ def aws(func):
         return func(*args, **kwargs)
     return wrapper
 
-def non_empty_prompt(topic_text: str, default: str|None = None):
-    non_empty_validator = Validator.from_callable(lambda x: x is not None and len(x)>0,
-                                                  error_message='Please provide a value')
+def validated_prompt(request_text: str, default_value: Optional[str], *callables: Callable[[str],bool]):
+    chain_validator = ChainValidator(move_cursor_to_end=True, *callables)
+    if default_value is not None:
+        return prompt(request_text, validator=chain_validator, default=default_value)
+    else:
+        return prompt(request_text, validator=chain_validator)
+
+def non_empty_prompt(topic_text: str, default: Optional[str] = None):
+    non_empty_validator = Validator.from_callable(lambda x: x is not None and len(x)>0, error_message='Please provide a value')
     if default is not None:
         return prompt(topic_text, validator=non_empty_validator, default=default)
     else:
@@ -54,10 +58,10 @@ def non_empty_prompt(topic_text: str, default: str|None = None):
 
 def collect_key_value_pairs(question: str, key_name: str):
     def collect_key_value_pair(topic_text: str):
-        semicolon_validator = Validator.from_callable(lambda x: ':' in x and len(x.split(':')[1])>0,
-                                                  error_message='Use a semicolon separator.')
-        kvs = prompt(f'{topic_text}: ', validator=semicolon_validator)
-        return [val.strip() for val in kvs.split(':')]
+        keyval_validator = Validator.from_callable(lambda x: '=' in x and len(x.split('=')[1])>0,
+                                                  error_message='Use an equal sign separator.')
+        kvs = prompt(f'{topic_text}: ', validator=keyval_validator, validate_while_typing=False)
+        return [val.strip("' ") for val in kvs.split('=')]
 
     params = dict()
     if collect_bool(question):
