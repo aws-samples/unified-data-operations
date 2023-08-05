@@ -31,6 +31,7 @@ Building the wheel package:
 pip install -U pip wheel setuptools
 python3 setup.py bdist_wheel
 ```
+
 As a result you should see
 
 Also: make sure Java is installed. On OSX:
@@ -54,7 +55,7 @@ wget https://jdbc.postgresql.org/download/postgresql-42.2.23.jar
 
 Install the AWS dependencies for hadoop:
 
-1. check the current version of hadoop: ```ll -al .venv/lib/python3.9/site-packages/pyspark/jars |grep hadoop```
+1. check the current version of hadoop: `ll -al .venv/lib/python3.9/site-packages/pyspark/jars |grep hadoop`
 2. create a POM file in the spark_deps folder (make sure the version field matches the current hadoop version):
 
 ```xml
@@ -87,6 +88,7 @@ Set the following parameters onto the execution context in your IDE:
 ```
 
 Alternatively you can run the whole solution from the command line:
+
 ```commandline
 data-product-processor --JOB_NAME "TEST" --product_path /tests/assets/integration --default_data_lake_bucket <SOME_DATA_LAKE_BUCKEY> --aws_profile <your-aws-account-profile> --aws_region <your-region>
 ```
@@ -106,11 +108,13 @@ pytest
 ## Troubleshooting
 
 On error:
+
 ```
 py4j.protocol.Py4JError: org.apache.spark.api.python.PythonUtils.getPythonAuthSocketTimeout does not exist in the JVM
 ```
 
 Type this:
+
 ```commandline
 export PYTHONPATH="${SPARK_HOME}/python;${SPARK_HOME}/python/lib/py4j-0.10.9-src.zip;${PYTHONPATH}"
 ```
@@ -122,6 +126,7 @@ export PYTHONPATH="${SPARK_HOME}/python;${SPARK_HOME}/python/lib/py4j-0.10.9-src
 ```commandline
 [NOT FOUND  ] org.slf4j#slf4j-api;1.7.5!slf4j-api.jar
 ```
+
 **Solution**
 Remove dir in .ivy2/cache, ivy2/jars and .m2/repository
 
@@ -143,11 +148,14 @@ ptpython
 Type the following in the ptpython console:fs.s3a.aws.credentials.provider
 
 [optional] only if you encounter errors with the larger snippet bellow:
+
 ```python
 import findspark
 findspark.init()
 ```
+
 Interactive development:
+
 ```python
 import sys
 import os
@@ -181,11 +189,39 @@ df = spark.createDataFrame([(1, 'Jumanji(1995)', 'Adventure | Children | Fantasy
                                           (2, 'Heat (1995)', 'Action|Crime|Thriller')],
                                          movie_schema)
 ```
+
 Get catalog information:
+
 ```python
 import boto3, json
 session = boto3.Session(profile_name='<your profile>', region_name='eu-central-1')
 glue = session.client('glue')
 s = json.dumps(glue.get_table(DatabaseName='test_db', Name='person'), indent=4, default=str)
 print(s)
+```
+
+## Setting up a Spark session with the UDO Driver API
+
+```python
+import driver
+import driver.aws.providers
+from pyspark import SparkConf
+from driver import io_handlers
+from driver import task_executor
+from driver.util import parse_dict_into_object, resolve_io_type, build_spark_configuration
+from driver.aws.providers import connection_provider, datalake_provider
+from driver.io_handlers import connection_input_handler, lake_input_handler, file_input_handler
+from argparse import Namespace
+
+driver.aws.providers.init(profile='<your profile>', region='<you-region>')
+driver.init(spark_config=build_spark_configuration(Namespace(local=True)))
+io_handlers.init(connection_provider, datalake_provider)
+dsc_input_obj = parse_dict_into_object({'connection':'sportstickets', 'table':'dms_sample.person_relevant'})
+setattr(dsc_input_obj, 'type', resolve_io_type(dsc_input_obj))
+driver.register_data_source_handler('connection', connection_input_handler)
+driver.register_data_source_handler('model', lake_input_handler)
+driver.register_data_source_handler('file', file_input_handler)
+handle_input = task_executor.data_src_handlers.get(dsc_input_obj.type)
+df = handle_input(dsc_input_obj)
+<!-- df = io_handlers.connection_input_handler(props=dsc_input_obj) -->
 ```

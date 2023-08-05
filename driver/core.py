@@ -1,10 +1,11 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+import os
+from typing import Optional
 from urllib.parse import urlparse
 from botocore.client import logger
 from jsonschema import validate, ValidationError
-import os
 from types import SimpleNamespace
 from dataclasses import dataclass
 from pyspark.sql import DataFrame
@@ -66,7 +67,7 @@ class DataSet:
             return list()
 
     @property
-    def storage_location(self) -> (str | None):
+    def storage_location(self) -> Optional[str]:
         if util.check_property(self, 'model.storage.location'):
             return self.model.storage.location
         else:

@@ -30,14 +30,14 @@ jdbc_drivers = {
 }
 
 
-def connection_input_handler(props: ConfigContainer) -> DataFrame:
-    connection: Connection = __CONN_PROVIDER__(props.connection)
+def connection_input_handler(input_definition: ConfigContainer) -> DataFrame:
+    connection: Connection = __CONN_PROVIDER__(input_definition.connection)
     logger.info(f'using input conection: {connection.get_jdbc_connection_url(generate_creds=False)}')
     jdbcDF = (
         get_spark()
         .read.format("jdbc")
         .option("url", connection.get_jdbc_connection_url(generate_creds=False))
-        .option("dbtable", props.table)
+        .option("dbtable", input_definition.table)
         .option("user", connection.principal)
         .option("password", connection.credential.get_secret_value())
         .option("driver", jdbc_drivers.get(connection.type.name))
