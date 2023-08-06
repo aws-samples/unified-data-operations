@@ -8,13 +8,14 @@ from driver import io_handlers
 #  import driver.aws.providers
 from driver.aws.providers import connection_provider, datalake_provider
 from driver.io_handlers import connection_input_handler, lake_input_handler, file_input_handler
-from pyspark import SparkConf
+from driver.util import build_spark_configuration
 from typing import Optional, Callable
 from prompt_toolkit.styles import Style
 from prompt_toolkit import HTML, print_formatted_text
 from prompt_toolkit.validation import Validator
 from prompt_toolkit import prompt
 from cli.core import ChainValidator
+from argparse import Namespace
 
 boto_session = None
 style = Style.from_dict(
@@ -46,7 +47,8 @@ def aws(func):
             boto_session = boto3.Session()
         print_formatted_text(
             HTML(
-                f"Using AWS account <green>{account}</green> profile <green>{boto_session.profile_name}</green> and region <green>{boto_session.region_name}</green>"
+                f"Using AWS account <green>{account}</green> profile <green>{boto_session.profile_name}</green> "
+                f"and region <green>{boto_session.region_name}</green>"
             ),
             style=style,
         )
@@ -59,7 +61,7 @@ def aws(func):
 def driver_subsystem(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        driver.init(spark_erbgfucgjrconfig=SparkConf())
+        driver.init(spark_config=build_spark_configuration(Namespace(local=True)))
         io_handlers.init(connection_provider, datalake_provider)
         driver.register_data_source_handler("connection", connection_input_handler)
         driver.register_data_source_handler("model", lake_input_handler)
@@ -90,7 +92,9 @@ def non_empty_prompt(topic_text: str, default: Optional[str] = None):
 def collect_key_value_pairs(question: str, key_name: str):
     def collect_key_value_pair(topic_text: str):
         keyval_validator = Validator.from_callable(
-            lambda x: "=" in x and len(x.split("=")[1]) > 0, error_message="Use an equal sign separator."
+            lambda x: "=" in x and len(x.split("=")[1]) > 0,
+            error_message="Use an equal sign separator.",
+            move_cursor_to_end=True,
         )
         kvs = prompt(f"{topic_text}: ", validator=keyval_validator, validate_while_typing=False)
         return [val.strip("' ") for val in kvs.split("=")]

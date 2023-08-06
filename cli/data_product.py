@@ -7,7 +7,7 @@ import yaml
 import driver.aws.providers
 
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, List, Dict
 from jinja2 import Environment, FileSystemLoader
 from prompt_toolkit import HTML, print_formatted_text, prompt
 from prompt_toolkit.completion import (
@@ -30,6 +30,9 @@ from cli.common import (
 )
 from driver.core import ConfigContainer, resolve_data_set_id
 from .bindings import kb
+from driver.util import create_model_from_spark_schema
+import pickle
+import json
 
 # todo: remove below imports
 # from prompt_toolkit.application import get_app
@@ -41,6 +44,8 @@ from .bindings import kb
 
 io_types = ["connection", "model", "file"]
 jinja_environment = Environment(loader=FileSystemLoader(os.path.join(Path(__file__).parent, "templates")))
+product_temp_file_name = ".product.dict"
+model_temp_file_name = ".model.dict"
 
 
 class IOCompleter(Completer):
@@ -122,7 +127,7 @@ def get_io_type(prompt_text: str):
     def parse_url(io_url):
         fragments = io_url.split(":", 1)
         if fragments[0] == "connection":
-            connection_parts = fragments[1].split(".")
+            connection_parts = fragments[1].split(".", 1)
             return {"connection": connection_parts[0].strip("' "), "table": connection_parts[1]}
         elif fragments[0] == "model":
             return {"model": fragments[1].strip("' ")}
@@ -164,7 +169,7 @@ def get_pipeline():
             return None
         return {
             "module": non_empty_prompt("Provide module name: ", default=f"tasks.{default_task_id}"),
-            "parameters": collect_key_value_pairs(question="Do you want to add params?", key_name="parameter"),
+            "parameters": collect_key_value_pairs(question="Do you want to add params?", key_name="Parameter"),
         }
 
     def get_ios(prefix: str):
@@ -193,7 +198,7 @@ def get_pipeline():
     return {"schedule": trigger, "tasks": tasks}
 
 
-def collect_data_product_definition(name: str):
+def collect_data_product_definition(name: str) -> ConfigContainer:
     product_name = non_empty_prompt("Product name: ", default=name)
     product_defintion = ConfigContainer.create_from_dict(
         {
@@ -210,10 +215,6 @@ def collect_data_product_definition(name: str):
     )
     driver.util.label_io_types_on_product(product_defintion)
     return product_defintion
-
-
-def collect_model_definition():
-    return {}
 
 
 def generate_task_logic(
@@ -240,30 +241,120 @@ def generate_task_logic(
 
 
 def collect_schema_from_data_source(input_definition: ConfigContainer):
-    handle_input = task_executor.data_src_handlers.get(input_definition.type)
-    #  df = io_handlers.connection_input_handler(props=connection_config)
-    if not handle_input:
-        raise Exception(f"No input handler is defined for {input_definition.type}")
-    df = handle_input(input_definition)
-    return df.schema
+    model = None
+    try:
+        handle_input = task_executor.data_src_handlers.get(input_definition.type)
+        print_formatted_text(
+            HTML(
+                f"Connecting to: <green>{resolve_data_set_id(input_definition)}</green> "
+                f"using input definition {input_definition.to_dict()} with identified input "
+                f"handler: {handle_input.__name__ if handle_input else None}"
+            ),
+            style=style,
+        )
+        #  df = io_handlers.connection_input_handler(props=connection_config)
+        if not handle_input:
+            raise Exception(f"No input handler is defined for {input_definition.type}")
+        df = handle_input(input_definition)
+        model_id = resolve_data_set_id(input_definition)
+        model = create_model_from_spark_schema(df, model_id, "1", model_id, model_id)
+    except Exception as ex:
+        print_formatted_text(
+            HTML(
+                f"<red>{str(type(ex).__name__)} exception caught</red> "
+                f"while collecting schema information. Skipping schema detection. Complete Exception message: \n{str(ex)}"
+            ),
+            style=style,
+        )
+        traceback.print_exc()
+    finally:
+        return model
 
 
-def generate_product(product_dict: dict, models_dict: dict):
-    product = ConfigContainer.create_from_dict(product_dict).product
+def re_define_model(model: dict):
+    #  print_formatted_text(HTML(f"<green>{model}</green>"), style=style)
+    #  def create_edit_column
+    # todo: add column management code abive / 3 cases: columns are empty, columns need redefinition, new columns should be added
+    print(f"Using model:\n{json.dumps(model, indent=4)}")
+    if collect_bool(f"Do you want to edit Model {model.get('id')}?", False):
+        model.update(id=non_empty_prompt("Model ID: ", model.get("id")))
+        model.update(version=non_empty_prompt("Version: ", model.get("version")))
+        model.update(name=non_empty_prompt("Name: ", model.get("name", "").title()))
+        model.update(description=non_empty_prompt("Description: ", model.get("description")))
+        cols = model.get("columns", [])
+        if cols and collect_bool("Do you want to edit the columns? ", False):
+            for idx, col in enumerate(cols):
+                col.update(id=non_empty_prompt("Id: ", col.get("id")))
+                # todo: add type mapper
+                col.update(type=non_empty_prompt("Type: ", col.get("type")))
+                col.update(name=non_empty_prompt("Name: ", col.get("name", "").title()))
+                col.update(description=non_empty_prompt("Description: ", col.get("description", "").capitalize()))
+                # todo: add constraints support
+                cols[idx] = col
+            model.update(columns=cols)
+        elif not cols and collect_bool("Do you want to add columns?", False):
+            pass
+        model = (
+            model
+            | {"meta": collect_key_value_pairs("Do you want to add metadata?", "Meta Data")}
+            | {"tags": collect_key_value_pairs("Do you want to add cost allocation tags?", "Cost Allocation Tag")}
+            | {"access": collect_key_value_pairs("Do you want to add access labels?", "Access Tag")}
+        )
+        # todo: add storage support
+    return model
 
-    models = ConfigContainer.create_from_dict(models_dict)
-    product_folder = os.path.join(os.getcwd(), product.id.replace(" ", "_"))
+
+def collect_model_definition(data_product: ConfigContainer):
+    input_models = list()
+    output_models = list()
+
+    def augment_models(model_list: List[Dict]) -> List[Dict]:
+        for idx, model in enumerate(model_list):
+            model_list[idx] = re_define_model(model)
+        return model_list
+
+    for task in data_product.product.pipeline.tasks:
+        if hasattr(task, "inputs"):
+            for input_def in task.inputs:
+                detected_model = collect_schema_from_data_source(input_def)
+                if detected_model is not None:
+                    input_models.append(detected_model)
+        input_ids = set([inp_model.get("id") for inp_model in input_models])
+        if hasattr(task, "outputs"):
+            expr = re.compile("[_|-]")
+            for output_def in task.outputs:
+                output_model_id = resolve_data_set_id(output_def)
+                if output_model_id not in input_ids:
+                    output_models.append(
+                        {
+                            "id": output_model_id,
+                            "version": "1",
+                            "name": expr.sub(" ", output_model_id),
+                            "description": "",
+                        }
+                    )
+    return augment_models(input_models + output_models)
+
+
+def generate_product(product_def: ConfigContainer, models_dict: dict):
+    #  models = ConfigContainer.create_from_dict(models_dict)
+    product_folder_name = product_def.product.id.replace(" ", "_")
+    product_folder = os.path.join(os.getcwd(), product_folder_name)
+    if os.path.exists(product_folder):
+        raise FileExistsError(f"Product folder [{product_folder_name}] already exists.")
     os.makedirs(os.path.join(product_folder, "tasks"))
     os.makedirs(os.path.join(product_folder, "tests"))
-    with open(os.path.join(product_folder, "product.yml"), "w") as outfile:
-        yaml.dump(product_dict, outfile, sort_keys=False, default_flow_style=False)
-    for task in product.pipeline.tasks:
+    with open(os.path.join(product_folder, "product.yml"), "w") as product_file:
+        yaml.dump(product_def.to_dict(), product_file, sort_keys=False, default_flow_style=False)
+    with open(os.path.join(product_folder, "model.yml"), "w") as model_file:
+        yaml.dump(models_dict, model_file, sort_keys=False, default_flow_style=False)
+    for task in product_def.product.pipeline.tasks:
         if task.logic is not None:
-            print(task)
+            #  print(task)
             content = generate_task_logic(inputs=task.inputs, outputs=task.outputs, params=task.logic.parameters)
             module_file_name = f"{task.logic.module.split('.')[-1]}.py"
-            with open(os.path.join(product_folder, "tasks", module_file_name), "w") as outfile:
-                outfile.write(content)
+            with open(os.path.join(product_folder, "tasks", module_file_name), "w") as product_file:
+                product_file.write(content)
 
 
 @click.command(name="create")
@@ -271,6 +362,12 @@ def generate_product(product_dict: dict, models_dict: dict):
 @aws
 @driver_subsystem
 def create_data_product(name):
+    def cleanup():
+        if os.path.exists(product_temp_file_name):
+            os.remove(product_temp_file_name)
+        if os.path.exists(model_temp_file_name):
+            os.remove(model_temp_file_name)
+
     try:
         #      app = get_app()
         #      b = app.current_buffer
@@ -279,14 +376,41 @@ def create_data_product(name):
         #      else:
         #          b.start_completion(select_first=False)
         #  b.insert_text(" ")
-        dp_definition = collect_data_product_definition(name=name)
-        models_definition = collect_model_definition()
-        dp = dp_definition.get("product")
-        print_formatted_text(
-            HTML(f"Product name: <green>{dp.get('name')}</green> and ID:  <green>{dp.get('id')}</green>"), style=style
-        )
+        if os.path.exists(product_temp_file_name) and collect_bool(
+            "Temporary product definition file is found. Do you want to continue it from here? [Y/N]", True
+        ):
+            with open(product_temp_file_name, "rb") as pp:
+                dp_definition = pickle.load(pp)
+                #  print_formatted_text(
+                #      HTML(f"Using product definition:<br> <green>{str(dp_definition)}</green>"),
+                #      style=style,
+                #  )
+                print(f"Using product definition:\n {json.dumps(dp_definition.to_dict(), indent=4)}")
+        else:
+            dp_definition = collect_data_product_definition(name=name)
+            with open(product_temp_file_name, "wb") as pp:
+                pickle.dump(dp_definition, pp)
+        if os.path.exists(model_temp_file_name) and collect_bool(
+            "Temporary models definition files is found. Do you want to continue it from here? [Y/N]", True
+        ):
+            with open(model_temp_file_name, "rb") as mp:
+                models_definition = pickle.load(mp)
+                print(f"Using models definition: \n{json.dumps(models_definition, indent=4)}")
+        else:
+            models_definition = collect_model_definition(dp_definition)
+            with open(model_temp_file_name, "wb") as mp:
+                pickle.dump(models_definition, mp)
+            dp = dp_definition.product
+            print_formatted_text(
+                HTML(f"Product name: <green>{dp.name}</green> and ID:  <green>{dp.id}</green>"),
+                style=style,
+            )
         generate_product(dp_definition, models_definition)
         #  print_formatted_text(HTML(f"Input: <green>{ds_input}</green>"), style=style)
+        cleanup()
     except Exception as ex:
         traceback.print_exc()
-        print(ex)
+        print_formatted_text(
+            HTML(f"<red>{type(ex).__name__} error caught, with message: </red> {str(ex)}"),
+            style=style,
+        )

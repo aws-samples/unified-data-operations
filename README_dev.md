@@ -225,3 +225,9 @@ handle_input = task_executor.data_src_handlers.get(dsc_input_obj.type)
 df = handle_input(dsc_input_obj)
 <!-- df = io_handlers.connection_input_handler(props=dsc_input_obj) -->
 ```
+
+Accessing the Spark Session:
+
+```python
+sessions = driver.driver.get_spark()
+```

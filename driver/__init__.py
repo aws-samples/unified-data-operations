@@ -1,7 +1,7 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-from .driver import process_product, init, install_dependencies
+from .driver import process_product, init, install_dependencies, get_spark
 from .task_executor import (
     register_data_source_handler,
     register_preprocessors,

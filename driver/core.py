@@ -34,6 +34,27 @@ class ConfigContainer(SimpleNamespace):
         #  else:
         #  self.__setattr__(key, value)
 
+    def to_dict(self):
+        def dicter(obj):
+            if not hasattr(obj, "__dict__"):
+                return obj
+            result = {}
+            for key, val in obj.__dict__.items():
+                if key.startswith("_"):
+                    continue
+                element = []
+                if isinstance(val, list):
+                    for item in val:
+                        element.append(dicter(item))
+                if isinstance(val, Enum):
+                    result[key] = val.name
+                else:
+                    element = dicter(val)
+                result[key] = element
+            return result
+
+        return dicter(self)
+
     def __getattribute__(self, value):
         try:
             return super().__getattribute__(value)

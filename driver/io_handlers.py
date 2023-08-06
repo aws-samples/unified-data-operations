@@ -28,7 +28,7 @@ jdbc_drivers = {"postgresql": "org.postgresql.Driver", "mysql": "com.mysql.jdbc"
 def connection_input_handler(input_definition: ConfigContainer) -> DataFrame:
     connection: Connection = __CONN_PROVIDER__(input_definition.connection)
     logger.info(f"using input conection: {connection.get_jdbc_connection_url(generate_creds=False)}")
-    jdbcDF = (
+    jdbc_df = (
         get_spark()
         .read.format("jdbc")
         .option("url", connection.get_jdbc_connection_url(generate_creds=False))
@@ -40,7 +40,7 @@ def connection_input_handler(input_definition: ConfigContainer) -> DataFrame:
         .option("sslmode", "require")
         .load()
     )
-    return jdbcDF
+    return jdbc_df
 
 
 def file_input_handler(props: ConfigContainer) -> DataFrame:

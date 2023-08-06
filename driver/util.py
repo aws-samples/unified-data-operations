@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import yaml
+import re
 import configparser
 from driver import driver
 from os.path import dirname
@@ -16,6 +17,7 @@ from yaml.scanner import ScannerError
 from driver.core import ArtefactType, ConfigContainer
 from .core import IOType, ResolverException
 from pyspark.sql import DataFrame
+from pyspark.sql.types import StructField, StructType, IntegerType, StringType
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +29,7 @@ def build_spark_configuration(args, config: configparser.RawConfigParser = None,
         os.environ["AWS_PROFILE"] = args.aws_profile
         conf.set("fs.s3a.aws.credentials.provider", "com.amazonaws.auth.profile.ProfileCredentialsProvider")
     if hasattr(args, "local") and args.local:
-        """local execution, dependencies should be configured"""
+        """adding local dependencies"""
         deps_path = os.path.join(dirname(dirname(os.path.abspath(__file__))), "spark_deps")
         local_jars = [file for file in os.listdir(deps_path) if file.endswith(".jar")]
         if hasattr(args, "jars"):
@@ -57,19 +59,44 @@ def run_chain(input_payload, *callables: callable):
     return result
 
 
-def parse_dict_into_object(d: dict) -> ConfigContainer:
-    x = ConfigContainer()
-    for k, v in d.items():
-        if isinstance(v, dict):
-            setattr(x, k, parse_dict_into_object(v))
-        elif isinstance(v, list):
-            object_list = list()
-            for e in v:
-                object_list.append(parse_dict_into_object(e) if isinstance(e, dict) else e)
-            setattr(x, k, object_list)
-        else:
-            setattr(x, str(k), v)
-    return x
+def create_model_columns_from_spark_schema(df: DataFrame) -> list[dict[str, Any]]:
+    columns = list()
+    expr = re.compile("[_|-]")
+    for field in df.schema:
+        definition = field.jsonValue()
+        col = {
+            "id": definition.get("name"),
+            # todo: add type mapper
+            "type": definition.get("type"),
+            "name": expr.sub(" ", definition.get("name", {}).title()),
+        }
+        if not definition.get("nullable"):
+            col.update(constraints=[{"type": "not_null"}])
+        columns.append(col)
+    return columns
+
+
+def create_metadata_from_data_frame(df: DataFrame):
+    meta = dict()
+    for field in df.schema:
+        metada_data = field.jsonValue().get("metadata")
+        if metada_data is not None:
+            for k, v in metada_data.items():
+                meta[k] = v
+    return meta
+
+
+def create_model_from_spark_schema(
+    df: DataFrame, model_id: str, model_version: str, model_name: str, model_description: str
+) -> dict[str, Any]:
+    return {
+        "id": model_id,
+        "version": model_version,
+        "name": model_name,
+        "description": model_description,
+        "columns": create_model_columns_from_spark_schema(df),
+        "meta": create_metadata_from_data_frame(df),
+    }
 
 
 def load_yaml(file_path: str):
@@ -212,7 +239,7 @@ def compile_product(product_path: str, args, prod_def_filename: str = "product.y
     product_processing_chain = [
         load_yaml,
         functools.partial(validate_json_schema, artefact_type=ArtefactType.product),
-        parse_dict_into_object,
+        ConfigContainer.create_from_dict,
         functools.partial(enrich_product, args=args),
         label_io_types_on_product,
     ]
@@ -225,5 +252,5 @@ def compile_models(
     model_path = os.path.join(product_path, def_file_name)
     part_validate_schema = functools.partial(validate_json_schema, artefact_type=ArtefactType.model)
     part_enrich_model = functools.partial(enrich_models, product=product)
-    model_processing_chain = [load_yaml, part_validate_schema, parse_dict_into_object, part_enrich_model]
+    model_processing_chain = [load_yaml, part_validate_schema, ConfigContainer.create_from_dict, part_enrich_model]
     return run_chain(model_path, *model_processing_chain)
