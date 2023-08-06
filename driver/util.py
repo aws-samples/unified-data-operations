@@ -7,6 +7,7 @@ import logging
 import os
 import yaml
 import configparser
+from driver import driver
 from os.path import dirname
 from pyspark import SparkConf
 from typing import List, Any
@@ -14,6 +15,7 @@ from jsonschema import validate, ValidationError, Draft3Validator
 from yaml.scanner import ScannerError
 from driver.core import ArtefactType, ConfigContainer
 from .core import IOType, ResolverException
+from pyspark.sql import DataFrame
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +80,14 @@ def load_yaml(file_path: str):
     except ScannerError as scerr:
         logger.error(f"Could not read [{file_path}] due to: {str(scerr)}")
         raise scerr
+
+
+def read_csv(path: str) -> DataFrame:
+    return driver.get_spark().read.format("csv").option("mode", "DROPMALFORMED").option("header", "true").load(path)
+
+
+def write_csv(df: DataFrame, output_path: str, buckets=3) -> None:
+    df.coalesce(buckets).write.format("csv").mode("overwrite").options(header="true").save(path=output_path)
 
 
 def safe_get_property(object: Any, property: str):

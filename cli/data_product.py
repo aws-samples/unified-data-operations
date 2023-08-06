@@ -17,7 +17,6 @@ from prompt_toolkit.completion import (
     WordCompleter,
 )
 from driver import task_executor
-from driver.util import parse_dict_into_object
 from prompt_toolkit.document import Document
 from prompt_toolkit.shortcuts import CompleteStyle
 from prompt_toolkit.validation import Validator
@@ -196,7 +195,7 @@ def get_pipeline():
 
 def collect_data_product_definition(name: str):
     product_name = non_empty_prompt("Product name: ", default=name)
-    product_defintion = parse_dict_into_object(
+    product_defintion = ConfigContainer.create_from_dict(
         {
             "schema": get_schema_definitions(),
             "product": {
@@ -250,9 +249,9 @@ def collect_schema_from_data_source(input_definition: ConfigContainer):
 
 
 def generate_product(product_dict: dict, models_dict: dict):
-    product = parse_dict_into_object(product_dict).product
+    product = ConfigContainer.create_from_dict(product_dict).product
 
-    models = parse_dict_into_object(models_dict)
+    models = ConfigContainer.create_from_dict(models_dict)
     product_folder = os.path.join(os.getcwd(), product.id.replace(" ", "_"))
     os.makedirs(os.path.join(product_folder, "tasks"))
     os.makedirs(os.path.join(product_folder, "tests"))

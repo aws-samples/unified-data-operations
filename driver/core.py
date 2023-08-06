@@ -20,6 +20,7 @@ from pydantic import (
 )
 from typing import Dict, List, TypeVar, Union
 from driver import util
+from pyspark.sql.types import StructType
 
 Scalar = TypeVar("Scalar", int, float, bool, str)
 
@@ -40,6 +41,21 @@ class ConfigContainer(SimpleNamespace):
             #  super().__setattr__(value, SimpleNamespace())
             return super().__getattribute__(value)
 
+    @classmethod
+    def create_from_dict(cls, d: dict) -> "ConfigContainer":
+        x = ConfigContainer()
+        for k, v in d.items():
+            if isinstance(v, dict):
+                setattr(x, k, ConfigContainer.create_from_dict(v))
+            elif isinstance(v, list):
+                object_list = list()
+                for e in v:
+                    object_list.append(ConfigContainer.create_from_dict(e) if isinstance(e, dict) else e)
+                setattr(x, k, object_list)
+            else:
+                setattr(x, str(k), v)
+        return x
+
 
 @dataclass
 class DataProduct:
@@ -56,8 +72,27 @@ class DataSet:
     product: DataProduct = None
 
     @classmethod
-    def find_by_id(cls, dataset_list, ds_id):
+    def find_by_id(cls, dataset_list: List["DataSet"], ds_id) -> Optional["DataSet"]:
         return next(iter([m for m in dataset_list if m.id == ds_id]), None)
+
+    @property
+    def spark_schema(self) -> List[StructType]:
+        """
+        Converts UDO style model schema to Spark Schema
+        :param ds: UDO DataSet containing Models
+        :returns: Spark style schema
+        """
+        schema_fields = list()
+        if not self.model:
+            raise Exception(f"The Model is not defined on the {self.__name__}.")
+        for col in self.model.columns:
+            if hasattr(col, "transform") and "skip" in [t.type for t in col.transform]:
+                continue
+            nullable = True
+            if hasattr(col, "constraints"):
+                nullable = "not_null" not in [c.type for c in col.constraints]
+            schema_fields.append({"metadata": {}, "name": col.id, "type": col.type, "nullable": nullable})
+        return StructType.fromJson({"fields": schema_fields, "type": "struct"})
 
     @property
     def partitions(self) -> List[str]:

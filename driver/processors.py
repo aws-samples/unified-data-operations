@@ -6,8 +6,6 @@ import logging
 import re
 from datetime import datetime, timedelta
 from typing import List
-
-from driver import common
 from pyspark.sql import DataFrame, Window
 from pyspark.sql.functions import col, lit, udf, hash, to_date, row_number
 from pyspark.sql.types import StringType, StructField, TimestampType
@@ -181,7 +179,7 @@ def find_schema_delta(ds: DataSet) -> List[StructField]:
         return next(filter(lambda rsf: rsf.name == name, schema_list))
 
     if test_property(ds, "model.columns"):
-        required_schema = common.remap_schema(ds)
+        required_schema = ds.spark_schema
         data_frame_fields = [{"name": x.name, "type": x.dataType} for x in ds.df.schema]
         required_schema_fields = [{"name": x.name, "type": x.dataType} for x in required_schema]
         delta_fields = [x for x in required_schema_fields if x not in data_frame_fields]
@@ -195,7 +193,7 @@ def type_caster(ds: DataSet):
         mismatched_fields = find_schema_delta(ds)
         for mismatched_field in mismatched_fields or []:
             logger.info(
-                f"--> typecasting [{mismatched_field.name}] to type: [{mismatched_field.dataType.typeName()}] in [{ds.id}]"
+                f"> typecasting [{mismatched_field.name}] to type: [{mismatched_field.dataType.typeName()}] in [{ds.id}]"
             )
             field_in_df = next(iter([f for f in ds.df.schema.fields if f.name == mismatched_field.name]), None)
             if field_in_df:
