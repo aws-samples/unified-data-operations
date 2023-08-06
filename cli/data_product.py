@@ -209,7 +209,7 @@ def collect_data_product_definition(name: str):
             },
         }
     )
-    driver.util.label_io_types_on_product(product_defintion.product)
+    driver.util.label_io_types_on_product(product_defintion)
     return product_defintion
 
 

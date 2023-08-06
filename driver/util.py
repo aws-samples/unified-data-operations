@@ -84,7 +84,7 @@ def safe_get_property(object: Any, property: str):
     return getattr(object, property) if hasattr(object, property) else None
 
 
-def check_property(object, nested_property: str):
+def test_property(object, nested_property: str):
     """
     :param object: the object to analyze
     :param nested_property: the nested properties separated by dots (.) (eg. model.storage.location)
@@ -103,7 +103,7 @@ def filter_list_by_id(object_list, object_id):
     return next(iter([m for m in object_list if m.id == object_id]), None)
 
 
-def validate_schema(validable_dict: dict, artefact_type: ArtefactType):
+def validate_json_schema(validable_dict: dict, artefact_type: ArtefactType):
     schema_vesion = validable_dict.get("schema_version")
     if not schema_vesion:
         raise ValidationError("schema_version keyword must be provided")
@@ -137,7 +137,8 @@ def label_io_types_on_product(product: ConfigContainer) -> ConfigContainer:
         for io in ios:
             setattr(io, "type", resolve_io_type(io))
 
-    for task in product.product.tasks:
+    product = product.product if hasattr(product, "product") else product
+    for task in product.pipeline.tasks:
         iterate_over_io(task.inputs)
         iterate_over_io(task.outputs)
     return product
@@ -153,7 +154,7 @@ def enrich_product(product_input: ConfigContainer, args):
         setattr(storage, "location", args.default_data_lake_bucket)
         logger.debug(f"product defaults {product.defaults}")
         setattr(product.defaults, "storage", storage)
-    if not check_property(product, "defaults.storage.location"):
+    if not test_property(product, "defaults.storage.location"):
         setattr(product.defaults.storage, "location", args.default_data_lake_bucket)
     return product
 
@@ -200,7 +201,7 @@ def compile_product(product_path: str, args, prod_def_filename: str = "product.y
     product_path = os.path.join(product_path, prod_def_filename)
     product_processing_chain = [
         load_yaml,
-        functools.partial(validate_schema, artefact_type=ArtefactType.product),
+        functools.partial(validate_json_schema, artefact_type=ArtefactType.product),
         parse_dict_into_object,
         functools.partial(enrich_product, args=args),
         label_io_types_on_product,
@@ -212,7 +213,7 @@ def compile_models(
     product_path: str, product: ConfigContainer, def_file_name: str = "model.yml"
 ) -> List[ConfigContainer]:
     model_path = os.path.join(product_path, def_file_name)
-    part_validate_schema = functools.partial(validate_schema, artefact_type=ArtefactType.model)
+    part_validate_schema = functools.partial(validate_json_schema, artefact_type=ArtefactType.model)
     part_enrich_model = functools.partial(enrich_models, product=product)
     model_processing_chain = [load_yaml, part_validate_schema, parse_dict_into_object, part_enrich_model]
     return run_chain(model_path, *model_processing_chain)
