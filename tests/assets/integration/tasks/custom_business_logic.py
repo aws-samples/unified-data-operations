@@ -3,7 +3,6 @@ import datetime
 from typing import List
 
 from pyspark.sql.functions import concat, col, lit, unix_timestamp
-from driver.common import find_dataset_by_id
 from driver.task_executor import DataSet
 
 

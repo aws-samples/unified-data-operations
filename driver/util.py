@@ -17,7 +17,23 @@ from yaml.scanner import ScannerError
 from driver.core import ArtefactType, ConfigContainer
 from .core import IOType, ResolverException
 from pyspark.sql import DataFrame
-from pyspark.sql.types import StructField, StructType, IntegerType, StringType
+from pyspark.sql.types import (
+    StringType,
+    IntegerType,
+    LongType,
+    DoubleType,
+    TimestampType,
+    DateType,
+    DataType,
+    NumericType,
+    BooleanType,
+    DecimalType,
+    FloatType,
+    ShortType,
+    ByteType,
+    ArrayType,
+    MapType,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +75,26 @@ def run_chain(input_payload, *callables: callable):
     return result
 
 
+def convert_model_type_to_spark_type(type_str: str) -> DataType:
+    type_map = {
+        "string": StringType,
+        "integer": IntegerType,
+        "long": LongType,
+        "double": DoubleType,
+        "timestamp": TimestampType,
+        "date": DateType,
+        "numeric": NumericType,
+        "boolean": BooleanType,
+        "decimal": DecimalType,
+        "float": FloatType,
+        "short": ShortType,
+        "byte": ByteType,
+        "array": ArrayType,
+        "map": MapType,
+    }
+    return type_map.get(type_str.lower(), StringType)
+
+
 def create_model_columns_from_spark_schema(df: DataFrame) -> list[dict[str, Any]]:
     columns = list()
     expr = re.compile("[_|-]")
@@ -84,6 +120,16 @@ def create_metadata_from_data_frame(df: DataFrame):
             for k, v in metada_data.items():
                 meta[k] = v
     return meta
+
+
+def parse_values_into_strict_type(value: str) -> Any:
+    match (value.strip("'").lower()):
+        case "true" | "yes" | "1" | "y":
+            return True
+        case "false" | "no" | "0" | "n":
+            return False
+        case _:
+            return value
 
 
 def create_model_from_spark_schema(
@@ -118,11 +164,16 @@ def write_csv(df: DataFrame, output_path: str, buckets=3) -> None:
 
 
 def safe_get_property(object: Any, property: str):
+    """
+    Returns the value of a property if the property exists. Othewise it returns None
+    :return: Value of the property if the property exists, None otherwise.
+    """
     return getattr(object, property) if hasattr(object, property) else None
 
 
 def test_property(object, nested_property: str):
     """
+    Verify if an object has a nested property or not.
     :param object: the object to analyze
     :param nested_property: the nested properties separated by dots (.) (eg. model.storage.location)
     :return: True if the nested property can be found on the object;

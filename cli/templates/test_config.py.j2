@@ -1,0 +1,39 @@
+from types import SimpleNamespace
+from pyspark.sql import DataFrame
+from pytest import fixture
+from pyspark.sql.types import StringType, StructField, StructType, IntegerType, LongType, DoubleType, TimestampType
+
+# todo: adapt this to your Environment
+DEFAULT_BUCKET = "s3://test-bucket"
+
+
+@fixture
+def app_args() -> ConfigContainer:
+    args = ConfigContainer()
+    setattr(args, "default_data_lake_bucket", DEFAULT_BUCKET)
+    return args
+
+{% if models is defined %}
+{% for model in models %}
+@fixture(scope="module")
+def {{ model.id }}_schema() -> StructType:
+    return StructType(
+        [
+        {% for col in model.columns %}
+        StructField("{{ col.id }}", {{ col.type | convert_type_name }}(), {{ col | is_nullable }}),
+        {% endfor %}
+        ]
+    )
+{% endfor %}
+{% endif %}
+
+@fixture(scope="module")
+def person_df(spark_session, person_schema) -> DataFrame:
+    return spark_session.createDataFrame(
+        [
+            (1, "John", "Doe", 25, "Berlin", "male"),
+            (2, "Jane", "Doe", 41, "Berlin", "female"),
+            (3, "Maxx", "Mustermann", 30, "Berlin", "male"),
+        ],
+        person_schema,
+    )

@@ -36,18 +36,18 @@ class ConfigContainer(SimpleNamespace):
 
     def to_dict(self):
         def dicter(obj):
-            if not hasattr(obj, "__dict__"):
+            if not hasattr(obj, "__dict__") or isinstance(obj, dict):
                 return obj
-            result = {}
+            result = dict()
             for key, val in obj.__dict__.items():
                 if key.startswith("_"):
                     continue
-                element = []
-                if isinstance(val, list):
+                elif isinstance(val, list):
+                    element = list()
                     for item in val:
                         element.append(dicter(item))
-                if isinstance(val, Enum):
-                    result[key] = val.name
+                elif isinstance(val, Enum):
+                    element = val.value
                 else:
                     element = dicter(val)
                 result[key] = element
@@ -58,8 +58,8 @@ class ConfigContainer(SimpleNamespace):
     def __getattribute__(self, value):
         try:
             return super().__getattribute__(value)
-        except AttributeError:
-            #  super().__setattr__(value, SimpleNamespace())
+        except AttributeError as e:
+            #  super().__setattr__(value, None)
             return super().__getattribute__(value)
 
     @classmethod

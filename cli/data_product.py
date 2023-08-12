@@ -5,10 +5,8 @@ import driver
 import click
 import yaml
 import driver.aws.providers
-
 from pathlib import Path
 from typing import Iterable, List, Dict
-from jinja2 import Environment, FileSystemLoader
 from prompt_toolkit import HTML, print_formatted_text, prompt
 from prompt_toolkit.completion import (
     CompleteEvent,
@@ -24,12 +22,14 @@ from cli.common import (
     aws,
     collect_bool,
     collect_key_value_pairs,
+    cron_expression_prompt,
     driver_subsystem,
     non_empty_prompt,
     style,
 )
 from driver.core import ConfigContainer, resolve_data_set_id
 from .bindings import kb
+from .jinja import generate_task_logic, generate_fixtures, generate_task_test_logic
 from driver.util import create_model_from_spark_schema
 import pickle
 import json
@@ -43,9 +43,16 @@ import json
 # from cli.data_product import get_io_type
 
 io_types = ["connection", "model", "file"]
-jinja_environment = Environment(loader=FileSystemLoader(os.path.join(Path(__file__).parent, "templates")))
 product_temp_file_name = ".product.dict"
 model_temp_file_name = ".model.dict"
+
+
+#  class CronCompleter(Completer):
+#      def __init__(self) -> None:
+#          super().__init__()
+
+#      def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
+#          pass
 
 
 class IOCompleter(Completer):
@@ -145,7 +152,7 @@ def get_io_type(prompt_text: str):
             completer=IOCompleter(),
             key_bindings=kb,
             validator=io_validator,
-            complete_style=CompleteStyle.COLUMN,
+            complete_style=CompleteStyle.MULTI_COLUMN,
             complete_while_typing=True,
         )
     )
@@ -188,7 +195,7 @@ def get_pipeline():
             task_dict.update(logic=logic)
         return task_dict
 
-    trigger = non_empty_prompt("Trigger: ")
+    trigger = cron_expression_prompt("Schedule crontab: ")
     tasks = list()
     while True:
         tasks.append(get_task())
@@ -202,7 +209,7 @@ def collect_data_product_definition(name: str) -> ConfigContainer:
     product_name = non_empty_prompt("Product name: ", default=name)
     product_defintion = ConfigContainer.create_from_dict(
         {
-            "schema": get_schema_definitions(),
+            "schema_version": get_schema_definitions(),
             "product": {
                 "id": non_empty_prompt("Unique data product ID: ", default=product_name.replace(" ", "_")),
                 "version": non_empty_prompt("Version: ", default="1.0.0"),
@@ -215,29 +222,6 @@ def collect_data_product_definition(name: str) -> ConfigContainer:
     )
     driver.util.label_io_types_on_product(product_defintion)
     return product_defintion
-
-
-def generate_task_logic(
-    inputs: list[ConfigContainer] | None = None,
-    outputs: list[ConfigContainer] | None = None,
-    params: list[ConfigContainer] | None = None,
-):
-    task_template = jinja_environment.get_template("task_logic.py.j2")
-
-    #  def xtract_io_name(io_entry: ConfigContainer):
-    #      io_type: str = list(set(dir(io_entry)) & set(io_types))[0]
-    #      extractors = {
-    #          "connection": lambda ioe: ioe.table.split(".")[-1],
-    #          "model": lambda ioe: ioe.model.split(".")[-1],
-    #          "file": lambda ioe: ioe.file.split("/")[-1],
-    #      }
-    #      return extractors.get(io_type)(io_entry)
-
-    input_ids = [resolve_data_set_id(io) for io in inputs] if inputs else []
-    output_ids = [resolve_data_set_id(io) for io in outputs] if outputs else []
-    if params is not None:
-        params = params.__dict__.keys()
-    return task_template.render(inputs=input_ids, outputs=output_ids, params=params)
 
 
 def collect_schema_from_data_source(input_definition: ConfigContainer):
@@ -262,7 +246,8 @@ def collect_schema_from_data_source(input_definition: ConfigContainer):
         print_formatted_text(
             HTML(
                 f"<red>{str(type(ex).__name__)} exception caught</red> "
-                f"while collecting schema information. Skipping schema detection. Complete Exception message: \n{str(ex)}"
+                f"while collecting schema information. Skipping schema detection. "
+                f"Complete Exception message: \n{str(ex)}"
             ),
             style=style,
         )
@@ -274,22 +259,31 @@ def collect_schema_from_data_source(input_definition: ConfigContainer):
 def re_define_model(model: dict):
     #  print_formatted_text(HTML(f"<green>{model}</green>"), style=style)
     #  def create_edit_column
-    # todo: add column management code abive / 3 cases: columns are empty, columns need redefinition, new columns should be added
+    # todo: add column management code abive /
+    # support: 3 cases: columns are empty, columns need redefinition, new columns should be added
     print(f"Using model:\n{json.dumps(model, indent=4)}")
     if collect_bool(f"Do you want to edit Model {model.get('id')}?", False):
+        replacers = {"-": " ", "_": " "}
+
+        def replace_multiple(original: str):
+            for k, v in replacers.items():
+                original = original.replace(k, v)
+            return original
+
         model.update(id=non_empty_prompt("Model ID: ", model.get("id")))
         model.update(version=non_empty_prompt("Version: ", model.get("version")))
-        model.update(name=non_empty_prompt("Name: ", model.get("name", "").title()))
-        model.update(description=non_empty_prompt("Description: ", model.get("description")))
+        model.update(name=non_empty_prompt("Name: ", replace_multiple(model.get("name", "")).title()))
+        model.update(description=non_empty_prompt("Description: ", replace_multiple(model.get("description", ""))))
         cols = model.get("columns", [])
         if cols and collect_bool("Do you want to edit the columns? ", False):
             for idx, col in enumerate(cols):
                 col.update(id=non_empty_prompt("Id: ", col.get("id")))
                 # todo: add type mapper
                 col.update(type=non_empty_prompt("Type: ", col.get("type")))
-                col.update(name=non_empty_prompt("Name: ", col.get("name", "").title()))
+                col.update(name=non_empty_prompt("Name: ", replace_multiple(col.get("name", "")).title()))
                 col.update(description=non_empty_prompt("Description: ", col.get("description", "").capitalize()))
                 # todo: add constraints support
+                #
                 cols[idx] = col
             model.update(columns=cols)
         elif not cols and collect_bool("Do you want to add columns?", False):
@@ -333,28 +327,46 @@ def collect_model_definition(data_product: ConfigContainer):
                             "description": "",
                         }
                     )
-    return augment_models(input_models + output_models)
+    # todo: check the status of medata extracted via Spark
+    return ConfigContainer.create_from_dict(
+        {"schema_version": data_product.schema_version, "models": augment_models(input_models + output_models)}
+    )
 
 
-def generate_product(product_def: ConfigContainer, models_dict: dict):
-    #  models = ConfigContainer.create_from_dict(models_dict)
+def generate_product(product_def: ConfigContainer, model_definition: ConfigContainer):
+    def dump_dict_to_yaml(dict_obj: dict, full_path: str):
+        with open(full_path, "w") as dump_file:
+            yaml.dump(dict_obj, dump_file, sort_keys=False, default_flow_style=False)
+
+    def write_file(path: str, content: str):
+        with open(path, "w") as file:
+            file.write(content)
+
+    def create_folders(prefix: str, folder_paths: list[str] | list[list[str]]):
+        for folder in folder_paths:
+            if isinstance(folder, list):
+                os.makedirs(os.path.join(prefix, *folder))
+            else:
+                os.makedirs(os.path.join(prefix, folder))
+
     product_folder_name = product_def.product.id.replace(" ", "_")
     product_folder = os.path.join(os.getcwd(), product_folder_name)
     if os.path.exists(product_folder):
         raise FileExistsError(f"Product folder [{product_folder_name}] already exists.")
-    os.makedirs(os.path.join(product_folder, "tasks"))
-    os.makedirs(os.path.join(product_folder, "tests"))
-    with open(os.path.join(product_folder, "product.yml"), "w") as product_file:
-        yaml.dump(product_def.to_dict(), product_file, sort_keys=False, default_flow_style=False)
-    with open(os.path.join(product_folder, "model.yml"), "w") as model_file:
-        yaml.dump(models_dict, model_file, sort_keys=False, default_flow_style=False)
+    create_folders(product_folder, folder_paths=["tasks", "tests"])
+    dump_dict_to_yaml(product_def.to_dict(), os.path.join(product_folder, "product.yml"))
+    dump_dict_to_yaml(model_definition.to_dict(), os.path.join(product_folder, "model.yml"))
     for task in product_def.product.pipeline.tasks:
         if task.logic is not None:
-            #  print(task)
-            content = generate_task_logic(inputs=task.inputs, outputs=task.outputs, params=task.logic.parameters)
-            module_file_name = f"{task.logic.module.split('.')[-1]}.py"
-            with open(os.path.join(product_folder, "tasks", module_file_name), "w") as product_file:
-                product_file.write(content)
+            task_name = task.logic.module.split(".")[-1]
+            task_content = generate_task_logic(inputs=task.inputs, outputs=task.outputs, params=task.logic.parameters)
+            write_file(os.path.join(product_folder, "tasks", f"{task_name}.py"), task_content)
+            fixture_content = generate_fixtures(model_definition)
+            write_file(os.path.join(product_folder, "tests", f"test_config.py"), fixture_content)
+            task_test_content = generate_task_test_logic(
+                inputs=task.inputs, outputs=task.outputs, params=task.logic.parameters, models=model_definition.models
+            )
+            write_file(os.path.join(product_folder, "tests", f"test_{task_name}.py"), task_test_content)
 
 
 @click.command(name="create")
@@ -395,7 +407,7 @@ def create_data_product(name):
         ):
             with open(model_temp_file_name, "rb") as mp:
                 models_definition = pickle.load(mp)
-                print(f"Using models definition: \n{json.dumps(models_definition, indent=4)}")
+                print(f"Using models definition: \n{json.dumps(models_definition.to_dict(), indent=4)}")
         else:
             models_definition = collect_model_definition(dp_definition)
             with open(model_temp_file_name, "wb") as mp:

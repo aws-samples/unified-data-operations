@@ -207,7 +207,7 @@ import driver
 import driver.aws.providers
 from pyspark import SparkConf
 from driver import io_handlers
-from driver import task_executor
+from driver import task_executoq:r
 from driver.util import parse_dict_into_object, resolve_io_type, build_spark_configuration
 from driver.aws.providers import connection_provider, datalake_provider
 from driver.io_handlers import connection_input_handler, lake_input_handler, file_input_handler
@@ -230,4 +230,10 @@ Accessing the Spark Session:
 
 ```python
 sessions = driver.driver.get_spark()
+```
+
+Retrieving the database connections only:
+
+```python
+connection = driver.io_handlers.__CONN_PROVIDER__(dsc_input_obj.connection)
 ```
