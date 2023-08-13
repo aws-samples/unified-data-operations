@@ -1,6 +1,6 @@
 # How to reference custom Spark dependencies?
 
-Sometimes you might need some third party libraries for your aggregation logic. These can be added by creating a
+Sometimes you might need custom third party libraries for your aggregation logic. These can be added by creating a
 ```requirements.txt``` file in the root of your Data Product folder. In the following example we show, how to use
 Pydeequ (a third party analyzer and quality assurance library from Amazon):
 
@@ -8,10 +8,9 @@ Pydeequ (a third party analyzer and quality assurance library from Amazon):
 pydeequ
 ```
 
-Pydeequ (in this example) is the python binding to the Deequ Scala implementation, that needs additional non-python (
-Scala or Java)
-libraries to be added to the Spark cluster. This can be added via a ```config.ini``` file (also stored in the root of
-the data product).
+Pydeequ - in our example - is the python binding to the Deequ Scala implementation, that needs additional non-python (
+Scala or Java) libraries to be added to the Spark cluster.
+This can be added via a ```config.ini``` file (also stored in the root of the data product).
 
 ```properties
 [spark jars]
@@ -19,7 +18,7 @@ spark.jars.packages=com.amazon.deequ:deequ:1.2.2-spark-3.0
 spark.jars.excludes=net.sourceforge.f2j:arpack_combined_all
 ```
 
-Once the pre-requisites are there, you can start usin the new library in your custom logic:
+Once the pre-requisites are there, you can start using the new library in your custom logic:
 
 ```python
 from pyspark.sql.functions import concat, col, lit
@@ -48,8 +47,9 @@ ds_analysis = DataSet(id='model_analysis', df=analysis_result_df)
 return [ds_model, ds_analysis]
 ```
 
-Additionally you can create a custom initialisation file, called ```init_hook.py``` in the root folder of the data
-product. This file will give you control over the Spark environment and the data product processor envrioenment as well.
+Additionally you can create a custom initialisation file, called ```init_hook.py``` in the root folder of your data
+product. This file will give you control over the Spark environment and the data product processor environment as well.
+A feature that we can use to interact with the cluster configuration.
 
 ```python
 from typing import List, Dict
@@ -86,6 +86,6 @@ Create a file ```pytest.ini``` and add Spark options:
 ```properties
 [pytest]
 spark_options=
-spark.jars.packages:com.amazon.deequ:deequ:1.2.2-spark-3.0
-spark.jars.excludes:net.sourceforge.f2j:arpack_combined_all
+spark.jars.packages=com.amazon.deequ:deequ:1.2.2-spark-3.0
+spark.jars.excludes=net.sourceforge.f2j:arpack_combined_all
 ```

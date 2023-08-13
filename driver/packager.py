@@ -25,6 +25,9 @@ def ziplib(dist_path, package_name) -> str:
 
 
 def install_dependencies(product_path: str) -> Dict:
+    """ Collects requirements from a requirements from the data product file,
+        installs the dependencies and returns a dictionary with all installed packages and their path.
+    """
     def collect_packages() -> set:
         ws = pkg_resources.WorkingSet(pkg_resources.working_set.entries)
         eks = ws.entry_keys

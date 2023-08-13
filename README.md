@@ -5,7 +5,7 @@ The data product processor is a library for dynamically creating and executing A
 The declaration is based on YAML and covers input and output data stores as well as data structures. It can be augmented with custom, PySpark-based transformation logic.
 
 ## Installation
-**Prerequisites**  
+**Prerequisites**
 - Python 3.x
 - Apache Spark 3.x
 
@@ -30,7 +30,7 @@ data-product-processor \
 ```
 This command will run Apache Spark locally (due to the --local switch) and store the output on an S3 bucket (authenticated with the AWS profile used in the parameter).
 
-If you want to run the library from a different folder than the data product decleration, reference the latter through the additional argument `--product_path`.
+If you want to run the library from a different folder than the data product declaration, reference the latter through the additional argument `--product_path`.
 ```commandline
 data-product-processor \
   --product_path ../path-to-some-data-product \

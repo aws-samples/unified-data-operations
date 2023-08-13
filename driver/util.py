@@ -2,17 +2,16 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import functools
+from io import DEFAULT_BUFFER_SIZE
 import json
 import logging
 import os
 import yaml
 
-from types import SimpleNamespace
 from typing import List, Any
 from jsonschema import validate, ValidationError, Draft3Validator
 from yaml.scanner import ScannerError
-
-from driver.core import ArtefactType
+from driver.core import ArtefactType, ConfigContainer
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +22,7 @@ def run_chain(input_payload, *callables: callable):
     result = input_payload
     for func in functions:
         func_name = func.func.__name__ if isinstance(func, functools.partial) else func.__name__
-        logger.info(f'Chain > executing: {func_name}')
+        logger.info(f'chain > executing: {func_name}')
         try:
             result = func(result)
         except Exception as exc:
@@ -33,7 +32,7 @@ def run_chain(input_payload, *callables: callable):
 
 
 def parse_dict_into_object(d: dict):
-    x = SimpleNamespace()
+    x = ConfigContainer()
     for k, v in d.items():
         if isinstance(v, dict):
             setattr(x, k, parse_dict_into_object(v))
@@ -85,7 +84,7 @@ def validate_schema(validable_dict: dict, artefact_type: ArtefactType):
     if not schema_vesion:
         raise ValidationError('schema_version keyword must be provided')
     script_folder = os.path.dirname(os.path.abspath(__file__))
-    schema_path = os.path.join(script_folder, 'schema', schema_vesion, f'{artefact_type}.json')
+    schema_path = os.path.join(script_folder, 'schema', schema_vesion, f'{artefact_type.name}.json')
     with open(schema_path) as schema:
         schema = json.load(schema)
     try:
@@ -98,21 +97,22 @@ def validate_schema(validable_dict: dict, artefact_type: ArtefactType):
     return validable_dict
 
 
-def enrich_product(product_input: SimpleNamespace, args):
+def enrich_product(product_input: ConfigContainer, args):
     # todo: replace this with a proper object merging logic
     product = product_input.product
     if not hasattr(product, 'defaults'):
-        setattr(product, 'defaults', SimpleNamespace())
+        setattr(product, 'defaults', ConfigContainer())
     if hasattr(args, 'default_data_lake_bucket') and not hasattr(product.defaults, 'storage'):
-        storage = SimpleNamespace()
+        storage = ConfigContainer()
         setattr(storage, 'location', args.default_data_lake_bucket)
+        logger.debug(f'product defaults {product.defaults}')
         setattr(product.defaults, 'storage', storage)
     if not check_property(product, 'defaults.storage.location'):
         setattr(product.defaults.storage, 'location', args.default_data_lake_bucket)
     return product
 
 
-def enrich_models(models: SimpleNamespace, product: SimpleNamespace):
+def enrich_models(models: ConfigContainer, product: ConfigContainer):
     def add_back_types(model, extended_model):
         columns_with_missing_type = [col for col in model.columns if not hasattr(col, 'type')]
         for col in columns_with_missing_type:
@@ -157,10 +157,10 @@ def compile_product(product_path: str, args, prod_def_filename: str = 'product.y
     return run_chain(product_path, *product_processing_chain)
 
 
-def compile_models(product_path: str, product: SimpleNamespace, def_file_name: str = 'model.yml') -> List[
-    SimpleNamespace]:
+def compile_models(product_path: str, product: ConfigContainer, def_file_name: str = 'model.yml') -> List[
+    ConfigContainer]:
     model_path = os.path.join(product_path, def_file_name)
-    part_validate_schema = functools.partial(validate_schema, artefact_type=ArtefactType.models)
+    part_validate_schema = functools.partial(validate_schema, artefact_type=ArtefactType.model)
     part_enrich_model = functools.partial(enrich_models, product=product)
     model_processing_chain = [load_yaml, part_validate_schema, parse_dict_into_object, part_enrich_model]
     return run_chain(model_path, *model_processing_chain)

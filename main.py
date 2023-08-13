@@ -13,6 +13,7 @@ import traceback
 import driver
 import driver.aws.providers
 from driver.aws.providers import connection_provider, datalake_provider
+from driver.driver import get_spark
 from driver.io_handlers import connection_input_handler, lake_input_handler, file_input_handler
 from driver.processors import schema_checker, constraint_processor, transformer_processor, type_caster, razor
 from driver.io_handlers import lake_output_handler, connection_input_handler
@@ -37,7 +38,8 @@ def build_spark_configuration(args, config: configparser.RawConfigParser, custom
         os.environ["AWS_PROFILE"] = args.aws_profile
         conf.set("fs.s3a.aws.credentials.provider", "com.amazonaws.auth.profile.ProfileCredentialsProvider")
     if hasattr(args, 'local') and args.local:
-        deps_path = os.path.join(os.getcwd(), 'spark_deps')
+        """ local execution, dependencies should be configured """
+        deps_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'spark_deps')
         local_jars = [file for file in os.listdir(deps_path) if file.endswith('.jar')]
         if hasattr(args, 'jars'):
             local_jars.extend([f'{deps_path}/{j}' for j in args.jars.strip().split(',')])
@@ -82,6 +84,8 @@ def init_system(args):
     config = read_config(product_path)
     custom_hook = get_custom_hook(product_path)
     driver.init(spark_config=build_spark_configuration(args, config, custom_hook))
+    logger.debug(f'using Spark configuration: {get_spark().sparkContext.getConf().getAll()}')
+    logger.debug(f'the following jar packages are deployed: {get_spark().sparkContext._jsc.sc().listJars()}')
     driver.install_dependencies(product_path)
     driver.register_data_source_handler('connection', connection_input_handler)
     driver.register_data_source_handler('model', lake_input_handler)
@@ -102,7 +106,6 @@ def init_system(args):
 
 def main():
     try:
-        logging.basicConfig(level=logging.INFO)
         parser = argparse.ArgumentParser(argument_default=argparse.SUPPRESS)
         parser.add_argument('--JOB_ID', help='the unique id of this Glue job')
         parser.add_argument('--JOB_RUN_ID', help='the unique id of this Glue job run')
@@ -116,7 +119,12 @@ def main():
         parser.add_argument('--jars', help='extra jars to be added to the Spark context')
         parser.add_argument('--additional-python-modules', help='this is used by Glue, ignored by this code')
         parser.add_argument('--default_data_lake_bucket', help='Data Mesh output S3 bucket name', default=None)
+        parser.add_argument('--log_level', choices=['debug', 'info', 'warning'], help='Set the desired log level', default='info')
         args, unknown = parser.parse_known_args()
+        logging.basicConfig()
+        log_level = logging.getLevelName(args.log_level.upper())
+        logger.setLevel(log_level)
+        logging.getLogger('driver').setLevel(log_level)
         logger.info(f"KNOWN_ARGS: {args}")
         logger.info(f"UNKNOWN_ARGS: {unknown}")
         logger.info(f'PATH: {os.environ["PATH"]}')

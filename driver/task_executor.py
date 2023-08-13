@@ -6,11 +6,10 @@ import logging
 
 import sys
 
-from types import SimpleNamespace
 from typing import List, Callable, Dict
 from .util import filter_list_by_id, enrich_models
 from .core import DataSet, DataProduct, IOType, ProcessorChainExecutionException, ValidationException, \
-    resolve_data_set_id, ResolverException, resolve_data_product_id
+        resolve_data_set_id, ResolverException, resolve_data_product_id, ConfigContainer
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +44,7 @@ def register_output_handler(output_handler_type: str, handler: callable):
     output_handlers.update({output_handler_type: handler})
 
 
-def resolve_io_type(io_definition: SimpleNamespace) -> IOType:
+def resolve_io_type(io_definition: ConfigContainer) -> IOType:
     if hasattr(io_definition, IOType.connection.name):
         return IOType.connection
     elif hasattr(io_definition, IOType.file.name):
@@ -56,7 +55,7 @@ def resolve_io_type(io_definition: SimpleNamespace) -> IOType:
         raise ResolverException(f'This IO type  is not supported yet: {io_definition.__repr__()}.')
 
 
-def load_inputs(product: SimpleNamespace, inputs: SimpleNamespace, models: List[SimpleNamespace]) -> List[DataSet]:
+def load_inputs(product: ConfigContainer, inputs: ConfigContainer, models: List[ConfigContainer]) -> List[DataSet]:
     input_datasets: list[DataSet] = list()
 
     def load_input(input_def):
@@ -68,16 +67,16 @@ def load_inputs(product: SimpleNamespace, inputs: SimpleNamespace, models: List[
     for inp in inputs:
         model_id = inp.model if hasattr(inp, 'model') else None
         setattr(inp, 'type', resolve_io_type(inp))
-        
+
         # dataset_id is build as follows
         # file:         <assigned model id OR filename without filetype>
         # model:        <data product id>.<model id>
         # connection:   <connection id>.<table name>
         data_product_id = resolve_data_product_id(inp)
         dataset_id = f'{data_product_id}.{resolve_data_set_id(inp)}' if data_product_id else resolve_data_set_id(inp)
-        
+
         model_obj = filter_list_by_id(models, model_id)
-        
+
         dp = DataProduct(id=product.id, description=getattr(product, 'description', None),
                          owner=getattr(product, 'owner', None))
         input_datasets.append(DataSet(dataset_id, load_input(inp), model_obj, dp))
@@ -124,27 +123,27 @@ def sink(o_dfs: List[DataSet]):
         handle_output(out_dataset)
 
 
-def enrich(datasets: List[DataSet], product: SimpleNamespace, models: List[SimpleNamespace]):
+def enrich(datasets: List[DataSet], product: ConfigContainer, models: List[ConfigContainer]):
     for dataset in datasets:
         if not dataset.product_id:
             dataset.product_id = product.id
         if not dataset.product_owner:
             dataset.product.owner = getattr(product, 'owner', None)
         if dataset.model is None:
-            default_model = enrich_models(SimpleNamespace(models=[SimpleNamespace(id=dataset.id)]), product=product)[0]
+            default_model = enrich_models(ConfigContainer(models=[ConfigContainer(id=dataset.id)]), product=product)[0]
             model_obj = next(iter([m for m in models if m.id == dataset.id]), default_model)
             dataset.model = model_obj
     return datasets
 
 
-def filter_output_models(task_outputs: List[SimpleNamespace], models: List[SimpleNamespace]):
+def filter_output_models(task_outputs: List[ConfigContainer], models: List[ConfigContainer]):
     output_model_names = [to.model for to in task_outputs if hasattr(to, 'model')]
     return [model for model in models if model.id in output_model_names]
 
 
-def execute(product: SimpleNamespace, task: SimpleNamespace, models: List[SimpleNamespace], product_path: str) \
+def execute(product: ConfigContainer, task: ConfigContainer, models: List[ConfigContainer], product_path: str) \
         -> List[DataSet]:
-    logger.info(f'Executing tasks > [{task.id}] for data product [{product.id}].')
+    logger.info(f'executing tasks > [{task.id}] for data product [{product.id}].')
 
     output_models = filter_output_models(task.outputs, models)
     input_dfs: list[DataSet] = run_processors('pre', load_inputs(product, task.inputs, models), pre_processors)
@@ -158,5 +157,5 @@ def execute(product: SimpleNamespace, task: SimpleNamespace, models: List[Simple
     output_dfs = enrich(output_dfs, product, output_models)
 
     sink(run_processors('post', output_dfs, post_processors))
-    
+
     return output_dfs

@@ -1,0 +1,128 @@
+models:
+  - id: event
+    version: "1.0.0"
+    description: Sport event
+    columns:
+      - id: id
+        type: long
+        constraints:
+          - type: unique
+          - type: not_null
+      - id: sport_type_name
+        type: string
+      - id: home_team_id
+        type: integer
+      - id: away_team_id
+        type: integer
+      - id: location_id
+        type: short
+      - id: start_date_time
+        type: timestamp
+      - id: start_date
+        type: date
+        transform:
+          - type: skip
+      - id: sold_out
+        type: short
+        transform:
+          - type: skip
+
+    meta:
+      contains_pii: true
+      steward: jane.doe@acme.com
+    storage:
+      type: lake
+      options:
+        skip_first_row: true
+        partition_by:
+          - sport_type_name
+        bucketed_at: 512M
+        stored_as: parquet
+        location: 's3a://glue-job-test-destination-bucket/sport_event'
+    tags:
+      cost_center: 123455
+      use_case: Customer 360
+    access:
+      domain: customer_support
+      confidentiality: private
+
+  - id: location
+    version: "1.0.0"
+    description: Sport Location
+    columns:
+      - id: id
+        type: integer
+        constraints:
+          - type: unique
+          - type: not_null
+      - id: name
+        type: string
+      - id: city
+        type: string
+      - id: seating_capacity
+        type: integer
+      - id: levels
+        type: integer
+      - id: sections
+        type: integer
+
+    meta:
+      contains_pii: true
+      steward: jane.doe@acme.com
+    storage:
+      type: lake
+      options:
+        skip_first_row: true
+        partition_by:
+          - levels
+        bucketed_at: 512M
+        stored_as: parquet
+        location: 's3a://glue-job-test-destination-bucket/location'
+    tags:
+      cost_center: 123455
+      use_case: Customer 360
+    access:
+      domain: customer_support
+      confidentiality: private
+
+  - id: team
+    version: "1.0.0"
+    description: Sport Team
+    columns:
+      - id: id
+        type: integer
+        constraints:
+          - type: unique
+          - type: not_null
+      - id: name
+        type: string
+      - id: abbreviated_name
+        type: string
+      - id: home_field_id
+        type: integer
+      - id: sport_type_name
+        type: string
+      - id: sport_league_short_name
+        type: string
+      - id: sport_division_short_name
+        type: string
+
+    meta:
+      contains_pii: true
+      steward: jane.doe@acme.com
+    storage:
+      type: lake
+      options:
+        skip_first_row: true
+        partition_by:
+          - sport_league_short_name
+          - sport_division_short_name
+        bucketed_at: 512M
+        stored_as: parquet
+        location: 's3a://glue-job-test-destination-bucket/team'
+    tags:
+      cost_center: 123455
+      use_case: Customer 360
+    access:
+      domain: customer_support
+      confidentiality: private

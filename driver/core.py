@@ -1,9 +1,8 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-import json
 from urllib.parse import urlparse
-
+from botocore.client import logger
 from jsonschema import validate, ValidationError
 import os
 from types import SimpleNamespace
@@ -22,6 +21,21 @@ from driver import util
 
 Scalar = TypeVar('Scalar', int, float, bool, str)
 
+class ConfigContainer(SimpleNamespace):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        #  for key, value in dictionary.items():
+            #  if isinstance(value, dict):
+                #  self.__setattr__(key, ConfigContainer(value))
+            #  else:
+                #  self.__setattr__(key, value)
+
+    def __getattribute__(self, value):
+        try:
+            return super().__getattribute__(value)
+        except AttributeError:
+            #  super().__setattr__(value, SimpleNamespace())
+            return super().__getattribute__(value)
 
 @dataclass
 class DataProduct:
@@ -34,7 +48,7 @@ class DataProduct:
 class DataSet:
     id: str
     df: DataFrame
-    model: SimpleNamespace = None
+    model: ConfigContainer = None
     product: DataProduct = None
 
     @classmethod
@@ -52,7 +66,7 @@ class DataSet:
             return list()
 
     @property
-    def storage_location(self) -> str:
+    def storage_location(self) -> (str | None):
         if util.check_property(self, 'model.storage.location'):
             return self.model.storage.location
         else:
@@ -63,7 +77,7 @@ class DataSet:
         if not self.model:
             raise Exception("There's no model on the dataset, so location cannot be set yet.")
         elif not hasattr(self.model, 'storage'):
-            storage = SimpleNamespace()
+            storage = ConfigContainer()
             setattr(storage, 'location', path)
             setattr(self.model, 'storage', storage)
         elif not hasattr(self.model.storage, 'location'):
@@ -91,21 +105,21 @@ class DataSet:
             return 'default'
 
     @property
-    def storage_format(self) -> str:
+    def storage_format(self) -> (str | None):
         if self.model and hasattr(self.model, 'storage'):
             return self.model.storage.format if hasattr(self.model.storage, 'format') else None
         else:
             return None
 
     @property
-    def storage_options(self) -> SimpleNamespace:
+    def storage_options(self) -> (ConfigContainer | None):
         if self.model and hasattr(self.model, 'storage') and hasattr(self.model.storage, 'options'):
             return self.model.storage.options
         else:
             return None
 
     @property
-    def product_id(self) -> str:
+    def product_id(self) -> (str | None):
         return self.product.id if self.product else None
 
     @product_id.setter
@@ -212,7 +226,7 @@ class IOType(str, Enum):
 
 
 class ArtefactType(str, Enum):
-    models = 'model'
+    model = 'model'
     product = 'product'
 
 
@@ -377,7 +391,7 @@ class DataProductTable(BaseModel):
         return self.storage_location.replace('s3://', 's3a://')
 
 
-def resolve_data_set_id(io_def: SimpleNamespace) -> str:
+def resolve_data_set_id(io_def: ConfigContainer) -> str:
     def xtract_domain(s):
         if '.' in s:
             domain_elements = s.rsplit('.')
@@ -401,7 +415,7 @@ def resolve_data_set_id(io_def: SimpleNamespace) -> str:
         raise ConnectionNotFoundException(f'The IO Type {io_def.type} is not supported.')
 
 
-def resolve_data_product_id(io_def: SimpleNamespace) -> str:
+def resolve_data_product_id(io_def: ConfigContainer) -> str:
     if io_def.type == IOType.model:
         return getattr(io_def, io_def.type).rsplit('.')[0]
     elif io_def.type == IOType.connection:

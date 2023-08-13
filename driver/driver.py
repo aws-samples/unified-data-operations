@@ -34,8 +34,10 @@ def get_or_create_session(config=None) -> SparkSession:  # pragma: no cover
 def init(spark_session: SparkSession = None, spark_config=None):
     global __SPARK__
     if not spark_session:
+        logger.info('creating a new Spark session.')
         __SPARK__ = get_or_create_session(spark_config)
     else:
+        logger.info('returning already existing Spark session.')
         __SPARK__ = spark_session
     # sc  = __SPARK__.sparkContext
     # sc.setSystemProperty("com.amazonaws.services.s3.enableV4", "true")
@@ -44,7 +46,7 @@ def init(spark_session: SparkSession = None, spark_config=None):
 def install_dependencies(product_path: str):
     new_packages = packager.install_dependencies(product_path)
     if new_packages:
-        logger.info(f'Packaging up the following new dependencies {new_packages.keys()}')
+        logger.info(f'packaging up the following new dependencies {new_packages.keys()}')
         for new_pack_name in new_packages.keys():
             zipfile = ziplib(new_packages.get(new_pack_name), new_pack_name)
             logger.info(f'-----> installing {zipfile}')
