@@ -6,17 +6,12 @@ import click
 import yaml
 import driver.aws.providers
 from pathlib import Path
-from typing import Iterable, List, Dict
+from typing import List, Dict
 from prompt_toolkit import HTML, print_formatted_text, prompt
 from prompt_toolkit.completion import (
-    CompleteEvent,
-    Completer,
-    Completion,
     WordCompleter,
 )
 from driver import task_executor
-from prompt_toolkit.document import Document
-from prompt_toolkit.shortcuts import CompleteStyle
 from prompt_toolkit.validation import Validator
 from cli.common import (
     aws,
@@ -28,8 +23,8 @@ from cli.common import (
     style,
 )
 from driver.core import ConfigContainer, resolve_data_set_id
-from .bindings import kb
 from .jinja import generate_task_logic, generate_fixtures, generate_task_test_logic
+from .common import get_io_type
 from driver.util import create_model_from_spark_schema
 import pickle
 import json
@@ -42,7 +37,6 @@ import json
 # import driver.aws.providers
 # from cli.data_product import get_io_type
 
-io_types = ["connection", "model", "file"]
 product_temp_file_name = ".product.dict"
 model_temp_file_name = ".model.dict"
 
@@ -53,109 +47,6 @@ model_temp_file_name = ".model.dict"
 
 #      def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
 #          pass
-
-
-class IOCompleter(Completer):
-    def __init__(self) -> None:
-        super().__init__()
-        self.tables = None
-        self.glue = driver.aws.providers.get_glue()
-        self.connections = self.glue.get_connections(HidePassword=True).get("ConnectionList")
-        # todo: iterate over all results
-        self.databases = self.glue.get_databases(ResourceShareType="ALL", MaxResults=250).get("DatabaseList")
-
-    def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
-        try:
-            colon_pattern = re.compile(r"^([^:(?\s)]+)")
-            dot_pattern = re.compile(r"^([^.]+)")
-
-            def handle_data_catalog(use_connections: bool = True):
-                offset = 1 if use_connections else 0
-                if words_cnt == offset:
-                    connections = [cid.get("Name") for cid in self.connections]
-                    connections_completer = WordCompleter(connections, pattern=colon_pattern)
-                    yield from connections_completer.get_completions(document, complete_event)
-                elif words_cnt == 1 + offset:
-                    datase_names = [db.get("Name") for db in self.databases]
-                    db_completer = WordCompleter(
-                        datase_names, pattern=dot_pattern if use_connections else colon_pattern
-                    )
-                    yield from db_completer.get_completions(document, complete_event)
-                elif words_cnt >= 2 + offset:
-                    try:
-                        database_name = (
-                            ".".join(fragments[1 : len(fragments) - 1]) if len(fragments[1:]) > 2 else fragments[offset]
-                        )
-                        tables = self.glue.get_tables(DatabaseName=database_name).get("TableList")
-                        table_completer = WordCompleter([tr.get("Name") for tr in tables], pattern=dot_pattern)
-                        yield from table_completer.get_completions(document, complete_event)
-                    except Exception:
-                        pass
-
-            prefix = document.text.split(":", 1)
-            fragments = [f.strip() for f in prefix[1].split(".")] if len(prefix) > 1 else []
-            words_cnt = len(fragments)
-            io_type_meta = {
-                "connection": "{connection name}.{schema name}.{table name}",
-                "model": "{database name}.{table name}",
-                "file": "{s3 path}",
-            }
-            if len(prefix) == 0 or prefix[0] not in io_types:
-                prefix_completer = WordCompleter(io_types, meta_dict=io_type_meta, pattern=colon_pattern)
-                #  prefix_completer = WordCompleter(io_types, meta_dict=io_type_meta)
-                yield from prefix_completer.get_completions(document, complete_event)
-            elif prefix[0] == "connection":
-                #  get_app().current_buffer.insert_text(': ')
-                yield from handle_data_catalog()
-            elif prefix[0] == "model":
-                yield from handle_data_catalog(use_connections=False)
-            elif prefix[0] == "file":
-                pass
-            else:
-                prefix_completer = WordCompleter(io_types, meta_dict=io_type_meta)
-                yield from prefix_completer.get_completions(document, complete_event)
-        except Exception:
-            pass
-
-
-def get_io_type(prompt_text: str):
-    def validate_io(text):
-        tokens = text.split(":", 1)
-        valid = len(tokens) > 1 and tokens[0] in io_types
-        if not valid:
-            return valid
-        elif tokens[0] == "connection":
-            return len(text.split(":", 1)[1].split(".")) >= 3
-        elif tokens[0] == "model":
-            return len(text.split(":", 1)[1].split(".")) >= 2
-        elif tokens[0] == "file":
-            return True
-
-    def parse_url(io_url):
-        fragments = io_url.split(":", 1)
-        if fragments[0] == "connection":
-            connection_parts = fragments[1].split(".", 1)
-            return {"connection": connection_parts[0].strip("' "), "table": connection_parts[1]}
-        elif fragments[0] == "model":
-            return {"model": fragments[1].strip("' ")}
-        elif fragments[0] == "file":
-            return {"file": fragments[1].strip("' '")}
-        else:
-            return io_url
-
-    io_validator = Validator.from_callable(
-        validate_io, error_message="Required pattern: type: [connection].schema.table", move_cursor_to_end=True
-    )
-    return parse_url(
-        prompt(
-            prompt_text,
-            completer=IOCompleter(),
-            key_bindings=kb,
-            validator=io_validator,
-            complete_style=CompleteStyle.MULTI_COLUMN,
-            complete_while_typing=True,
-        )
-    )
 
 
 def get_schema_definitions():
