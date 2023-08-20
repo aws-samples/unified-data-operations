@@ -24,16 +24,19 @@ def {{ model.id }}_schema() -> StructType:
         {% endfor %}
         ]
     )
-{% endfor %}
-{% endif %}
 
+{% if model.id in input_ids %}
 @fixture(scope="module")
-def person_df(spark_session, person_schema) -> DataFrame:
+def {{ model.id }}_df(spark_session, {{ model.id }}_schema) -> DataFrame:
     return spark_session.createDataFrame(
         [
             (1, "John", "Doe", 25, "Berlin", "male"),
             (2, "Jane", "Doe", 41, "Berlin", "female"),
             (3, "Maxx", "Mustermann", 30, "Berlin", "male"),
         ],
-        person_schema,
+        {{ model.id }}_schema,
     )
+{% endif %}
+
+{% endfor %}
+{% endif %}

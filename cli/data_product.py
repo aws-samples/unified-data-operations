@@ -12,7 +12,6 @@ from prompt_toolkit.completion import (
     WordCompleter,
 )
 from driver import task_executor
-from prompt_toolkit.validation import Validator
 from cli.common import (
     aws,
     collect_bool,
@@ -28,14 +27,6 @@ from .common import get_io_type
 from driver.util import create_model_from_spark_schema
 import pickle
 import json
-
-# todo: remove below imports
-# from prompt_toolkit.application import get_app
-# from prompt_toolkit.document import Document
-# from prompt_toolkit.shortcuts import CompleteStyle, print_container
-# from prompt_toolkit.validation import Validator
-# import driver.aws.providers
-# from cli.data_product import get_io_type
 
 product_temp_file_name = ".product.dict"
 model_temp_file_name = ".model.dict"
@@ -122,8 +113,8 @@ def collect_schema_from_data_source(input_definition: ConfigContainer):
         print_formatted_text(
             HTML(
                 f"Connecting to: <green>{resolve_data_set_id(input_definition)}</green> "
-                f"using input definition {input_definition.to_dict()} with identified input "
-                f"handler: {handle_input.__name__ if handle_input else None}"
+                f"using input definition <path>{input_definition.to_dict()}</path> with identified input "
+                f"handler: <levender>{handle_input.__name__ if handle_input else None}</levender>"
             ),
             style=style,
         )
@@ -150,7 +141,7 @@ def collect_schema_from_data_source(input_definition: ConfigContainer):
 def re_define_model(model: dict):
     #  print_formatted_text(HTML(f"<green>{model}</green>"), style=style)
     #  def create_edit_column
-    # todo: add column management code abive /
+    # todo: add column management code above /
     # support: 3 cases: columns are empty, columns need redefinition, new columns should be added
     print(f"Using model:\n{json.dumps(model, indent=4)}")
     if collect_bool(f"Do you want to edit Model {model.get('id')}?", False):
@@ -181,7 +172,7 @@ def re_define_model(model: dict):
             pass
         model = (
             model
-            | {"meta": collect_key_value_pairs("Do you want to add metadata?", "Meta Data")}
+            | {"meta": model.get("meta", {}) | collect_key_value_pairs("Do you want to add metadata?", "Meta Data")}
             | {"tags": collect_key_value_pairs("Do you want to add cost allocation tags?", "Cost Allocation Tag")}
             | {"access": collect_key_value_pairs("Do you want to add access labels?", "Access Tag")}
         )
@@ -252,10 +243,17 @@ def generate_product(product_def: ConfigContainer, model_definition: ConfigConta
             task_name = task.logic.module.split(".")[-1]
             task_content = generate_task_logic(inputs=task.inputs, outputs=task.outputs, params=task.logic.parameters)
             write_file(os.path.join(product_folder, "tasks", f"{task_name}.py"), task_content)
-            fixture_content = generate_fixtures(model_definition)
-            write_file(os.path.join(product_folder, "tests", f"test_config.py"), fixture_content)
+            fixture_content = generate_fixtures(
+                model_definition, [resolve_data_set_id(inp_def) for inp_def in task.inputs]
+            )
+            write_file(os.path.join(product_folder, "tests", "test_config.py"), fixture_content)
+            print(task)
             task_test_content = generate_task_test_logic(
-                inputs=task.inputs, outputs=task.outputs, params=task.logic.parameters, models=model_definition.models
+                task_name=task_name,
+                inputs=task.inputs,
+                outputs=task.outputs,
+                params=task.logic.parameters,
+                models=model_definition.models,
             )
             write_file(os.path.join(product_folder, "tests", f"test_{task_name}.py"), task_test_content)
 
@@ -280,7 +278,7 @@ def create_data_product(name):
         #          b.start_completion(select_first=False)
         #  b.insert_text(" ")
         if os.path.exists(product_temp_file_name) and collect_bool(
-            "Temporary product definition file is found. Do you want to continue it from here? [Y/N]", True
+            "Temporary product definition file is found. Do you want to continue it from here?", True
         ):
             with open(product_temp_file_name, "rb") as pp:
                 dp_definition = pickle.load(pp)
@@ -294,7 +292,7 @@ def create_data_product(name):
             with open(product_temp_file_name, "wb") as pp:
                 pickle.dump(dp_definition, pp)
         if os.path.exists(model_temp_file_name) and collect_bool(
-            "Temporary models definition files is found. Do you want to continue it from here? [Y/N]", True
+            "Temporary models definition files is found. Do you want to continue it from here?", True
         ):
             with open(model_temp_file_name, "rb") as mp:
                 models_definition = pickle.load(mp)

@@ -13,17 +13,25 @@ def convert_type_name(source_type: str) -> str:
     return convert_model_type_to_spark_type(source_type).__name__
 
 
-def extract_nullable_from_column(column: ConfigContainer) -> bool:
+def is_nullable_column(column: ConfigContainer) -> bool:
+    """
+    Return True if the column is nullable
+    """
     return not (hasattr(column, "constraints") and "non_null" in [c.type for c in column.constraints])
+
+
+def strformat(value, frmt_str):
+    return frmt_str % value
 
 
 def init():
     global __JINJA__ENV__
     __JINJA__ENV__ = Environment(
-        trim_blocks=True, loader=FileSystemLoader(os.path.join(Path(__file__).parent, "templates"))
+        lstrip_blocks=True, trim_blocks=True, loader=FileSystemLoader(os.path.join(Path(__file__).parent, "templates"))
     )
     __JINJA__ENV__.filters["convert_type_name"] = convert_type_name
-    __JINJA__ENV__.filters["is_nullable"] = extract_nullable_from_column
+    __JINJA__ENV__.filters["is_nullable"] = is_nullable_column
+    __JINJA__ENV__.filters["strformat"] = strformat
 
 
 def get_jinja_env() -> Environment:
@@ -48,6 +56,7 @@ def generate_task_logic(
 
 
 def generate_task_test_logic(
+    task_name: str,
     inputs: list[ConfigContainer] | None = None,
     outputs: list[ConfigContainer] | None = None,
     params: list[ConfigContainer] | None = None,
@@ -61,6 +70,6 @@ def generate_task_test_logic(
     return task_test_template.render(inputs=input_ids, outputs=output_ids, params=params)
 
 
-def generate_fixtures(model_definition: ConfigContainer | None = None) -> str:
+def generate_fixtures(model_definition: ConfigContainer | None = None, input_ids: list[str] | None = None) -> str:
     fixture_template = get_jinja_env().get_template("test_config.py.j2")
-    return fixture_template.render(models=model_definition.models)
+    return fixture_template.render(models=model_definition.models, input_ids=input_ids)

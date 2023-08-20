@@ -21,6 +21,7 @@ from pydantic import (
 from typing import Dict, List, TypeVar, Union
 from driver import util
 from pyspark.sql.types import StructType
+import traceback
 
 Scalar = TypeVar("Scalar", int, float, bool, str)
 
@@ -55,12 +56,17 @@ class ConfigContainer(SimpleNamespace):
 
         return dicter(self)
 
-    def __getattribute__(self, value):
-        try:
-            return super().__getattribute__(value)
-        except AttributeError as e:
-            #  super().__setattr__(value, None)
-            return super().__getattribute__(value)
+    #  def __getattribute__(self, value):
+    #      try:
+    #          return super().__getattribute__(value)
+    #      except AttributeError as e:
+    #          return None
+
+    #  def __getstate__(self):
+    #      return self.__dict__
+
+    #  def __setstate__(self, d):
+    #      self.__dict__.update(d)
 
     @classmethod
     def create_from_dict(cls, d: dict) -> "ConfigContainer":
@@ -452,10 +458,13 @@ class DataProductTable(BaseModel):
 
 
 def resolve_data_set_id(io_def: ConfigContainer) -> str:
+    """
+    Returns the input specific, unique ID of the model
+    """
     def xtract_domain(s):
-        if "." in s:
+        if s and "." in s:
             domain_elements = s.rsplit(".")
-            return domain_elements[len(domain_elements) - 1]
+            return domain_elements[-1]
         else:
             return s
 
@@ -463,7 +472,7 @@ def resolve_data_set_id(io_def: ConfigContainer) -> str:
         model_url = getattr(io_def, io_def.type)
         return xtract_domain(model_url)
     elif io_def.type == IOType.connection:
-        return xtract_domain(io_def.model) if hasattr(io_def, "model") else xtract_domain(io_def.table)
+        return io_def.model if hasattr(io_def, "model") else xtract_domain(io_def.table)
     elif io_def.type == IOType.file:
         if hasattr(io_def, IOType.model.name):
             return xtract_domain(getattr(io_def, IOType.model.name))

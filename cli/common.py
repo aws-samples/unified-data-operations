@@ -34,6 +34,8 @@ style = Style.from_dict(
     {
         "red": "#ff0066",
         "green": "#44ff00",
+        "levender": "#E2D1F9",
+        "path": "#884444 underline",
         "green_italic": "#44ff00 italic",
     }
 )
