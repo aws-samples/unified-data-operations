@@ -247,8 +247,6 @@ def generate_product(product_def: ConfigContainer, model_definition: ConfigConta
                 model_definition, [resolve_data_set_id(inp_def) for inp_def in task.inputs]
             )
             write_file(os.path.join(product_folder, "tests", "test_config.py"), fixture_content)
-            print(task)
-            print(model_definition.models)
             task_test_content = generate_task_test_logic(
                 task_name=task_name,
                 inputs=task.inputs,
