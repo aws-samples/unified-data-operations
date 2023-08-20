@@ -67,7 +67,10 @@ def generate_task_test_logic(
     output_ids = [resolve_data_set_id(io) for io in outputs] if outputs else []
     if params is not None:
         params = params.__dict__.keys()
-    return task_test_template.render(inputs=input_ids, outputs=output_ids, params=params)
+    print(f"-> {task_name} / {input_ids} / {output_ids}")
+    return task_test_template.render(
+        task_name=task_name, inputs=input_ids, outputs=output_ids, params=params, models=models
+    )
 
 
 def generate_fixtures(model_definition: ConfigContainer | None = None, input_ids: list[str] | None = None) -> str:
