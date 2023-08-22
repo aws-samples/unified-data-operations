@@ -1,11 +1,28 @@
 import os
+import time
+import random
+from faker import Faker
 from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
+from .fakers import get_fake_value_by_spark_type, get_text_fakers
 from driver.util import convert_model_type_to_spark_type
 from driver.core import ConfigContainer, resolve_data_set_id
+from pyspark.sql.types import (
+    ArrayType,
+    BooleanType,
+    DateType,
+    DecimalType,
+    DoubleType,
+    FloatType,
+    IntegerType,
+    LongType,
+    NumericType,
+    ShortType,
+    TimestampType,
+    StringType,
+)
 
-#  from pyspark.sql.types import DataType
-
+__FAKER__: Faker = None
 __JINJA__ENV__: Environment = None
 
 
@@ -24,6 +41,26 @@ def strformat(value, frmt_str):
     return frmt_str % value
 
 
+def faker(column: ConfigContainer):
+    global __FAKER__
+    if not __FAKER__:
+        __FAKER__ = Faker()
+        #  __FAKER__.sed(10)
+
+    col_type = convert_model_type_to_spark_type(column.type)
+    if col_type == StringType:
+        processed_id = column.id.replace("_", " ").replace("-", " ").lower()
+        return get_text_fakers(processed_id, __FAKER__)
+    elif col_type == BooleanType:
+        return random.choice([True, False])
+    elif col_type in [DecimalType, DoubleType, FloatType, IntegerType, LongType, NumericType, ShortType, DateType]:
+        return get_fake_value_by_spark_type(col_type.__name__, __FAKER__)
+    elif col_type in [TimestampType]:
+        return time.time()
+    else:
+        return "N/A"
+
+
 def init():
     global __JINJA__ENV__
     __JINJA__ENV__ = Environment(
@@ -32,6 +69,7 @@ def init():
     __JINJA__ENV__.filters["convert_type_name"] = convert_type_name
     __JINJA__ENV__.filters["is_nullable"] = is_nullable_column
     __JINJA__ENV__.filters["strformat"] = strformat
+    __JINJA__ENV__.filters["faker"] = faker
 
 
 def get_jinja_env() -> Environment:

@@ -15,4 +15,4 @@ numpy>=1.19.5
 click
 prompt_toolkit
 Jinja2
-
+Faker

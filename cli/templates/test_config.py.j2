@@ -30,9 +30,11 @@ def {{ model.id }}_schema() -> StructType:
 def {{ model.id }}_df(spark_session, {{ model.id }}_schema) -> DataFrame:
     return spark_session.createDataFrame(
         [
+        {% for n in range(5) %}
+            ({{ n }}, {{ model.columns|map('faker')|join(', ') }}),
             (1, "John", "Doe", 25, "Berlin", "male"),
             (2, "Jane", "Doe", 41, "Berlin", "female"),
-            (3, "Maxx", "Mustermann", 30, "Berlin", "male"),
+        {% endfor %}
         ],
         {{ model.id }}_schema,
     )
