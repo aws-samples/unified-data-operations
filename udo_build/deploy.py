@@ -18,7 +18,7 @@ sts = boto3.client('sts')
 code_pipeline = boto3.client('codepipeline')
 
 # templating of dags
-TEMPLATE_BASE_DIR = os.path.join(os.path.abspath(__file__), "templates")
+TEMPLATE_BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
 DAGS_S3_BUCKET = getenv('DAG_S3_BUCKET')
 DAGS_S3_KEY_PREFIX = getenv('DAGS_S3_KEY_PREFIX') or 'dags'
 
