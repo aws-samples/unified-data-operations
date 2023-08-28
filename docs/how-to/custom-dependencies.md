@@ -1,7 +1,7 @@
 # How to reference custom Spark dependencies?
 
 Sometimes you might need custom third party libraries for your aggregation logic. These can be added by creating a
-```requirements.txt``` file in the root of your Data Product folder. In the following example we show, how to use
+`requirements.txt` file in the root of your Data Product folder. In the following example we show, how to use
 Pydeequ (a third party analyzer and quality assurance library from Amazon):
 
 ```requirements.txt
@@ -10,7 +10,7 @@ pydeequ
 
 Pydeequ - in our example - is the python binding to the Deequ Scala implementation, that needs additional non-python (
 Scala or Java) libraries to be added to the Spark cluster.
-This can be added via a ```config.ini``` file (also stored in the root of the data product).
+This can be added via a `config.ini` file (also stored in the root of the data product).
 
 ```properties
 [spark jars]
@@ -22,7 +22,7 @@ Once the pre-requisites are there, you can start using the new library in your c
 
 ```python
 from pyspark.sql.functions import concat, col, lit
-from driver.common import find_dataset_by_id
+from driver.util import filter_list_by_id
 from driver.task_executor import DataSet
 from typing import List
 from pyspark.sql import SparkSession, Row
@@ -30,7 +30,7 @@ from pydeequ.analyzers import *
 
 
 def execute(inp_dfs: List[DataSet], spark_session: SparkSession):
-    ds = find_dataset_by_id(inp_dfs, 'sample_product.sample_model')
+    ds = filter_list_by_id(inp_dfs, 'sample_product.sample_model')
     ds.df = ds.df.withColumn('full_name', concat(col('first_name'), lit(' '), col('last_name')))
 
     analysis_result = AnalysisRunner(spark_session)
@@ -42,12 +42,12 @@ def execute(inp_dfs: List[DataSet], spark_session: SparkSession):
 
 analysis_result_df = AnalyzerContext.successMetricsAsDataFrame(spark_session, analysis_result)
 
-ds_model = DataSet(id='sample_model', df=ds.df)
-ds_analysis = DataSet(id='model_analysis', df=analysis_result_df)
+ds_model = DataSet(model_id='sample_model', df=ds.df)
+ds_analysis = DataSet(model_id='model_analysis', df=analysis_result_df)
 return [ds_model, ds_analysis]
 ```
 
-Additionally you can create a custom initialisation file, called ```init_hook.py``` in the root folder of your data
+Additionally you can create a custom initialisation file, called `init_hook.py` in the root folder of your data
 product. This file will give you control over the Spark environment and the data product processor environment as well.
 A feature that we can use to interact with the cluster configuration.
 
@@ -81,7 +81,7 @@ ini file.
 
 #### Preparing your unit test to work with Pyspark custom configurations
 
-Create a file ```pytest.ini``` and add Spark options:
+Create a file `pytest.ini` and add Spark options:
 
 ```properties
 [pytest]

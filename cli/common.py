@@ -135,6 +135,15 @@ class IOCompleter(Completer):
             pass
 
 
+def select_from_list(
+    prompt_string: str,
+    string_list: list[str],
+    ignore_case: bool = True,
+):
+    word_completer = WordCompleter(string_list, ignore_case)
+    return prompt(prompt_string, completer=word_completer)
+
+
 def get_io_type(prompt_text: str):
     def validate_io(text):
         tokens = text.split(":", 1)
@@ -169,7 +178,7 @@ def get_io_type(prompt_text: str):
             completer=IOCompleter(),
             key_bindings=kb,
             validator=io_validator,
-            complete_style=CompleteStyle.MULTI_COLUMN,
+            complete_style=CompleteStyle.COLUMN,
             complete_while_typing=True,
         )
     )
@@ -208,7 +217,7 @@ def non_empty_prompt(topic_text: str, default: Optional[str] = None):
 
 def cron_expression_prompt(prompt_text: str) -> str:
     regex = re.compile(
-        "(@(annually|yearly|monthly|weekly|daily|hourly|reboot))|(@every (\d+(ns|us|µs|ms|s|m|h))+)|((((\d+,)+\d+|(\d+(\/|-)\d+)|\d+|\*) ?){5,7})"
+        "(@(annually|yearly|monthly|weekly|daily|hourly|reboot))|(@every (\d+(ns|us|µs|ms|s|m|h))+)|((((\d+,)+\d+|(\d+(\/|-)\d+)|\d+|\*|\?) ?){5,7})"
     )
     cron_expression_validator = Validator.from_callable(
         lambda x: bool(regex.match(x)), error_message="Please provide a valid cron expression", move_cursor_to_end=True

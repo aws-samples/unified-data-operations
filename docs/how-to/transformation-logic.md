@@ -5,16 +5,16 @@ DataFrame)
 and must produce at least one output DataSet with a Spark DataFrame inside. Everything in between is standard Python and
 PySpark.
 
-The example below receives one DataSet with the ID ```person_raw```, adds a new timestamp column if
-the ```create_timestamp```
-property was defined in the ```product.yml```'s pipeline > tasks > logic > parameters section and concatenates the
+The example below receives one DataSet with the ID `person_raw`, adds a new timestamp column if
+the `create_timestamp`
+property was defined in the `product.yml`'s pipeline > tasks > logic > parameters section and concatenates the
 first_name and last_names columns into a full_name column. The very same DataFrame is packaged into two different
 DataSets, with two different models referred to in the id property, so that the processor can do some post-processing on
 the dataframes, that are defined in those models.
 
 ```python
 def execute(inp_dfs: List[DataSet], spark_session: SparkSession, create_timestamp=False):
-    ds = find_dataset_by_id(inp_dfs, 'person_raw')
+    ds = filter_list_by_id(inp_dfs, 'person_raw')
 
     if create_timestamp:
         timestamp = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
@@ -22,13 +22,13 @@ def execute(inp_dfs: List[DataSet], spark_session: SparkSession, create_timestam
 
     df = ds.df.withColumn('full_name', concat(col('first_name'), lit(' '), col('last_name')))
 
-    ds_pub = DataSet(id='person_pub', df=df)
-    ds_pii = DataSet(id='person_pii', df=df)
+    ds_pub = DataSet(model_id='person_pub', df=df)
+    ds_pii = DataSet(model_id='person_pii', df=df)
 
     return [ds_pub, ds_pii]
 ```
 
-In the example above, it is mandatory to provide the ```inp_dfs``` and the ```spark_session``` parameters, because these
+In the example above, it is mandatory to provide the `inp_dfs` and the `spark_session` parameters, because these
 are injected by the task executor.
 
 The DataSet class provides access to the Spark Data Frame, as well to the model and the product metadata structure.
@@ -44,18 +44,18 @@ class DataSet:
 
 These can be referenced in each custom aggregation task code.
 
-Your custom aggregation logic is parametrised from the ```product.yml``` file's ```tasks``` section:
+Your custom aggregation logic is parametrised from the `product.yml` file's `tasks` section:
 
 ```yaml
-  logic:
-    module: tasks.custom_business_logic
-    parameters:
-      create_timestamp: false
+logic:
+  module: tasks.custom_business_logic
+  parameters:
+    create_timestamp: false
 ```
 
 ## Testing
 
-We recommend using the ```pytest``` framework for writing unit tests for your custom logic.
+We recommend using the `pytest` framework for writing unit tests for your custom logic.
 
 ### 1) Create a virtual environment in root folder
 
@@ -65,13 +65,14 @@ source .venv/bin/activate
 ```
 
 ### 2) Install data-product-processor
+
 ```commandline
 pip install data-product-processor
 ```
 
 ### 3) Install python dependencies for test execution
 
-Create a ```requirements-test.txt``` file in the root folder of the data product with the following content:
+Create a `requirements-test.txt` file in the root folder of the data product with the following content:
 
 ```text
 pyspark
@@ -85,19 +86,21 @@ pytest
 ```
 
 Install them.
+
 ```commandline
 pip install -r requirements-test.txt
 ```
 
 ### 4) Add tests
 
-Create a ```tests``` folder in your data product folder.
+Create a `tests` folder in your data product folder.
 
 ```commandline
 mkdir tests
 touch tests/__init__.py
 ```
-Create a test configuration file called ```test_config.py```
+
+Create a test configuration file called `test_config.py`
 with [fixtures](https://docs.pytest.org/en/6.2.x/fixture.html) (reusable, support functionality injected into your tests
 by the pytest framework).
 
@@ -143,14 +146,14 @@ def person_df(spark_session, person_schema) -> DataFrame:
                                           ], person_schema)
 ```
 
-Next write your test function for your custom business logic in the ```test_custom_business_logic.py``` file:
+Next write your test function for your custom business logic in the `test_custom_business_logic.py` file:
 
 ```python
 from pyspark.sql import DataFrame
 
 
 def test_custom_logic(spark_session, person_df: DataFrame):
-    data_source = DataSet(id='some_schema.some_table', df=person_df)
+    data_source = DataSet(model_id='some_table', df=person_df, product_id='some_schema')
     results: List[DataSet] = tasks.custom_business_logic.execute([data_source], spark_session)
     for dataset in results:
         assert dataset.id == 'transformed_data_set'
@@ -188,4 +191,4 @@ def test_end_to_end(spark_session, spark_context, person_df: DataFrame, app_args
     driver.process_product(app_args, product_folder)
 ```
 
-You can run your tests from your favourite editor (eg. Pycharm) or using the ```pytest``` command line.
+You can run your tests from your favourite editor (eg. Pycharm) or using the `pytest` command line.

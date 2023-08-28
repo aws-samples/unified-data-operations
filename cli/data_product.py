@@ -1,6 +1,8 @@
 import os
 import re
 import traceback
+
+from pandas.tests.internals.test_internals import N
 import driver
 import click
 import yaml
@@ -20,9 +22,10 @@ from cli.common import (
     driver_subsystem,
     non_empty_prompt,
     style,
+    select_from_list,
 )
 from driver.core import ConfigContainer, resolve_data_set_id
-from .jinja import generate_task_logic, generate_fixtures, generate_task_test_logic
+from .jinja import generate_task_logic, generate_fixtures, generate_task_test_logic, generate_pytest_ini
 from .common import get_io_type
 from driver.util import create_model_from_spark_schema
 import pickle
@@ -112,9 +115,9 @@ def collect_schema_from_data_source(input_definition: ConfigContainer):
         handle_input = task_executor.data_src_handlers.get(input_definition.type)
         print_formatted_text(
             HTML(
-                f"Connecting to: <green>{resolve_data_set_id(input_definition)}</green> "
-                f"using input definition <path>{input_definition.to_dict()}</path> with identified input "
-                f"handler: <levender>{handle_input.__name__ if handle_input else None}</levender>"
+                f"Connecting to: <green>{resolve_data_set_id(input_definition)}</green>\n"
+                f"  using input definition <path>{input_definition.to_dict()}</path>\n"
+                f"  with identified input handler: <levender>{handle_input.__name__ if handle_input else None}</levender>"
             ),
             style=style,
         )
@@ -138,11 +141,23 @@ def collect_schema_from_data_source(input_definition: ConfigContainer):
         return model
 
 
-def re_define_model(model: dict):
-    #  print_formatted_text(HTML(f"<green>{model}</green>"), style=style)
-    #  def create_edit_column
+def re_define_model(model: dict, other_models: list = []):
     # todo: add column management code above /
     # support: 3 cases: columns are empty, columns need redefinition, new columns should be added
+    def configure_column(existing: dict = None):
+        col = {
+            "id": non_empty_prompt("Id: ", existing.get("id") if existing else None),
+            "type": non_empty_prompt("Type: ", existing.get("type") if existing else None),
+            "name": non_empty_prompt(
+                "Name: ", replace_multiple(existing.get("name", "")).title() if existing else None
+            ),
+            "description": non_empty_prompt(
+                "Description: ", existing.get("description", "").capitalize() if existing else None
+            ),
+        }
+        # todo: add constraints support
+        return col
+
     print(f"Using model:\n{json.dumps(model, indent=4)}")
     if collect_bool(f"Do you want to edit Model {model.get('id')}?", False):
         replacers = {"-": " ", "_": " "}
@@ -159,17 +174,23 @@ def re_define_model(model: dict):
         cols = model.get("columns", [])
         if cols and collect_bool("Do you want to edit the columns? ", False):
             for idx, col in enumerate(cols):
-                col.update(id=non_empty_prompt("Id: ", col.get("id")))
-                # todo: add type mapper
-                col.update(type=non_empty_prompt("Type: ", col.get("type")))
-                col.update(name=non_empty_prompt("Name: ", replace_multiple(col.get("name", "")).title()))
-                col.update(description=non_empty_prompt("Description: ", col.get("description", "").capitalize()))
-                # todo: add constraints support
-                #
-                cols[idx] = col
+                cols[idx] = configure_column(col)
             model.update(columns=cols)
         elif not cols and collect_bool("Do you want to add columns?", False):
-            pass
+            if other_models and collect_bool("Do you want to copy fields from another model?", False):
+                other_model_id = select_from_list(
+                    "Select model to copy from: ", [other_model.get("id") for other_model in other_models]
+                )
+                other_model = next(iter([m for m in other_models if m.get("id") == other_model_id]), None)
+                if other_model:
+                    model.update(columns=other_model.get("columns"))
+            else:
+                cols: List[Dict] = list()
+                while True:
+                    cols.append(configure_column())
+                    if not collect_bool("Add another one? "):
+                        break
+                model.update(columns=cols)
         model = (
             model
             | {"meta": model.get("meta", {}) | collect_key_value_pairs("Do you want to add metadata?", "Meta Data")}
@@ -186,7 +207,7 @@ def collect_model_definition(data_product: ConfigContainer):
 
     def augment_models(model_list: List[Dict]) -> List[Dict]:
         for idx, model in enumerate(model_list):
-            model_list[idx] = re_define_model(model)
+            model_list[idx] = re_define_model(model, model_list)
         return model_list
 
     for task in data_product.product.pipeline.tasks:
@@ -241,7 +262,9 @@ def generate_product(product_def: ConfigContainer, model_definition: ConfigConta
     for task in product_def.product.pipeline.tasks:
         if task.logic is not None:
             task_name = task.logic.module.split(".")[-1]
-            task_content = generate_task_logic(inputs=task.inputs, outputs=task.outputs, params=task.logic.parameters)
+            task_content = generate_task_logic(
+                inputs=task.inputs, outputs=task.outputs, param_list=task.logic.parameters
+            )
             write_file(os.path.join(product_folder, "tasks", f"{task_name}.py"), task_content)
             fixture_content = generate_fixtures(
                 model_definition, [resolve_data_set_id(inp_def) for inp_def in task.inputs]
@@ -255,6 +278,8 @@ def generate_product(product_def: ConfigContainer, model_definition: ConfigConta
                 models=model_definition.models,
             )
             write_file(os.path.join(product_folder, "tests", f"test_{task_name}.py"), task_test_content)
+    pytest_ini_content = generate_pytest_ini()
+    write_file(os.path.join(product_folder, "pytest.ini"), pytest_ini_content)
 
 
 @click.command(name="create")

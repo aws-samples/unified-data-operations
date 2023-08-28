@@ -4,10 +4,7 @@
   "title": "Data Product Schema",
   "description": "Used to validate the product.yml that defines the data product execution pipeline",
   "type": "object",
-  "required": [
-    "schema_version",
-    "product"
-  ],
+  "required": ["schema_version", "product"],
   "additionalProperties": false,
   "properties": {
     "schema_version": {
@@ -16,13 +13,7 @@
     },
     "product": {
       "type": "object",
-      "required": [
-        "id",
-        "version",
-        "owner",
-        "pipeline",
-        "description"
-      ],
+      "required": ["id", "version", "owner", "pipeline", "description"],
       "additionalProperties": false,
       "properties": {
         "id": {
@@ -50,11 +41,7 @@
         },
         "engine": {
           "type": "string",
-          "enum": [
-            "glue",
-            "emr",
-            "dbt"
-          ]
+          "enum": ["glue", "emr", "dbt"]
         },
         "pipeline": {
           "$ref": "#/$defs/pipeline"
@@ -68,10 +55,7 @@
     },
     "pipeline": {
       "type": "object",
-      "required": [
-        "schedule",
-        "tasks"
-      ],
+      "required": ["schedule", "tasks"],
       "additionalProperties": false,
       "properties": {
         "schedule": {
@@ -88,11 +72,7 @@
     },
     "task": {
       "type": "object",
-      "required": [
-        "id",
-        "inputs",
-        "outputs"
-      ],
+      "required": ["id", "inputs", "outputs"],
       "additionalProperties": false,
       "properties": {
         "id": {
@@ -139,9 +119,7 @@
     "task_logic": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "module"
-      ],
+      "required": ["module"],
       "properties": {
         "module": {
           "type": "string",
@@ -155,10 +133,7 @@
     },
     "io_type_connection": {
       "type": "object",
-      "required": [
-        "connection",
-        "table"
-      ],
+      "required": ["connection", "table"],
       "additionalProperties": true,
       "properties": {
         "connection": {
@@ -177,10 +152,8 @@
     },
     "io_type_model": {
       "type": "object",
-      "required": [
-        "model"
-      ],
-      "additionalProperties": false,
+      "required": ["model"],
+      "additionalProperties": true,
       "properties": {
         "model": {
           "type": "string",
@@ -190,9 +163,7 @@
     },
     "io_type_file": {
       "type": "object",
-      "required": [
-        "file"
-      ],
+      "required": ["file"],
       "additionalProperties": true,
       "properties": {
         "file": {

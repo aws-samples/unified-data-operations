@@ -56,8 +56,15 @@ def process_product(args, product_path: str):
         product = compile_product(product_path, args)
         models = compile_models(product_path, product)
         for task in product.pipeline.tasks:
-            task_executor.execute(product, task, models, product_path)
+            try:
+                task_executor.execute(product, task, models, product_path)
+            except Exception as tex:
+                err = type(tex).__name__
+                trb = traceback.format_exc()
+                logger.error(f"Execution of task [{task.id}] for product [{product.id}/] failed with: {trb}")
+                raise
     except Exception as e:
-        traceback.print_exc()
-        logger.error(f"Couldn't execute job due to >> {type(e).__name__}: {str(e)}")
+        #  todo: do traceback only in case of verbose mode
+        #  traceback.print_exc()
+        logger.error(f"Exiting, because data product task execution failed >> {type(e).__name__}: {str(e)}")
         sys.exit(-1)

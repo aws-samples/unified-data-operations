@@ -24,7 +24,7 @@ def person_frame(spark_session) -> DataFrame:
                 StructField("id", IntegerType(), True),
                 StructField("first_name", StringType(), True),
                 StructField("last_name", StringType(), True),
-                StructField("age", IntegerType(), True)
+                StructField("age", IntegerType(), True),
             ]
         ),
     )
@@ -32,20 +32,21 @@ def person_frame(spark_session) -> DataFrame:
 
 @skip("Integration test is skipped for now")
 def test_update(person_frame: DataFrame):
-    catalog_service = CatalogService(Session(profile_name='finn'))
+    # todo: review and/or remove this code
+    catalog_service = CatalogService(Session(profile_name="finn"))
 
-    catalog_service.drain_database('customers')
+    catalog_service.drain_database("customers")
 
-    catalog_service.update_database('customers', 'person', DataSet(
-        id='person',
-        df=person_frame,
-        product_id='customers',
-        model_id='person',
-        model=ConfigContainer(
-            storage=ConfigContainer(
-                options=ConfigContainer(
-                    location='s3://job-interpreter/data/customers'
-                )
-            )
-        )
-    ))
+    catalog_service.update_database(
+        "customers",
+        "person",
+        DataSet(  # this instantiation is deprecated
+            id="person",
+            df=person_frame,
+            product_id="customers",
+            model_id="person",
+            model=ConfigContainer(
+                storage=ConfigContainer(options=ConfigContainer(location="s3://job-interpreter/data/customers"))
+            ),
+        ),
+    )

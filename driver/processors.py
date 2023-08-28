@@ -12,8 +12,7 @@ from pyspark.sql.types import StringType, StructField, TimestampType
 from pyspark.ml.feature import Bucketizer
 from driver.core import ValidationException, SchemaValidationException
 from driver.task_executor import DataSet
-
-from driver.util import test_property
+from driver.util import test_property, safe_get_property
 
 logger = logging.getLogger(__name__)
 
@@ -249,7 +248,7 @@ def constraint_processor(ds: DataSet):
             cvalidator = constraint_validators.get(ctype)
             if cvalidator:
                 constraint = next(iter([co for co in col.constraints if co.type == ctype]), None)
-                constraint_opts = constraint.options if hasattr(constraint, "options") else None
+                constraint_opts = safe_get_property(constraint, "option")
                 cvalidator(ds.df, col.id, constraint_opts)
     return ds
 

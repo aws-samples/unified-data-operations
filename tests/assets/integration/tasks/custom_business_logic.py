@@ -15,8 +15,7 @@ def execute(inp_dfs: List[DataSet], create_timestamp=False):
 
     df = ds.df.withColumn("full_name", concat(col("first_name"), lit(" "), col("last_name")))
 
-    ds_pub = DataSet(id="person_pub", df=df)
-    ds_pii = DataSet(id="person_pii", df=df)
+    ds_pub = DataSet(model_id="person_pub", df=df)
+    ds_pii = DataSet(model_id="person_pii", df=df)
 
     return [ds_pub, ds_pii]
-

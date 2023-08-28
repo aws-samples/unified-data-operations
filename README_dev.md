@@ -1,17 +1,29 @@
 [![pipeline status](https://gitlab.aws.dev/aws-sa-dach/teams/dnb/data-mesh-task-interpreter/badges/master/pipeline.svg)](https://gitlab.aws.dev/aws-sa-dach/teams/dnb/data-mesh-task-interpreter/-/commits/master)
 [![coverage report](https://gitlab.aws.dev/aws-sa-dach/teams/dnb/data-mesh-task-interpreter/badges/master/coverage.svg)](https://gitlab.aws.dev/aws-sa-dach/teams/dnb/data-mesh-task-interpreter/-/commits/master)
 
-# Data Mesh Task Interpreter
+## Semantic Layer
+
+- Data Product Id: is the ID defined in the product.yml
+- Model Id: is the id defined for every model in the model.yml
+- Data Set Id: a combination of {Data Product Id}.{Model Id}
+
+### This Documentation is WIP
+
+While this page contains good tidbits of information, some of it is outtdated or
+unfinished
+
+# UDO Task Executor
 
 Interprets YAML based task definition of
 the [data mesh](https://gitlab.aws.dev/aws-sa-dach/teams/dnb/data-mesh-solution) as AWS Glue job.
 
 ## Format
 
+todo: the links below are broken
 See [model.yml](deprecated_ts/interpreters/model.yml) and [product.yml](deprecated_ts/interpreters/product.yml)
 test examples.
 
-# Setup real-local development environment
+# Setup local development environment
 
 ## Install development environment on OSX
 

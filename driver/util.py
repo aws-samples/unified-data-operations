@@ -163,12 +163,21 @@ def write_csv(df: DataFrame, output_path: str, buckets=3) -> None:
     df.coalesce(buckets).write.format("csv").mode("overwrite").options(header="true").save(path=output_path)
 
 
-def safe_get_property(object: Any, property: str):
+def safe_get_property(current_object: Any, nested_property: str):
     """
     Returns the value of a property if the property exists. Othewise it returns None
     :return: Value of the property if the property exists, None otherwise.
     """
-    return getattr(object, property) if hasattr(object, property) else None
+    elements = nested_property.split(".")
+    last_index = len(elements) - 1
+    for count, element in enumerate(elements):
+        if count == last_index:
+            return getattr(current_object, element) if hasattr(current_object, element) else None
+        elif hasattr(current_object, element):
+            current_object = getattr(current_object, element)
+        else:
+            return None
+    return None
 
 
 def test_property(object, nested_property: str):
@@ -187,7 +196,7 @@ def test_property(object, nested_property: str):
     return True
 
 
-def filter_list_by_id(object_list, object_id):
+def filter_list_by_id(object_list: list[Any], object_id: str):
     return next(iter([m for m in object_list if m.id == object_id]), None)
 
 

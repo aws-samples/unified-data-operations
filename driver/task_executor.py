@@ -7,15 +7,14 @@ import logging
 import sys
 
 from typing import List, Callable, Dict
-from .util import filter_list_by_id, enrich_models
+from .util import filter_list_by_id, enrich_models, resolve_io_type
 from .core import (
     DataSet,
     DataProduct,
     ProcessorChainExecutionException,
     ValidationException,
-    resolve_data_set_id,
-    ResolverException,
-    resolve_data_product_id,
+    resolve_model_id,
+    resolve_product_id,
     ConfigContainer,
 )
 
@@ -62,29 +61,37 @@ def load_inputs(product: ConfigContainer, inputs: ConfigContainer, models: List[
         return handle_input(input_def)
 
     for inp in inputs:
-        model_id = inp.model if hasattr(inp, "model") else None
-        #  setattr(inp, 'type', resolve_io_type(inp))
+        model_id = resolve_model_id(inp)
+        setattr(inp, "type", resolve_io_type(inp))
 
         # dataset_id is build as follows
-        # file:         <assigned model id OR filename without filetype>
+        # file:         <assigned model id OR <parent dir>.<filename> without filetype>
         # model:        <data product id>.<model id>
-        # connection:   <connection id>.<table name>
-        data_product_id = resolve_data_product_id(inp)
-        dataset_id = f"{data_product_id}.{resolve_data_set_id(inp)}" if data_product_id else resolve_data_set_id(inp)
+        # connection:   <schema id>.<table name>
 
         model_obj = filter_list_by_id(models, model_id)
 
         dp = DataProduct(
             id=product.id, description=getattr(product, "description", None), owner=getattr(product, "owner", None)
         )
-        input_datasets.append(DataSet(dataset_id, load_input(inp), model_obj, dp))
+        input_datasets.append(
+            DataSet(
+                model_id=model_id,
+                df=load_input(inp),
+                product_id=resolve_product_id(inp),
+                model=model_obj,
+                current_product=dp,
+            )
+        )
     return input_datasets
 
 
 def run_processors(phase: str, datasets: List[DataSet], processors: List[Callable]) -> List[DataSet]:
+    current_processor_name = None
     try:
         processed_dfs: list[datasets] = datasets
         for processor in processors:
+            current_processor_name = processor.__name__
             logger.info(f"-> running processor: [{processor.__name__}]")
             new_dss: list[datasets] = list()
             for ds in processed_dfs:
@@ -93,15 +100,18 @@ def run_processors(phase: str, datasets: List[DataSet], processors: List[Callabl
         return processed_dfs
     except ValidationException as vex:
         raise ProcessorChainExecutionException(
-            f"{type(vex).__name__} in processor [{processor.__name__}] at processor chain: [{phase}]: {str(vex)}"
+            f"{type(vex).__name__} in processor [{current_processor_name}] at processor chain: [{phase}]: {str(vex)}"
         ) from vex
     except Exception as e:
         raise ProcessorChainExecutionException(
-            f"{type(e).__name__} in [{processor.__name__}] at processor chain: [{phase}]: {str(e)}"
+            f"{type(e).__name__} in [{current_processor_name}] at processor chain: [{phase}]: {str(e)}"
         ) from e
 
 
 def transform(inp_dfs: List[DataSet], product_path: str, custom_module_name, params=None) -> List[DataSet]:
+    """
+    The actual data transformation execution
+    """
     from driver.driver import get_spark
 
     sys.path.append(product_path)
@@ -126,10 +136,10 @@ def sink(o_dfs: List[DataSet]):
 
 def enrich(datasets: List[DataSet], product: ConfigContainer, models: List[ConfigContainer]):
     for dataset in datasets:
-        if not dataset.product_id:
+        if dataset.product_id is None:
             dataset.product_id = product.id
-        if not dataset.product_owner:
-            dataset.product.owner = getattr(product, "owner", None)
+        if dataset.product_owner is None:
+            dataset.current_product.owner = getattr(product, "owner", None)
         if dataset.model is None:
             default_model = enrich_models(ConfigContainer(models=[ConfigContainer(id=dataset.id)]), product=product)[0]
             model_obj = next(iter([m for m in models if m.id == dataset.id]), default_model)

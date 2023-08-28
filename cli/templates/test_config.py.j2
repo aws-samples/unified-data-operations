@@ -1,4 +1,4 @@
-from types import SimpleNamespace
+from driver.core import ConfigContainer
 from pyspark.sql import DataFrame
 from pytest import fixture
 from pyspark.sql.types import StringType, StructField, StructType, IntegerType, LongType, DoubleType, TimestampType
@@ -14,6 +14,8 @@ def app_args() -> ConfigContainer:
     return args
 
 {% if models is defined %}
+{% set input_models = input_ids|map('split_and_pick',-1) %}
+
 {% for model in models %}
 @fixture(scope="module")
 def {{ model.id }}_schema() -> StructType:
@@ -25,15 +27,13 @@ def {{ model.id }}_schema() -> StructType:
         ]
     )
 
-{% if model.id in input_ids %}
+{% if model.id in input_models %}
 @fixture(scope="module")
 def {{ model.id }}_df(spark_session, {{ model.id }}_schema) -> DataFrame:
     return spark_session.createDataFrame(
         [
         {% for n in range(5) %}
-            ({{ n }}, {{ model.columns|map('faker')|join(', ') }}),
-            (1, "John", "Doe", 25, "Berlin", "male"),
-            (2, "Jane", "Doe", 41, "Berlin", "female"),
+            ({{ model.columns|map('faker') |join(', ') }}),
         {% endfor %}
         ],
         {{ model.id }}_schema,

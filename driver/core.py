@@ -21,7 +21,6 @@ from pydantic import (
 from typing import Dict, List, TypeVar, Union
 from driver import util
 from pyspark.sql.types import StructType
-import traceback
 
 Scalar = TypeVar("Scalar", int, float, bool, str)
 
@@ -56,18 +55,6 @@ class ConfigContainer(SimpleNamespace):
 
         return dicter(self)
 
-    #  def __getattribute__(self, value):
-    #      try:
-    #          return super().__getattribute__(value)
-    #      except AttributeError as e:
-    #          return None
-
-    #  def __getstate__(self):
-    #      return self.__dict__
-
-    #  def __setstate__(self, d):
-    #      self.__dict__.update(d)
-
     @classmethod
     def create_from_dict(cls, d: dict) -> "ConfigContainer":
         x = ConfigContainer()
@@ -93,14 +80,28 @@ class DataProduct:
 
 @dataclass
 class DataSet:
-    id: str
+    """
+    Args:
+        product_id (str): referenced data product id; In case of an input, this is not be the same as the current_product.
+        model_id (str): reference model
+        df (DataFrame): the Spark data frame that contains the actual data
+        model (ConfigContainer): optional, only in case the model identified by model_id is defined in the model.yml
+        current_product (DataProduct): basic information about the current data product
+    """
+
+    model_id: str
     df: DataFrame
-    model: ConfigContainer = None
-    product: DataProduct = None
+    product_id: str = None
+    model: ConfigContainer = None  # optional: only in case the model, identified by model_id is defined in model.yml
+    current_product: DataProduct = None
 
     @classmethod
     def find_by_id(cls, dataset_list: List["DataSet"], ds_id) -> Optional["DataSet"]:
         return next(iter([m for m in dataset_list if m.id == ds_id]), None)
+
+    @property
+    def id(self):
+        return f"{self.product_id}.{self.model_id}"
 
     @property
     def spark_schema(self) -> List[StructType]:
@@ -153,11 +154,14 @@ class DataSet:
 
     @property
     def path(self) -> str:
+        """
+        Geberate the output path based on the data product id and the model id.
+        """
         if self.id is None:
             raise Exception("Can not construct data set path because product id is not defined.")
         if not self.storage_location:
             raise Exception(f"The data set storage location is not set for dataset id: {self.id}.")
-        return f"{self.product.id}/{self.id}"
+        return f"{self.current_product.id}/{self.id}"
 
     @property
     def dataset_storage_path(self) -> str:
@@ -186,22 +190,22 @@ class DataSet:
 
     @property
     def product_id(self) -> str | None:
-        return self.product.id if self.product else None
+        return self.current_product.id if self.current_product else None
 
     @product_id.setter
     def product_id(self, p_id: str) -> None:
-        if self.product:
-            self.product.id = p_id
+        if self.current_product:
+            self.current_product.id = p_id
         else:
-            self.product = DataProduct(id=p_id)
+            self.current_product = DataProduct(id=p_id)
 
     @property
     def product_description(self) -> str:
-        return self.product.description if self.product else None
+        return util.safe_get_property(self, "product.description")
 
     @property
     def product_owner(self) -> str:
-        return self.product.owner if self.product else None
+        return util.safe_get_property(self, "product.owner")
 
     @property
     def tags(self) -> dict:
@@ -227,11 +231,11 @@ class DataSet:
 
     @property
     def model_name(self) -> str:
-        return self.model.name if hasattr(self, "model") and hasattr(self.model, "name") else self.id
+        return util.safe_get_property(self, "model.name")
 
     @property
     def model_description(self) -> str:
-        return self.model.description if hasattr(self, "model") and hasattr(self.model, "description") else str()
+        return util.safe_get_property(self, "model.description")
 
 
 class SchemaValidationException(Exception):
@@ -457,11 +461,12 @@ class DataProductTable(BaseModel):
         return self.storage_location.replace("s3://", "s3a://")
 
 
-def resolve_data_set_id(io_def: ConfigContainer) -> str:
+def resolve_model_id(io_def: ConfigContainer) -> str:
     """
     Returns the input specific, unique ID of the model
     """
-    def xtract_domain(s):
+
+    def remove_prefix(s):
         if s and "." in s:
             domain_elements = s.rsplit(".")
             return domain_elements[-1]
@@ -470,12 +475,12 @@ def resolve_data_set_id(io_def: ConfigContainer) -> str:
 
     if io_def.type == IOType.model:
         model_url = getattr(io_def, io_def.type)
-        return xtract_domain(model_url)
+        return remove_prefix(model_url)
     elif io_def.type == IOType.connection:
-        return io_def.model if hasattr(io_def, "model") else xtract_domain(io_def.table)
+        return io_def.model if hasattr(io_def, "model") else remove_prefix(io_def.table)
     elif io_def.type == IOType.file:
         if hasattr(io_def, IOType.model.name):
-            return xtract_domain(getattr(io_def, IOType.model.name))
+            return remove_prefix(getattr(io_def, IOType.model.name))
         else:
             parsed_file = urlparse(io_def.file)
             filename = os.path.basename(parsed_file.path)
@@ -484,8 +489,16 @@ def resolve_data_set_id(io_def: ConfigContainer) -> str:
         raise ConnectionNotFoundException(f"The IO Type {io_def.type} is not supported.")
 
 
-def resolve_data_product_id(io_def: ConfigContainer) -> str:
+def resolve_product_id(io_def: ConfigContainer) -> str:
     if io_def.type == IOType.model:
         return getattr(io_def, io_def.type).rsplit(".")[0]
     elif io_def.type == IOType.connection:
         return getattr(io_def, "table").rsplit(".")[0]
+    elif io_def.type == IOType.file:
+        parsed_file = urlparse(io_def.file)
+        directories = os.path.dirname(parsed_file.path)
+        return directories.rsplit("/")[-1]
+
+
+def resolve_data_set_id(io_def: ConfigContainer) -> None:
+    return f"{resolve_product_id(io_def)}.{resolve_model_id(io_def)}"

@@ -65,6 +65,6 @@ def test_task_temaplate(product_defition, jinja_env):
     #  input_ids =
     #  template = task_template.render(inputs=input_ids, outputs=output_ids, params=params)
     task = product_defition.product.pipeline.tasks[0]
-    content = generate_task_logic(inputs=task.inputs, outputs=task.outputs, params=task.logic.parameters)
+    content = generate_task_logic(inputs=task.inputs, outputs=task.outputs, param_list=task.logic.parameters)
     print(content)
     assert content
