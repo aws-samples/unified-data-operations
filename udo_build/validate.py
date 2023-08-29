@@ -7,6 +7,7 @@ from udo_build.build_tools.configuration.parser import parse
 from udo_build.build_tools.configuration.error import ConfigurationError
 
 logger = logging.getLogger(__name__)
+logger.setLevel('INFO')
 
 
 def validate_configuration():

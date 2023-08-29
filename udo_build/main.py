@@ -4,7 +4,8 @@
 import argparse
 import logging
 
-from udo_build.deploy import deploy_data_product
+from udo_build.build_tools.configuration.core import DataProduct
+from udo_build.deploy import deploy_data_product_dag, package_data_product_version, upload_data_product_version
 from udo_build.validate import validate_configuration
 
 logger = logging.getLogger(__name__)
@@ -16,10 +17,14 @@ def execute(args):
     if args.validate_config:
         logger.info('Validate data product configuration of product and model YAML files')
         validate_configuration()
+        logger.info('Validation of data product completed')
 
     if args.deploy_data_product:
-        logger.info('Deploy data product DAG into airflow')
-        deploy_data_product()
+        logger.info('Deploy data product into airflow')
+        data_product: DataProduct = deploy_data_product_dag()
+        version_name, version_location = package_data_product_version(data_product)
+        upload_data_product_version(version_name, version_location)
+        logger.info('Deployment of data product completed')
 
 
 def main():
