@@ -123,13 +123,13 @@ def create_metadata_from_data_frame(df: DataFrame):
 
 
 def parse_values_into_strict_type(value: str) -> Any:
-    value_lower = value.strip("'").lower()
-    if value_lower in ("true", "yes", "1", "y"):
-        return True
-    elif value_lower in ("false", "no", "0", "n"):
-        return False
-    else:
-        return value
+    match (value.strip("'").lower()):
+        case "true" | "yes" | "1" | "y":
+            return True
+        case "false" | "no" | "0" | "n":
+            return False
+        case _:
+            return value
 
 
 def create_model_from_spark_schema(
