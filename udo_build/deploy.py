@@ -23,25 +23,26 @@ code_pipeline = boto3.client('codepipeline')
 
 # templating of dags
 TEMPLATE_BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
-DAGS_S3_BUCKET = getenv('DAG_S3_BUCKET')
+DAGS_S3_BUCKET_NAME = getenv('DAGS_S3_BUCKET_NAME')
 DAGS_S3_KEY_PREFIX = getenv('DAGS_S3_KEY_PREFIX') or 'dags'
 
 # sources of data products on the metadata bucket
-S3_DATA_PRODUCT_DEFINITIONS = getenv('S3_DATA_PRODUCT_DEFINITIONS')
-S3_DATALAKE = getenv('S3_DATALAKE')
+S3_BUCKET_DATALAKE_NAME = getenv('S3_BUCKET_DATALAKE_NAME')
 
 # data-product-processor-based computation on Glue
 GLUE_ROLE_NAME = getenv('DAG_GLUE_ROLE_NAME')
 DPP_VERSION = getenv('DPP_VERSION')
-PYSPARK_SCRIPT_LOCATION = f's3://{getenv("S3_ETL_ARTIFACTS")}/main.py'
-S3_BUCKET_TEMP = f's3://{getenv("S3_BUCKET_TEMP")}/glue'
+S3_BUCKET_ARTIFACTS_NAME = getenv('S3_BUCKET_ARTIFACTS_NAME')
+S3_BUCKET_ARTIFACTS = f"s3://{S3_BUCKET_ARTIFACTS_NAME}"
+S3_BUCKET_ARTIFACTS_GLUE = f"{S3_BUCKET_ARTIFACTS}/glue"
+PYSPARK_SCRIPT_LOCATION = f"{S3_BUCKET_ARTIFACTS}/main.py"
 
 # make all files found under extra_jars available to Glue via --extra-jars argument
-etl_artifact_bucket = s3_client.Bucket(getenv('S3_ETL_ARTIFACTS'))
+etl_artifact_bucket = s3_client.Bucket(S3_BUCKET_ARTIFACTS_NAME)
 jars = []
 for jar in etl_artifact_bucket.objects.filter(Prefix='extra_jars/'):
     if jar.key != 'extra_jars/':
-        jars.append(f's3://{getenv("S3_ETL_ARTIFACTS")}/{jar.key}')
+        jars.append(f"{S3_BUCKET_ARTIFACTS}/{jar.key}")
 EXTRA_JARS = ','.join(jars)
 
 # Airflow notifications
@@ -61,9 +62,9 @@ def deploy_data_product_dag() -> DataProduct:
             'NOTIFICATION_SENDER_EMAIL_ADDRESS': NOTIFICATION_SENDER_EMAIL_ADDRESS,
             'GLUE_VERSION': '3.0',
             'GLUE_PYTHON_VERSION': '3',
-            'S3_BUCKET_RESULTS': S3_DATALAKE,
-            'S3_BUCKET_ARTIFACTS': S3_DATA_PRODUCT_DEFINITIONS,
-            'S3_BUCKET_TEMP': S3_BUCKET_TEMP,
+            'S3_BUCKET_DATALAKE_NAME': S3_BUCKET_DATALAKE_NAME,
+            'S3_BUCKET_ARTIFACTS': S3_BUCKET_ARTIFACTS,
+            'S3_BUCKET_ARTIFACTS_GLUE': S3_BUCKET_ARTIFACTS_GLUE,
             'GLUE_ROLE_NAME': GLUE_ROLE_NAME,
             'DPP_VERSION': DPP_VERSION,
             'PYSPARK_SCRIPT_LOCATION': PYSPARK_SCRIPT_LOCATION,
@@ -79,7 +80,7 @@ def deploy_data_product_dag() -> DataProduct:
         rendered_dag_content = template.render(template_parameters)
 
         dag_s3_key = f'{DAGS_S3_KEY_PREFIX}/{data_product.id}.py'
-        dag_file = s3_client.Object(DAGS_S3_BUCKET, dag_s3_key)
+        dag_file = s3_client.Object(DAGS_S3_BUCKET_NAME, dag_s3_key)
         logger.info(f'Putting DAG file {dag_file.key} to {dag_file.bucket_name}.')
         dag_file.put(Body=rendered_dag_content.encode(
         ), ExpectedBucketOwner=sts.get_caller_identity().get('Account'))
@@ -101,11 +102,11 @@ def package_data_product_version(data_product: DataProduct, data_product_path: s
 
 
 def upload_data_product_version(version_name: str, version_location: str):
-    logger.info(f'Starting version upload into {S3_DATA_PRODUCT_DEFINITIONS} bucket')
+    logger.info(f'Starting version upload into {S3_BUCKET_ARTIFACTS_NAME} bucket')
     data_product_s3_key = f'datamesh/products/{version_name}'
-    data_product_version_object = s3_client.Object(S3_DATA_PRODUCT_DEFINITIONS, data_product_s3_key)
+    data_product_version_object = s3_client.Object(S3_BUCKET_ARTIFACTS_NAME, data_product_s3_key)
     data_product_version_object.upload_file(version_location)
-    logger.info(f'New data product version available in s3://{S3_DATA_PRODUCT_DEFINITIONS}/{data_product_s3_key}')
+    logger.info(f'New data product version available in {S3_BUCKET_ARTIFACTS}/{data_product_s3_key}')
 
 
 def get_dependencies(product: DataProduct) -> List[str]:
