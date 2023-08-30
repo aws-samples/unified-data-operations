@@ -49,7 +49,7 @@ with airflow.DAG(
             "DefaultArguments": {
                 "--additional-python-modules": "pydantic,quinn,pyyaml,mypy-boto3-glue,jsonschema,data-product-processor=={{ DPP_VERSION }}",
                 '--default_data_lake_bucket': "{{ S3_BUCKET_DATALAKE_NAME }}",
-                '--extra-files': "s3://{{ S3_BUCKET_ARTIFACTS }}/datamesh/products/{{ product.id }}-{{ product.version }}.zip",
+                '--extra-files': "{{ S3_BUCKET_ARTIFACTS }}/datamesh/products/{{ product.id }}-{{ product.version }}.zip",
                 '--extra-jars': "{{ EXTRA_JARS }}",
                 '--TempDir': "{{ S3_BUCKET_ARTIFACTS_GLUE }}",
                 '--job-bookmark-option': "job-bookmark-disable",
