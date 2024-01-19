@@ -196,9 +196,9 @@ def test_property(object, nested_property: str):
     return True
 
 
-def filter_list_by_id(object_list: list[Any], object_id: str):
+def filter_list_by_id(object_list: list[Any], object_id: str, allow_none=False):
     data_set = next(iter([m for m in object_list if m.id == object_id]), None)
-    if data_set is None:
+    if not allow_none and data_set is None:
         raise ValueError(f"There's no <{object_id}> in the list {[m.id for m in object_list]}")
     return data_set
 
@@ -263,6 +263,7 @@ def enrich_models(models: ConfigContainer, product: ConfigContainer):
         columns_with_missing_type = [col for col in model.columns if not hasattr(col, "type")]
         for col in columns_with_missing_type:
             setattr(col, "type", filter_list_by_id(extended_model.columns, col.id).type)
+
 
     def decorate_model_with_defaults(model):
         if hasattr(product, "defaults"):

@@ -70,7 +70,7 @@ def load_inputs(product: ConfigContainer, inputs: ConfigContainer, models: List[
         # model:        <data product id>.<model id>
         # connection:   <schema id>.<table name>
 
-        model_obj = filter_list_by_id(models, model_id)
+        model_obj = filter_list_by_id(models, model_id, allow_none=True)
 
         dp = DataProduct(
             id=product.id, description=getattr(product, "description", None), owner=getattr(product, "owner", None)
