@@ -4,12 +4,13 @@
 boto3==1.18.34
 botocore
 wheel==0.38.1
-pyyaml==5.4.1
+PyYAML==6.0
+MarkupSafe==2.0.1
 pydantic==1.10.10
 quinn
 boto3-stubs[glue]==1.18.34
 mypy-boto3-glue==1.18.34
-jsonschema==3.0.2
+jsonschema==4.16.0
 pyspark==3.4.0
 numpy>=1.19.5
 click

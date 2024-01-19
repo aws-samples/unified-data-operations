@@ -1,6 +1,6 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
-from os import path
+from os import path, system
 from pip._internal.req import parse_requirements
 from setuptools import setup, find_packages, Command
 
@@ -35,7 +35,7 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     author="Amazon Web Services",
-    url = 'https://github.com/aws-samples/dpac-data-product-processor',
+    url='https://github.com/aws-samples/unified-data-operations',
     packages=find_packages(
         exclude=(
             "contrib",
@@ -58,6 +58,7 @@ setup(
     entry_points={
         "console_scripts": [
             "data-product-processor=main:main",
+            "udo-build=udo_build.main:main",
             "udo=cli.main:main"],
     },
 )
