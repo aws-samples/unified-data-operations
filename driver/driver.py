@@ -65,6 +65,6 @@ def process_product(args, product_path: str):
                 raise
     except Exception as e:
         #  todo: do traceback only in case of verbose mode
-        #  traceback.print_exc()
+        traceback.print_exc()
         logger.error(f"Exiting, because data product task execution failed >> {type(e).__name__}: {str(e)}")
         sys.exit(-1)

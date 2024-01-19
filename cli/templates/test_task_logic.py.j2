@@ -8,13 +8,15 @@ from driver.core import ConfigContainer, resolve_data_set_id
 from pyspark.sql import DataFrame
 from driver import DataSet
 from driver.processors import schema_checker, constraint_processor, transformer_processor
-from test_config import {{ input_models| map('strformat', '%s_df') |join(', ') }}, {{ models | map(attribute='id', default='unavailable') | map('strformat', '%s_schema') |join(', ') }}, app_args
+#from test_config import {{ input_models| map('strformat', '%s_df') |join(', ') }}, {{ models | map(attribute='id', default='unavailable') | map('strformat', '%s_schema') |join(', ') }}, app_args
 
-def test_{{ task_name }}(spark_session, {{ input_models| map('strformat', '%s_df: DataFrame') |join(', ') }}):
+def test_{{ task_name }}(spark_session, {{ inputs| map('extract_table')|map('strformat', '%s_df: DataFrame') |join(', ') }}):
     inputs = list()
     {% for input in inputs %}
-    {{ input.split('.')[-1] }}_ds = DataSet(model_id='{{ input }}', df={{ input.split('.')[-1] }}_df)
-    inputs.append({{ input.split('.')[-1] }}_ds)
+    {% set product_id = input.split('.')[0]  %}
+    {% set model_id = input.split('.')[-1]  %}
+    {{ input.split('.')[-1] }}_ds = DataSet(product_id='{{ product_id }}', model_id='{{ model_id }}', df={{ model_id }}_df)
+    inputs.append({{ model_id }}_ds)
     {% endfor %}
     outputs: List[DataSet] = tasks.{{ task_name }}.execute(inputs, spark_session, {% if params is defined and params %}{{ params |map('tuple_mapper', '=') | join(', ') }}{% endif %})
     for dataset in outputs:
@@ -25,7 +27,7 @@ def test_{{ task_name }}(spark_session, {{ input_models| map('strformat', '%s_df
         dataset.df.describe()
 
 
-def test_end_to_end(spark_session, spark_context, {{ inputs| map('split', '.')|list|last |map('strformat', '%s_df: DataFrame') |join(', ') }}, app_args):
+def test_end_to_end(spark_session, spark_context, {{ inputs| map('extract_table')|map('strformat', '%s_df: DataFrame') |join(', ') }}, app_args):
     current_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
     print(f'End to end test executed in working folder: {current_folder}')
 
@@ -33,7 +35,7 @@ def test_end_to_end(spark_session, spark_context, {{ inputs| map('split', '.')|l
     def mock_input_handler(input_definition: ConfigContainer):
         dfs = {
             {% for input in inputs %}
-            "{{ input }} ": {{ input.split('.')[-1] }}_df
+            "{{ input }}": {{ input.split('.')[-1] }}_df
             {% endfor %}
             }
         return dfs.get(resolve_data_set_id(input_definition))

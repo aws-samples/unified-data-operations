@@ -33,6 +33,13 @@ def convert_type_name(source_type: str) -> str:
     return convert_model_type_to_spark_type(source_type).__name__
 
 
+def extract_table(value: str) -> str:
+    """
+    Jinja filter to return the last element of a "schema.table" definition
+    """
+    return value.split('.')[-1]
+
+
 def split(value: str, pattern: str = ".") -> list:
     """
     Jinja filter to split a string and return a list
@@ -100,6 +107,7 @@ def init():
     __JINJA__ENV__.filters["product_id"] = resolve_product_id
     __JINJA__ENV__.filters["model_id"] = resolve_model_id
     __JINJA__ENV__.filters["split"] = split
+    __JINJA__ENV__.filters["extract_table"] = extract_table
 
 
 def get_jinja_env() -> Environment:
@@ -116,9 +124,9 @@ def generate_pytest_ini():
 
 
 def generate_task_logic(
-    inputs: list[ConfigContainer] | None = None,
-    outputs: list[ConfigContainer] | None = None,
-    param_list: list[ConfigContainer] | None = None,
+        inputs: list[ConfigContainer] | None = None,
+        outputs: list[ConfigContainer] | None = None,
+        param_list: list[ConfigContainer] | None = None,
 ) -> str:
     task_template = get_jinja_env().get_template("task_logic.py.j2")
     input_ids = [resolve_data_set_id(io) for io in inputs] if inputs else []
@@ -129,11 +137,11 @@ def generate_task_logic(
 
 
 def generate_task_test_logic(
-    task_name: str,
-    inputs: list[ConfigContainer] | None = None,
-    outputs: list[ConfigContainer] | None = None,
-    params: list[ConfigContainer] | None = None,
-    models: list[ConfigContainer] | None = None,
+        task_name: str,
+        inputs: list[ConfigContainer] | None = None,
+        outputs: list[ConfigContainer] | None = None,
+        params: list[ConfigContainer] | None = None,
+        models: list[ConfigContainer] | None = None,
 ) -> str:
     task_test_template = get_jinja_env().get_template("test_task_logic.py.j2")
     input_ids = [resolve_data_set_id(io) for io in inputs] if inputs else []
@@ -146,5 +154,5 @@ def generate_task_test_logic(
 
 
 def generate_fixtures(model_definition: ConfigContainer | None = None, input_ids: list[str] | None = None) -> str:
-    fixture_template = get_jinja_env().get_template("test_config.py.j2")
+    fixture_template = get_jinja_env().get_template("conftest.py.j2")
     return fixture_template.render(models=model_definition.models, input_ids=input_ids)

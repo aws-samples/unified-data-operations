@@ -197,8 +197,10 @@ def test_property(object, nested_property: str):
 
 
 def filter_list_by_id(object_list: list[Any], object_id: str):
-    return next(iter([m for m in object_list if m.id == object_id]), None)
-
+    data_set = next(iter([m for m in object_list if m.id == object_id]), None)
+    if data_set is None:
+        raise ValueError(f"There's no <{object_id}> in the list {[m.id for m in object_list]}")
+    return data_set
 
 def validate_json_schema(validable_dict: dict, artefact_type: ArtefactType):
     schema_vesion = validable_dict.get("schema_version")

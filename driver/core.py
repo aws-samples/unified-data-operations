@@ -6,7 +6,7 @@ from typing import Optional
 from urllib.parse import urlparse
 from jsonschema import ValidationError
 from types import SimpleNamespace
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pyspark.sql import DataFrame
 from enum import Enum
 from pydantic import (
@@ -92,16 +92,13 @@ class DataSet:
     model_id: str
     df: DataFrame
     product_id: str = None
-    model: ConfigContainer = None  # optional: only in case the model, identified by model_id is defined in model.yml
+    _product_id: str = field(init=False, repr=False, default=None)
+    model: ConfigContainer = None  # optional: only if the model, identified by model_id is defined in the model.yml
     current_product: DataProduct = None
 
-    @classmethod
-    def find_by_id(cls, dataset_list: List["DataSet"], ds_id) -> Optional["DataSet"]:
-        return next(iter([m for m in dataset_list if m.id == ds_id]), None)
-
     @property
-    def id(self):
-        return f"{self.product_id}.{self.model_id}"
+    def id(self) -> str:
+        return f"{self.product_id}.{self.model_id}" if self.product_id else self.model_id
 
     @property
     def spark_schema(self) -> List[StructType]:
@@ -190,22 +187,28 @@ class DataSet:
 
     @property
     def product_id(self) -> str | None:
-        return self.current_product.id if self.current_product else None
+        """
+        Please note: we can have a data-set that refers to Data Product A and it is part of DataProduct B (as an inpput).
+        In this scenarion the Data Set product ID (product A) will differ form the Data Set current product id (product B)
+        """
+        if hasattr(self, '_product_id') and self._product_id is not None:
+            return self._product_id
+        else:
+            util.safe_get_property(self, 'current_product.id')
 
     @product_id.setter
     def product_id(self, p_id: str) -> None:
-        if self.current_product:
-            self.current_product.id = p_id
-        else:
-            self.current_product = DataProduct(id=p_id)
+        if type(p_id) is property:
+            p_id = DataSet._product_id # initial value not specified, use default
+        self._product_id = p_id
 
     @property
     def product_description(self) -> str:
-        return util.safe_get_property(self, "product.description")
+        return util.safe_get_property(self, "current_product.description")
 
     @property
     def product_owner(self) -> str:
-        return util.safe_get_property(self, "product.owner")
+        return util.safe_get_property(self, "current_product.owner")
 
     @property
     def tags(self) -> dict:
@@ -493,7 +496,7 @@ def resolve_product_id(io_def: ConfigContainer) -> str:
     if io_def.type == IOType.model:
         return getattr(io_def, io_def.type).rsplit(".")[0]
     elif io_def.type == IOType.connection:
-        return getattr(io_def, "table").rsplit(".")[0]
+        return getattr(io_def, 'table').rsplit(".")[0]
     elif io_def.type == IOType.file:
         parsed_file = urlparse(io_def.file)
         directories = os.path.dirname(parsed_file.path)
@@ -501,4 +504,9 @@ def resolve_product_id(io_def: ConfigContainer) -> str:
 
 
 def resolve_data_set_id(io_def: ConfigContainer) -> None:
+    # dataset_id is build as follows
+    # file:         <assigned model id OR <parent dir>.<filename> without filetype>
+    # model:        <data product id>.<model id>
+    # connection:   <schema id>.<table name>
+
     return f"{resolve_product_id(io_def)}.{resolve_model_id(io_def)}"
