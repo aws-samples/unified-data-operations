@@ -1,8 +1,6 @@
 import os
 import re
 import traceback
-
-from pandas.tests.internals.test_internals import N
 import driver
 import click
 import yaml
@@ -25,8 +23,8 @@ from cli.common import (
     select_from_list,
 )
 from driver.core import ConfigContainer, resolve_data_set_id
-from .jinja import generate_task_logic, generate_fixtures, generate_task_test_logic, generate_pytest_ini
-from .common import get_io_type
+from jinja import generate_task_logic, generate_fixtures, generate_task_test_logic, generate_pytest_ini
+from common import get_io_type
 from driver.util import create_model_from_spark_schema
 import pickle
 import json
