@@ -84,12 +84,11 @@ def resolve_columns(ds: DataSet) -> List[ColumnTypeDef]:
     def lookup(column_name):
         if not hasattr(ds.model, "columns"):
             return str()
-        model_column = filter_list_by_id(ds.model.columns, column_name)
-        if hasattr(model_column, "name"):
+        model_column = filter_list_by_id(ds.model.columns, column_name, allow_none=True)
+        if model_column and hasattr(model_column, "name"):
             return f"{safe_get_property(model_column, 'name')}: {safe_get_property(model_column, 'description')}"
         else:
             return str()
-
     return [ColumnTypeDef(Name=cn, Type=ct, Comment=lookup(cn)) for cn, ct in ds.df.dtypes if cn not in ds.partitions]
 
 
@@ -108,7 +107,7 @@ def resolve_table(ds: DataSet) -> TableTypeDef:
 
 def resolve_table_input(ds: DataSet) -> TableInputTypeDef:
     return TableInputTypeDef(
-        Name=ds.id,
+        Name=ds.model_id,
         Description=f"{ds.model_name}: {ds.model_description}",
         Owner=ds.product_owner or str(),
         PartitionKeys=resolve_partitions(ds),

@@ -3,7 +3,7 @@ import os
 from urllib.parse import urlparse
 from pyspark.sql import DataFrame, DataFrameWriter
 from driver.aws import datalake_api, glue_api
-from driver.core import Connection, resolve_product_id, resolve_data_set_id
+from driver.core import Connection, resolve_product_id, resolve_model_id
 from driver.driver import get_spark
 from driver.task_executor import DataSet
 from driver.util import test_property
@@ -74,14 +74,14 @@ def file_input_handler(props: ConfigContainer) -> DataFrame:
 
 def lake_input_handler(io_def: ConfigContainer) -> DataFrame:
     prod_id = resolve_product_id(io_def)
-    model_id = resolve_data_set_id(io_def)
+    model_id = resolve_model_id(io_def)
     data_product_table = __DATA_PRODUCT_PROVIDER__(prod_id, model_id)
     df = get_spark().read.parquet(data_product_table.storage_location_s3a)
     return df
 
 
 def file_output_handler(ds: DataSet, options: ConfigContainer):
-    pass
+    raise NotImplementedError
 
 
 def resolve_compression(ds: DataSet):

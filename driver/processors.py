@@ -207,7 +207,7 @@ def type_caster(ds: DataSet):
 def schema_checker(ds: DataSet):
     if test_property(ds, "model.columns"):
         logger.info(
-            f"-> checking schema for dataset [{ds.id}] with model id: [{ds.model.id}]. Data frame columns: {len(ds.df.columns)}"
+            f"-> checking schema for dataset [{ds.id}]. Data frame columns: {len(ds.df.columns)}"
         )
         missing_fields = find_schema_delta(ds)
         if missing_fields:
@@ -248,7 +248,7 @@ def constraint_processor(ds: DataSet):
             cvalidator = constraint_validators.get(ctype)
             if cvalidator:
                 constraint = next(iter([co for co in col.constraints if co.type == ctype]), None)
-                constraint_opts = safe_get_property(constraint, "option")
+                constraint_opts = safe_get_property(constraint, "options")
                 cvalidator(ds.df, col.id, constraint_opts)
     return ds
 

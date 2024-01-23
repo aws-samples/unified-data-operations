@@ -15,7 +15,7 @@ def test_end_to_end(spark_session, transaction_df: DataFrame, fixture_asset_path
         return dfs.get(props.table)
 
     def mock_output_handler(ds: DataSet):
-        assert ds.id == 'transaction'
+        assert ds.model_id == 'transaction'
         assert ds.df.count() == transaction_df.count()
         ds.df.show()
         ds.df.describe()
@@ -26,7 +26,6 @@ def test_end_to_end(spark_session, transaction_df: DataFrame, fixture_asset_path
     driver.register_output_handler('default', mock_output_handler)
     driver.register_output_handler('lake', mock_output_handler)
     setattr(app_args, 'product_path', fixture_asset_path)
-    print('something')
     driver.process_product(app_args, fixture_asset_path)
 
 def test_resolve_io_type():

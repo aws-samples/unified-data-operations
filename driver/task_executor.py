@@ -15,7 +15,6 @@ from .core import (
     ValidationException,
     resolve_model_id,
     resolve_product_id,
-    resolve_data_set_id,
     ConfigContainer,
 )
 
@@ -142,8 +141,8 @@ def enrich(datasets: List[DataSet], product: ConfigContainer, models: List[Confi
         if dataset.current_product is None:
             dataset.current_product = product
         if dataset.model is None:
-            default_model = enrich_models(ConfigContainer(models=[ConfigContainer(id=dataset.id)]), product=product)[0]
-            model_obj = next(iter([m for m in models if m.id == dataset.id]), default_model)
+            default_model = enrich_models(ConfigContainer(models=[ConfigContainer(id=dataset.model_id)]), product=product)[0]
+            model_obj = next(iter([m for m in models if m.id == dataset.model_id]), default_model)
             dataset.model = model_obj
     return datasets
 

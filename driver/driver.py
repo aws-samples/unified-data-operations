@@ -61,7 +61,8 @@ def process_product(args, product_path: str):
             except Exception as tex:
                 err = type(tex).__name__
                 trb = traceback.format_exc()
-                logger.error(f"Execution of task [{task.id}] for product [{product.id}/] failed with: {trb}")
+                logger.error(f"{err} encountered, while executing task [{task.id}] for product [{product.id}]. "
+                             f"Trace: {trb}")
                 raise
     except Exception as e:
         #  todo: do traceback only in case of verbose mode

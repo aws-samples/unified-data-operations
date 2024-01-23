@@ -15,11 +15,12 @@ from driver.core import (
 __SESSION__ = None
 logger = logging.getLogger(__name__)
 
+
 def init(
-    key_id: str = None,
-    key_material: str = None,
-    profile: str = None,
-    region: str = None,
+        key_id: str = None,
+        key_material: str = None,
+        profile: str = None,
+        region: str = None,
 ):
     global __SESSION__
     if key_id and key_material and region:
@@ -46,6 +47,7 @@ def init(
     sts = __SESSION__.client("sts")
     __AWS_ACCOUNT_ID__ = sts.get_caller_identity()["Account"]
 
+
 def get_session() -> boto3.Session:
     return __SESSION__
 
@@ -68,9 +70,11 @@ def get_s3():
 
     return get_session().client("s3")
 
+
 def describe_session():
     boto_session = get_session()
     return f'| Profile: {boto_session.profile_name} | Region: {boto_session.region_name} | Access Key: {boto_session.get_credentials().access_key}'
+
 
 def connection_provider(connection_id: str) -> Connection:
     """
@@ -84,13 +88,14 @@ def connection_provider(connection_id: str) -> Connection:
         glue = get_session().client("glue")
         response = glue.get_connection(Name=connection_id, HidePassword=False)
         if "Connection" not in response:
-            logger.error(f'Connection {connection_id} not found. Boto session: {describe_session()}. Connection request response: {response}')
+            logger.error(
+                f'Connection {connection_id} not found. Boto session: {describe_session()}. Connection request response: {response}')
             raise ConnectionNotFoundException(
                 f"Connection [{connection_id}] could not be found."
             )
         cprops = response.get("Connection").get("ConnectionProperties")
         logger.debug(f'Connection details: {response.get("Connection")}')
-        native_host = cprops.get("JDBC_CONNECTION_URL")[len("jdbc:") :]
+        native_host = cprops.get("JDBC_CONNECTION_URL")[len("jdbc:"):]
         logger.debug(f'native host definition: {native_host}')
         connection = Connection.parse_obj(
             {
@@ -104,7 +109,8 @@ def connection_provider(connection_id: str) -> Connection:
         )
         return connection
     except Exception as e:
-        logger.error(f'{type(e).__name__} exception received while retrieving the connection to the data source: {str(e)}). Boto session {describe_session()}.')
+        logger.error(
+            f'{type(e).__name__} exception received while retrieving the connection to the data source: {str(e)}). Boto session {describe_session()}.')
         logger.debug(f'Exception log: {traceback.format_exc()}')
         raise ConnectionNotFoundException(
             f"Connection [{connection_id}] could not be found. {str(e)}. Make sure you have the right region defined."
@@ -115,7 +121,12 @@ def datalake_provider(product_id, table_id) -> DataProductTable:
     if not get_session():
         raise Exception("Boto session is not initialized. Please call init first.")
     glue = get_session().client("glue")
-    response = glue.get_table(DatabaseName=product_id, Name=table_id)
+    try:
+        response = glue.get_table(DatabaseName=product_id, Name=table_id)
+    except Exception as enox:
+        raise TableNotFoundException(f'Data product table [{product_id}.{table_id}] is not found in Glue.'
+                                     f'{str(enox)}')
+
     if "Table" not in response:
         raise TableNotFoundException(
             f"Data Product Table [{product_id}.{table_id}] could not be found."
@@ -125,8 +136,8 @@ def datalake_provider(product_id, table_id) -> DataProductTable:
             "product_id": product_id,
             "table_id": table_id,
             "storage_location": response.get("Table")
-            .get("StorageDescriptor")
-            .get("Location"),
+                .get("StorageDescriptor")
+                .get("Location"),
         }
     )
     return table

@@ -44,21 +44,21 @@ def update_data_catalog(ds: DataSet):
 
     def upsert_table():
         try:
-            rsp: GetTablesResponseTypeDef = glue.get_table(DatabaseName=ds.product_id, Name=ds.id)
+            rsp: GetTablesResponseTypeDef = glue.get_table(DatabaseName=ds.product_id, Name=ds.model_id)
             # todo: update table
-            glue.delete_table(DatabaseName=ds.product_id, Name=ds.id)
+            glue.delete_table(DatabaseName=ds.product_id, Name=ds.model_id)
             glue.create_table(DatabaseName=ds.product_id, TableInput=resolve_table_input(ds))
             # glue.update_table(DatabaseName=ds.product_id, TableInput=resolve_table_input(ds))
         except Exception as enf:  # EntityNotFoundException
             # table not found
             if enf.__class__.__name__ == "EntityNotFoundException":
                 logger.warning(
-                    f"Table [{ds.id}] cannot be found in the catalog schmea [{ds.product_id}]. Table is going to be created."
+                    f"Table [{ds.model_id}] cannot be found in the catalog schema [{ds.product_id}]. Table is going to be created."
                 )
                 glue.create_table(DatabaseName=ds.product_id, TableInput=resolve_table_input(ds))
             else:
                 raise enf
-        # rsp: GetTablesResponseTypeDef = glue.get_table(DatabaseName=ds.product_id, Name=ds.id)
+        # rsp: GetTablesResponseTypeDef = glue.get_table(DatabaseName=ds.product_id, Name=ds.model_id)
         # todo: update partitions
         # todo: register with lakeformation
 
@@ -69,12 +69,12 @@ def update_data_catalog(ds: DataSet):
         if not partition_inputs:
             return
         rsp = glue.batch_create_partition(
-            DatabaseName=ds.product_id, TableName=ds.id, PartitionInputList=partition_inputs
+            DatabaseName=ds.product_id, TableName=ds.model_id, PartitionInputList=partition_inputs
         )
-        # rsp = glue.batch_update_partition(DatabaseName=ds.product_id, TableName=ds.id,
+        # rsp = glue.batch_update_partition(DatabaseName=ds.product_id, TableName=ds.model_id,
         #                                   Entries=partition_inputs)
         if rsp.get("Errors"):
-            raise Exception(f"Couldn't update the table [{ds.id}] with the partitions.")
+            raise Exception(f"Couldn't update the table [{ds.model_id}] with the partitions.")
         status_code = rsp.get("ResponseMetadata").get("HTTPStatusCode")
         logger.info(f"Partition upsert response with HTTP Status Code: {str(status_code)}")
         # todo: write a proper error handling here

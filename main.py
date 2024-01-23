@@ -3,7 +3,6 @@
 
 import configparser
 import importlib
-import logging
 import os
 import argparse
 import sys
@@ -16,6 +15,7 @@ from driver.aws.providers import connection_provider, datalake_provider
 from driver.driver import get_spark
 from driver.io_handlers import connection_input_handler, lake_input_handler, file_input_handler, lake_output_handler
 from driver.processors import schema_checker, constraint_processor, transformer_processor, type_caster, razor
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -104,8 +104,10 @@ def main():
         log_level = logging.getLevelName(args.log_level.upper())
         logger.setLevel(log_level)
         logging.getLogger("driver").setLevel(log_level)
+        logging.getLogger("driver.aws").setLevel(log_level)
+        logger.setLevel(log_level)
         logger.info(f"KNOWN_ARGS: {args}")
-        logger.info(f"UNKNOWN_ARGS: {unknown}")
+        logger.warn(f"UNKNOWN_ARGS: {unknown}")
         logger.info(f'PATH: {os.environ["PATH"]}')
         logger.info(f'SPARK_HOME: {os.environ.get("SPARK_HOME")}')
         logger.info(f'PYTHONPATH: {os.environ.get("PYTHONPATH")}')
