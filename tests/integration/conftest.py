@@ -15,7 +15,7 @@ def app_args() -> ConfigContainer:
 
 
 @fixture(scope="module")
-def person_relevant_schema() -> StructType:
+def test_df_schema() -> StructType:
     return StructType(
         [
             StructField("id", IntegerType(), True),
@@ -28,7 +28,7 @@ def person_relevant_schema() -> StructType:
 
 
 @fixture(scope="module")
-def person_relevant_df(spark_session, person_relevant_schema) -> DataFrame:
+def test_df(spark_session, test_df_schema) -> DataFrame:
     return spark_session.createDataFrame(
         [
             (2666, "Nguyen", "Blake", 6210, "non binary"),
@@ -37,13 +37,5 @@ def person_relevant_df(spark_session, person_relevant_schema) -> DataFrame:
             (9102, "Rodriguez", "Michael", 460, "non binary"),
             (4281, "Morton", "James", 8900, "female"),
         ],
-        person_relevant_schema,
-    )
-
-
-@fixture(scope="module")
-def customer_personal_schema() -> StructType:
-    return StructType(
-        [
-        ]
+        test_df_schema,
     )

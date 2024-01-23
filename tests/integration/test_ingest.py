@@ -10,10 +10,10 @@ from tests.integration import ingest_task
 
 def test_ingest(
     spark_session,
-    person_relevant_df: DataFrame
+    test_df: DataFrame
 ):
     inputs = list()
-    person_relevant_ds = DataSet(product_id="dms_sample", model_id="person_relevant", df=person_relevant_df)
+    person_relevant_ds = DataSet(product_id="dms_sample", model_id="person_relevant", df=test_df)
     inputs.append(person_relevant_ds)
     outputs: List[DataSet] = ingest_task.execute(inputs, spark_session, create_timestamp=True)
     for dataset in outputs:
@@ -26,16 +26,16 @@ def test_ingest(
         dataset.df.describe()
 
 
-def test_end_to_end(spark_session, spark_context, person_relevant_df: DataFrame, app_args):
-    current_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../../../udo_test/test_product")
+def test_end_to_end(spark_session, spark_context, test_df: DataFrame, app_args):
+    current_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../assets/integration_source/")
     print(f"End to end test executed in working folder: {current_folder}")
 
     def mock_input_handler(input_definition: ConfigContainer):
-        dfs = {"dms_sample.person_relevant": person_relevant_df}
+        dfs = {"dms_sample.sporting_event": test_df}
         return dfs.get(resolve_data_set_id(input_definition))
 
     def mock_output_handler(dataset: DataSet):
-        assert dataset.id in ["test_product.customer_personal"]
+        assert dataset.id in ["sport_events.sporting_event"]
         # Here you can provide the assertions specifc to the output
         # assert dataset.df.count() == 30
         dataset.df.show()

@@ -202,12 +202,13 @@ def filter_list_by_id(object_list: list[Any], object_id: str, allow_none=False):
         raise ValueError(f"There's no <{object_id}> in the list {[m.id for m in object_list]}")
     return data_set
 
+
 def validate_json_schema(validable_dict: dict, artefact_type: ArtefactType):
-    schema_vesion = validable_dict.get("schema_version")
-    if not schema_vesion:
+    schema_version = validable_dict.get("schema_version")
+    if not schema_version:
         raise ValidationError("schema_version keyword must be provided")
     script_folder = os.path.dirname(os.path.abspath(__file__))
-    schema_path = os.path.join(script_folder, "schema", schema_vesion, f"{artefact_type.name}.json")
+    schema_path = os.path.join(script_folder, "schema", schema_version, f"{artefact_type.name}.json")
     with open(schema_path) as schema:
         schema = json.load(schema)
     try:

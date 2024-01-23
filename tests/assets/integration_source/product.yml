@@ -1,0 +1,20 @@
+schema_version: 1.rc-1
+product:
+  id: sport_events
+  version: "1.0.0"
+  description: Sporting Events
+  owner: jane.doe@acme.com
+  name: "test product"
+  pipeline:
+    schedule: "0 3 * * *"
+    tasks:
+      - id: extract_sport_events
+        logic:
+          module: builtin.ingest
+        inputs:
+          - id: events
+            type: connection
+            connection: test_db_connection
+            table: dms_sample.sporting_event
+        outputs:
+          - model: sporting_event

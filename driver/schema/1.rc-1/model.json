@@ -10,7 +10,7 @@
   "additionalProperties": false,
   "properties": {
     "schema_version": {
-      "type": "string",
+      "type": ["string", "number"],
       "description": "The version of this schema file"
     },
     "models": {
