@@ -36,6 +36,7 @@ S3_BUCKET_ARTIFACTS_NAME = getenv('S3_BUCKET_ARTIFACTS_NAME')
 S3_BUCKET_ARTIFACTS = f"s3://{S3_BUCKET_ARTIFACTS_NAME}"
 S3_BUCKET_ARTIFACTS_GLUE = f"{S3_BUCKET_ARTIFACTS}/glue"
 PYSPARK_SCRIPT_LOCATION = f"{S3_BUCKET_ARTIFACTS}/main.py"
+EXTRA_PY_FILES = getenv('EXTRA_PY_FILES')
 
 # make all files found under extra_jars available to Glue via --extra-jars argument
 etl_artifact_bucket = s3_client.Bucket(S3_BUCKET_ARTIFACTS_NAME)
@@ -70,7 +71,8 @@ def deploy_data_product_dag() -> DataProduct:
             'PYSPARK_SCRIPT_LOCATION': PYSPARK_SCRIPT_LOCATION,
             'EXTRA_JARS': EXTRA_JARS,
             'AIRFLOW_BASE_URL': AIRFLOW_BASE_URL,
-            'AWS_REGION': os.environ['AWS_REGION']
+            'AWS_REGION': os.environ['AWS_REGION'],
+            'EXTRA_PY_FILES': EXTRA_PY_FILES
         }
 
         template_loader = jinja2.FileSystemLoader(searchpath=TEMPLATE_BASE_DIR)
