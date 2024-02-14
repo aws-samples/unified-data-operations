@@ -97,6 +97,7 @@ def package_data_product_version(data_product: DataProduct, data_product_path: s
     logger.info('Packaging new data product version')
     version_name = f'{data_product.id}-{data_product.version}'
     version_location = f'dist/{version_name}'
+    logger.info(version_location)
     logger.info(f'Starting make archive process at {os.path.join(os.path.dirname(os.path.abspath(__file__)))}')
     shutil.make_archive(version_location, format='zip', root_dir=data_product_path)
     logger.info(f'Data product version {version_name} successfully created')
