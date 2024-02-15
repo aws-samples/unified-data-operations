@@ -54,8 +54,7 @@ with airflow.DAG(
                 '--extra-jars': "{{ EXTRA_JARS }}",
                 '--TempDir': "{{ S3_BUCKET_ARTIFACTS_GLUE }}",
                 '--job-bookmark-option': "job-bookmark-disable",
-                '--enable-metrics': "",
-                '--product_path': "{{ product.id }}-{{ product.version }}"
+                '--enable-metrics': ""
             },
             "GlueVersion": "{{ GLUE_VERSION }}",
         },
