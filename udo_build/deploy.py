@@ -61,7 +61,7 @@ def deploy_data_product_dag() -> DataProduct:
             'dependencies': get_dependencies(data_product),
             'now': datetime.utcnow(),
             'NOTIFICATION_SENDER_EMAIL_ADDRESS': NOTIFICATION_SENDER_EMAIL_ADDRESS,
-            'GLUE_VERSION': '3.0',
+            'GLUE_VERSION': '4.0',
             'GLUE_PYTHON_VERSION': '3',
             'S3_BUCKET_DATALAKE_NAME': S3_BUCKET_DATALAKE_NAME,
             'S3_BUCKET_ARTIFACTS': S3_BUCKET_ARTIFACTS,
