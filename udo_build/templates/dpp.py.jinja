@@ -47,7 +47,7 @@ with airflow.DAG(
         retry_limit=0,
         create_job_kwargs={
             "DefaultArguments": {
-                "--additional-python-modules": "pydantic,quinn,pyyaml,mypy-boto3-glue,jsonschema",
+                "--additional-python-modules": "pydantic,quinn,pyyaml,mypy-boto3-glue,jsonschema,{{DPP_MODULE}}",
                 '--default_data_lake_bucket': "{{ S3_BUCKET_DATALAKE_NAME }}",
                 '--extra-files': "{{ S3_BUCKET_ARTIFACTS }}/datamesh/products/{{ product.id }}-{{ product.version }}.zip",
                 '--extra-py-files': "{{ EXTRA_PY_FILES }}",
