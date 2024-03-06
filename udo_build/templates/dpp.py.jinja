@@ -2,7 +2,7 @@ import airflow
 from datetime import timedelta, datetime
 
 # Custom Operators deployed as Airflow plugins
-from airflow.providers.amazon.aws.operators.glue import AwsGlueJobOperator
+from airflow.providers.amazon.aws.operators.glue import GlueJobOperator
 from airflow.sensors.external_task_sensor import ExternalTaskSensor
 
 from common.notification import handle_notification
