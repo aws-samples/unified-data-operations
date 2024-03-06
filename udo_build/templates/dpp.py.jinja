@@ -35,7 +35,7 @@ with airflow.DAG(
     schedule_interval='{{ product.pipeline.schedule or '0 3 * * *' }}'
 ) as dag:
 
-    glue_task = AwsGlueJobOperator(
+    glue_task = GlueJobOperator(
         task_id='{{ product.id }}',
         job_name='{{ product.id }}-{{ product.version }}',
         iam_role_name="{{ GLUE_ROLE_NAME }}",
