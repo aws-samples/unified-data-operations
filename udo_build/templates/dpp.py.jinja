@@ -56,8 +56,9 @@ with airflow.DAG(
                 '--enable-metrics': ""
             },
             "GlueVersion": "{{ GLUE_VERSION }}",
-            "Connections": {"Connections":[{{ GLUE_NETWORK_CONNECTION }}]} if {{GLUE_NETWORK_CONNECTION}} else None
         },
+        if {{ GLUE_NETWORK_CONNECTION }}:
+            create_job_kwargs['Connections'] = {"Connections":[{{ GLUE_NETWORK_CONNECTION }}]}
         on_failure_callback=on_failure
     )
 
