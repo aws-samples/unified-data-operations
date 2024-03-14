@@ -57,7 +57,7 @@ with airflow.DAG(
             },
             "GlueVersion": "{{ GLUE_VERSION }}",
             {% if GLUE_NETWORK_CONNECTION %}
-                "Connections": {"Connections":[{{ GLUE_NETWORK_CONNECTION }}]}
+                "Connections": {"Connections":["{{ GLUE_NETWORK_CONNECTION }}"]}
             {% endif %}
         },
         on_failure_callback=on_failure
